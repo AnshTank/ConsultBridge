@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { consultancyData } from '../../../../../data/consultancyData';
+import connectDB from '../../../../lib/mongodb';
+import mongoose from 'mongoose';
 
 export async function GET(
   request: NextRequest,
@@ -8,27 +9,21 @@ export async function GET(
   try {
     const id = params.id;
     
-    // Try to find consultancy by ID in sample data
-    let foundConsultancy = null;
+    await connectDB();
+    const db = mongoose.connection.db;
+    const consultanciesCollection = db.collection('consultancies');
     
-    // Check each category
-    Object.entries(consultancyData).forEach(([category, consultancies]) => {
-      // Check each consultancy in the category
-      consultancies.forEach((consultancy) => {
-        // Check if category matches the ID
-        if (consultancy.category.toLowerCase().replace(/\\s+/g, '-') === id.toLowerCase()) {
-          foundConsultancy = {
-            ...consultancy,
-            id: id
-          };
-        }
-      });
+    const consultancy = await consultanciesCollection.findOne({
+      _id: new mongoose.Types.ObjectId(id)
     });
     
-    if (foundConsultancy) {
+    if (consultancy) {
       return NextResponse.json({ 
         success: true, 
-        data: foundConsultancy
+        data: {
+          ...consultancy,
+          id: consultancy._id.toString()
+        }
       });
     } else {
       return NextResponse.json({ 

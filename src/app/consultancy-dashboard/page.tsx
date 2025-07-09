@@ -1,8 +1,8 @@
 import dynamic from 'next/dynamic';
 
-// Dynamically import the UserDashboard with no SSR
+// Dynamically import the DashboardPage with no SSR
 const UserDashboard = dynamic(
-  () => import('../../pages/UserDashboard'),
+  () => import('../../pages/DashboardPage'),
   { ssr: false }
 );
 
