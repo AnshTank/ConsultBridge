@@ -400,7 +400,7 @@ const DashboardPage: React.FC = () => {
                         const now = new Date();
                         const aptDate = new Date(appointment.appointmentDate);
                         const aptTime = appointment.appointmentTime;
-                        const [time, period] = aptTime.split(' ');
+                        const [time, period] = (aptTime || '').split(' ');
                         const [hours, minutes] = time.split(':').map(Number);
                         let hour24 = hours;
                         if (period === 'PM' && hours !== 12) hour24 += 12;
@@ -426,7 +426,7 @@ const DashboardPage: React.FC = () => {
                             const now = new Date();
                             const aptDate = new Date(appointment.appointmentDate);
                             const aptTime = appointment.appointmentTime;
-                            const [time, period] = aptTime.split(' ');
+                            const [time, period] = (aptTime || '').split(' ');
                             const [hours, minutes] = time.split(':').map(Number);
                             let hour24 = hours;
                             if (period === 'PM' && hours !== 12) hour24 += 12;
@@ -450,7 +450,7 @@ const DashboardPage: React.FC = () => {
                           const now = new Date();
                           const aptDate = new Date(appointment.appointmentDate);
                           const aptTime = appointment.appointmentTime;
-                          const [time, period] = aptTime.split(' ');
+                          const [time, period] = (aptTime || '').split(' ');
                           const [hours, minutes] = time.split(':').map(Number);
                           let hour24 = hours;
                           if (period === 'PM' && hours !== 12) hour24 += 12;

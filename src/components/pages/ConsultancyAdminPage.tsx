@@ -494,7 +494,7 @@ const ConsultancyAdminPage: React.FC = () => {
                         {(() => {
                           const now = new Date();
                           const aptDate = new Date(appointment.appointmentDate);
-                          const [time, period] = appointment.appointmentTime.split(' ');
+                          const [time, period] = (appointment.appointmentTime || '').split(' ');
                           const [hours, minutes] = time.split(':').map(Number);
                           let hour24 = hours;
                           if (period === 'PM' && hours !== 12) hour24 += 12;
@@ -986,6 +986,8 @@ const ConsultancyAdminPage: React.FC = () => {
                 const result = await response.json();
                 
                 if (result.success) {
+                  // Revalidate cache
+                  fetch('/api/revalidate', { method: 'POST' });
                   alert('Profile updated successfully!');
                   setShowEditProfile(false);
                   window.location.reload();

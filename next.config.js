@@ -1,17 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    esmExternals: false,
+    esmExternals: true,
   },
-  webpack: (config) => {
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      net: false,
-      tls: false,
-    };
-    return config;
-  },
-};
+  // Force dynamic rendering for all pages
+  output: 'standalone',
+  // Disable static optimization
+  trailingSlash: false,
+  // Ensure no static generation
+  generateStaticParams: false,
+  // Force dynamic routes
+  dynamicParams: true,
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig
