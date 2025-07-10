@@ -18,7 +18,12 @@ function CategoryPage() {
     const fetchConsultancies = async () => {
       try {
         // Get consultancies filtered by category from API (MongoDB)
-        const response = await fetch(`/api/consultancies`);
+        const response = await fetch(`/api/consultancies?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        });
         const result = await response.json();
 
         if (result.success && result.data) {
@@ -31,7 +36,11 @@ function CategoryPage() {
             .join(" ");
 
           const filteredConsultancies = result.data.filter(
-            (consultancy: any) => consultancy.category === categoryName
+            (consultancy: any) => 
+              consultancy.category === categoryName &&
+              consultancy.name && 
+              typeof consultancy.name === 'string' && 
+              consultancy.name.trim() !== ''
           );
 
           setConsultancies(filteredConsultancies);

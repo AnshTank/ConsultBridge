@@ -16,12 +16,21 @@ export async function GET(
     }
     const consultanciesCollection = db.collection('consultancies');
     
-    // Search for consultancies by category (case-insensitive)
+    // Search for consultancies by category (case-insensitive) with validation
     const consultancies = await consultanciesCollection.find({
-      category: { $regex: new RegExp(category, 'i') }
+      $and: [
+        { category: { $regex: new RegExp(category, 'i') } },
+        { _id: { $exists: true } },
+        { name: { $exists: true, $ne: null, $ne: '' } }
+      ]
     }).toArray();
     
-    const consultanciesWithId = consultancies.map(consultancy => ({
+    // Filter out any invalid consultancies
+    const validConsultancies = consultancies.filter(c => 
+      c._id && c.name && typeof c.name === 'string' && c.name.trim() !== ''
+    );
+    
+    const consultanciesWithId = validConsultancies.map(consultancy => ({
       ...consultancy,
       id: consultancy._id.toString()
     }));

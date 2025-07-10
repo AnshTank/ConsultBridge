@@ -156,7 +156,9 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
               </div>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-blue-600">{price}</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {price.startsWith('$') ? price : `$${price}`}
+              </p>
               <p className="text-gray-500">per session</p>
             </div>
           </div>

@@ -12,17 +12,33 @@ export async function GET(request: NextRequest) {
     }
     const consultanciesCollection = db.collection('consultancies');
     
-    const consultancies = await consultanciesCollection.find({}).toArray();
+    const consultancies = await consultanciesCollection.find({
+      $and: [
+        { _id: { $exists: true } },
+        { name: { $exists: true, $ne: null } }
+      ]
+    }).toArray();
     
-    const consultanciesWithId = consultancies.map(consultancy => ({
+    // Filter out any invalid consultancies
+    const validConsultancies = consultancies.filter(c => 
+      c._id && c.name && typeof c.name === 'string' && c.name.trim() !== ''
+    );
+    
+    const consultanciesWithId = validConsultancies.map(consultancy => ({
       ...consultancy,
       id: consultancy._id.toString()
     }));
     
-    return NextResponse.json({ 
+    const response = NextResponse.json({ 
       success: true, 
       data: consultanciesWithId
     });
+    
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
   } catch (error) {
     console.error('Error in consultancies API:', error);
     return NextResponse.json({ 

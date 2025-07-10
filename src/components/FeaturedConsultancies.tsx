@@ -21,12 +21,20 @@ export default function FeaturedConsultancies() {
   useEffect(() => {
     const fetchFeaturedConsultancies = async () => {
       try {
-        const response = await fetch("/api/consultancies");
+        const response = await fetch(`/api/consultancies?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        });
         const result = await response.json();
         
         if (result.success && result.data && result.data.length > 0) {
-          // Get top 3 highest rated consultancies
-          const featured = result.data
+          // Filter out invalid consultancies and get top 3 highest rated
+          const validConsultancies = result.data.filter((c: ConsultancyData) => 
+            c && (c.id || c._id) && c.name && typeof c.name === 'string' && c.name.trim() !== ''
+          );
+          const featured = validConsultancies
             .sort((a: ConsultancyData, b: ConsultancyData) => b.rating - a.rating)
             .slice(0, 3);
           setConsultancies(featured);

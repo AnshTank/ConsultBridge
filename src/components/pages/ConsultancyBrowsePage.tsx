@@ -45,12 +45,21 @@ const ConsultancyBrowsePage: React.FC = () => {
     const loadConsultancies = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/consultancies');
+        const response = await fetch(`/api/consultancies?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        });
         const result = await response.json();
         
         if (result.success && result.data) {
-          setConsultancies(result.data);
-          setFilteredConsultancies(result.data);
+          // Filter out invalid consultancies on client side too
+          const validConsultancies = result.data.filter((c: ConsultancyProfile) => 
+            c && c.id && c.name && typeof c.name === 'string' && c.name.trim() !== ''
+          );
+          setConsultancies(validConsultancies);
+          setFilteredConsultancies(validConsultancies);
         } else {
           setConsultancies([]);
           setFilteredConsultancies([]);
