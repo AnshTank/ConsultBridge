@@ -1,9 +1,0 @@
-{
-  "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "functions": {
-    "src/app/api/**/*.ts": {
-      "runtime": "nodejs18.x"
-    }
-  }
-}
