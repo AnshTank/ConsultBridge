@@ -320,13 +320,22 @@ const ConsultancyAdminPage: React.FC = () => {
                   {currentProfile.price || "Not set"}
                 </p>
               </div>
-              <button
-                onClick={() => setShowEditProfile(true)}
-                className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
-              >
-                <Edit className="w-4 h-4" />
-                Edit Profile
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => window.open(`/consultancy/${localStorage.getItem('consultancyId')}`, '_blank')}
+                  className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  View Profile
+                </button>
+                <button
+                  onClick={() => setShowEditProfile(true)}
+                  className="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit Profile
+                </button>
+              </div>
             </div>
           </div>
 

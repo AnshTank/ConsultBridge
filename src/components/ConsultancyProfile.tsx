@@ -53,6 +53,16 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
   availability,
   contact,
 }) => {
+  // Add null checks for required props
+  if (!id || !name || !availability || !contact) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+          <p className="text-gray-600">Unable to load consultancy profile. Missing required data.</p>
+        </div>
+      </div>
+    );
+  }
   const { isSignedIn, user } = useUser();
   const [appointmentType, setAppointmentType] = useState<"online" | "offline">(
     "online"
@@ -83,12 +93,12 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
   // Generate time slots based on availability hours
   const generateTimeSlots = () => {
     const slots = [];
-    const [startTime, endTime] = availability.hours.split(' - ');
+    const [startTime, endTime] = (availability?.hours || '').split(' - ');
     
     // Parse start and end times
     const parseTime = (timeStr: string) => {
-      const [time, period] = timeStr.split(' ');
-      const [hours, minutes] = time.split(':').map(Number);
+      const [time, period] = (timeStr || '').split(' ');
+      const [hours, minutes] = (time || '').split(':').map(Number);
       let hour24 = hours;
       if (period === 'PM' && hours !== 12) hour24 += 12;
       if (period === 'AM' && hours === 12) hour24 = 0;
@@ -117,8 +127,8 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
     
     if (selectedDate === today) {
       return timeSlots.filter(slot => {
-        const [time, period] = slot.split(' ');
-        const [hours] = time.split(':').map(Number);
+        const [time, period] = (slot || '').split(' ');
+        const [hours] = (time || '').split(':').map(Number);
         let hour24 = hours;
         if (period === 'PM' && hours !== 12) hour24 += 12;
         if (period === 'AM' && hours === 12) hour24 = 0;
@@ -172,7 +182,7 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
             <div className="border-t pt-6">
               <h3 className="text-lg font-semibold mb-4">Areas of Expertise</h3>
               <div className="flex flex-wrap gap-2">
-                {expertise.map((skill, index) => (
+                {(expertise || []).map((skill, index) => (
                   <span
                     key={index}
                     className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm"
@@ -300,19 +310,19 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
           <div className="space-y-4">
             <div className="flex items-center">
               <Phone className="w-5 h-5 text-gray-500 mr-3" />
-              <span>{contact.phone}</span>
+              <span>{contact?.phone || 'Not provided'}</span>
             </div>
             <div className="flex items-center">
               <Mail className="w-5 h-5 text-gray-500 mr-3" />
-              <span>{contact.email}</span>
+              <span>{contact?.email || 'Not provided'}</span>
             </div>
             <div className="flex items-center">
               <Globe className="w-5 h-5 text-gray-500 mr-3" />
               <a
-                href={contact.website}
+                href={contact?.website || '#'}
                 className="text-blue-600 hover:underline"
               >
-                {contact.website}
+                {contact?.website || 'Not provided'}
               </a>
             </div>
           </div>
@@ -321,11 +331,11 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
             <h3 className="text-lg font-semibold mb-4">Availability</h3>
             <div className="flex items-center mb-3">
               <Calendar className="w-5 h-5 text-gray-500 mr-3" />
-              <span>{availability.days.join(", ")}</span>
+              <span>{(availability?.days || []).join(", ")}</span>
             </div>
             <div className="flex items-center">
               <Clock className="w-5 h-5 text-gray-500 mr-3" />
-              <span>{availability.hours}</span>
+              <span>{availability?.hours || 'Not specified'}</span>
             </div>
           </div>
 
