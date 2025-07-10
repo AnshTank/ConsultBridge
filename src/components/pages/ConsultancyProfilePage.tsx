@@ -6,6 +6,10 @@ import LoadingScreen from "../LoadingScreen";
 import Navbar from "../Navbar";
 import Footer from "../Footer";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 function ConsultancyProfilePage({ id }: { id: string }) {
   const [consultancy, setConsultancy] = useState<any>(null);
   const [loading, setLoading] = useState(true);
