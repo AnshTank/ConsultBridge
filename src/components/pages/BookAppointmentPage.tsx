@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Calendar, Clock, User, Mail, Phone, MessageSquare, MapPin } from "lucide-react";
-import Navbar from "../components/Navbar";
+import Navbar from "../Navbar";
 
 function BookAppointmentPage() {
   const { user } = useUser();

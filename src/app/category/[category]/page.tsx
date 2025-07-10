@@ -1,5 +1,5 @@
-import CategoryPage from '../../../pages/CategoryPage'
+import CategoryPage from '../../../components/pages/CategoryPage'
 
-export default function CategoryPageRoute({ params }: { params: { category: string } }) {
+export default function CategoryPageRoute() {
   return <CategoryPage />
 }

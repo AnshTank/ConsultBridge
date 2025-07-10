@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Calendar, Clock, User, Phone, Mail, CreditCard } from "lucide-react";
-import Navbar from "../components/Navbar";
+import Navbar from "../Navbar";
 
 interface BookAppointmentFormProps {
   consultancyId: string;

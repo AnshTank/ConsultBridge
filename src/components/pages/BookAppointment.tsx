@@ -2,9 +2,9 @@
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import AppointmentBooking from "../components/AppointmentBooking";
-import Navbar from "../components/Navbar";
-import PageTransition from "../components/PageTransition";
+import AppointmentBooking from "../AppointmentBooking";
+import Navbar from "../Navbar";
+import PageTransition from "../PageTransition";
 interface ConsultancyData {
   _id?: string;
   id?: string;

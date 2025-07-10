@@ -2,8 +2,8 @@
 import React, { useState } from "react";
 import { MapPin, Phone, Mail, Clock, User, Building, Send } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
-import Navbar from "../components/Navbar";
-import PageTransition from "../components/PageTransition";
+import Navbar from "../Navbar";
+import PageTransition from "../PageTransition";
 
 function ContactPage() {
   const { user } = useUser();

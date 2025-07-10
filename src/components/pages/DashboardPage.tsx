@@ -16,12 +16,12 @@ import {
   Search,
   Filter,
 } from "lucide-react";
-import Navbar from "../components/Navbar";
-import PageTransition from "../components/PageTransition";
+import Navbar from "../Navbar";
+import PageTransition from "../PageTransition";
 import {
   appointmentManager,
   AppointmentData,
-} from "../utils/appointmentManager";
+} from "../../utils/appointmentManager";
 
 // Appointment type
 interface Appointment {

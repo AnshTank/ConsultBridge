@@ -1,5 +1,5 @@
-import ConsultancyCalendarPage from "../../pages/ConsultancyCalendarPage";
+import ConsultancyCalendarPage from "../../components/pages/ConsultancyCalendarPage";
 
-export default function ConsultancyCalendarRoute() {
-  return <ConsultancyCalendarPage />;
+export default function ConsultancyCalendarPageRoute() {
+  return <ConsultancyCalendarPage />
 }

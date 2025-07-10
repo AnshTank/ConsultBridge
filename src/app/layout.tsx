@@ -6,6 +6,9 @@ import '../styles/page-transitions.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export const metadata: Metadata = {
   title: 'Consultancy App',
   description: 'Professional consultancy services platform',

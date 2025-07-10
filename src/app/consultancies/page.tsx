@@ -1,5 +1,5 @@
-import ConsultancyBrowsePage from "../../pages/ConsultancyBrowsePage";
+import ConsultancyBrowsePage from '../../components/pages/ConsultancyBrowsePage'
 
-export default function ConsultanciesRoute() {
-  return <ConsultancyBrowsePage />;
+export default function ConsultanciesPageRoute() {
+  return <ConsultancyBrowsePage />
 }

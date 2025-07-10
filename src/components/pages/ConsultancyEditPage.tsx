@@ -15,7 +15,7 @@ import {
   ArrowLeft,
   Camera
 } from "lucide-react";
-import Navbar from "../components/Navbar";
+import Navbar from "../Navbar";
 
 const ConsultancyEditPage: React.FC = () => {
   const router = useRouter();

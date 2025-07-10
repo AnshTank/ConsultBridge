@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import Navbar from "../components/Navbar";
-import LoadingScreen from "../components/LoadingScreen";
-import ConsultancyCard from "../components/ConsultancyCard";
+import Navbar from "../Navbar";
+import LoadingScreen from "../LoadingScreen";
+import ConsultancyCard from "../ConsultancyCard";
 
 interface ConsultancyProfile {
   id: string;

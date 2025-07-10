@@ -13,7 +13,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
-import { getConsultancyProfile } from "../utils/consultancyUtils";
+import { getConsultancyProfile } from "../../utils/consultancyUtils";
 
 interface Appointment {
   _id: string;

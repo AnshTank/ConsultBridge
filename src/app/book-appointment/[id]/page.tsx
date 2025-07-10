@@ -1,5 +1,5 @@
-import BookAppointmentPage from '../../../pages/BookAppointmentPage'
+import BookAppointmentPage from '../../../components/pages/BookAppointmentPage'
 
-export default function BookAppointmentRoute({ params }: { params: { id: string } }) {
+export default function BookAppointmentPageRoute() {
   return <BookAppointmentPage />
 }

@@ -1,11 +1,5 @@
-"use client";
-import ConsultancyAdminPage from "../../pages/ConsultancyAdminPage";
-import { Suspense } from "react";
+import ConsultancyAdminPage from '../../components/pages/ConsultancyAdminPage'
 
-export default function ConsultancyAdminRoute() {
-  return (
-    <Suspense fallback={<div className="p-8 text-center">Loading admin portal...</div>}>
-      <ConsultancyAdminPage />
-    </Suspense>
-  );
+export default function ConsultancyAdminPageRoute() {
+  return <ConsultancyAdminPage />
 }

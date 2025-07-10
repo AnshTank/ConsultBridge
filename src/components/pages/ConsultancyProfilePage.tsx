@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import ConsultancyProfile from "../components/ConsultancyProfile";
-import ConsultancyReviews from "../components/ConsultancyReviews";
-import LoadingScreen from "../components/LoadingScreen";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+import ConsultancyProfile from "../ConsultancyProfile";
+import ConsultancyReviews from "../ConsultancyReviews";
+import LoadingScreen from "../LoadingScreen";
+import Navbar from "../Navbar";
+import Footer from "../Footer";
 
 function ConsultancyProfilePage({ id }: { id: string }) {
   const [consultancy, setConsultancy] = useState<any>(null);
@@ -16,12 +16,12 @@ function ConsultancyProfilePage({ id }: { id: string }) {
         // First try to get consultancy by MongoDB _id
         const response = await fetch(`/api/consultancies/${id}`);
         const result = await response.json();
-        
+
         if (result.success && result.data) {
-          console.log('Found consultancy by ID');
+          console.log("Found consultancy by ID");
           setConsultancy(result.data);
         } else {
-          console.log('Consultancy not found');
+          console.log("Consultancy not found");
           setConsultancy(null);
         }
       } catch (error) {
@@ -31,7 +31,7 @@ function ConsultancyProfilePage({ id }: { id: string }) {
         setLoading(false);
       }
     };
-    
+
     fetchConsultancy();
   }, [id]);
 
@@ -43,9 +43,11 @@ function ConsultancyProfilePage({ id }: { id: string }) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-xl text-gray-600 mb-4">Consultancy not found</div>
-          <button 
-            onClick={() => window.location.href = '/'}
+          <div className="text-xl text-gray-600 mb-4">
+            Consultancy not found
+          </div>
+          <button
+            onClick={() => (window.location.href = "/")}
             className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
           >
             Return to Home
@@ -61,11 +63,12 @@ function ConsultancyProfilePage({ id }: { id: string }) {
         <Navbar />
       </header>
 
-      <ConsultancyProfile {...consultancy} id={consultancy._id || consultancy.id} />
-
-      <ConsultancyReviews
-        consultancyId={consultancy._id || consultancy.id}
+      <ConsultancyProfile
+        {...consultancy}
+        id={consultancy._id || consultancy.id}
       />
+
+      <ConsultancyReviews consultancyId={consultancy._id || consultancy.id} />
 
       <Footer />
     </div>

@@ -1,5 +1,9 @@
-import ConsultancyProfilePage from '../../../pages/ConsultancyProfilePage'
+import ConsultancyProfilePage from '../../../components/pages/ConsultancyProfilePage'
 
-export default function ConsultancyPageRoute({ params }: { params: { id: string } }) {
+interface Props {
+  params: { id: string }
+}
+
+export default function ConsultancyProfilePageRoute({ params }: Props) {
   return <ConsultancyProfilePage id={params.id} />
 }

@@ -1,5 +1,5 @@
-import ConsultancySetupForm from '../../pages/ConsultancySetupForm'
+import ConsultancySetupForm from '../../components/pages/ConsultancySetupForm'
 
-export default function ConsultancySetupRoute() {
+export default function ConsultancySetupPageRoute() {
   return <ConsultancySetupForm />
 }

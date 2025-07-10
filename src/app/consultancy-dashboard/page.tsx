@@ -1,15 +1,5 @@
-import dynamic from 'next/dynamic';
+import DashboardPage from '../../components/pages/DashboardPage';
 
-// Dynamically import the DashboardPage with no SSR
-const UserDashboard = dynamic(
-  () => import('../../pages/DashboardPage'),
-  { ssr: false }
-);
-
-export default function ConsultancyDashboardRoute() {
-  return (
-    <div>
-      <UserDashboard />
-    </div>
-  );
+export default function ConsultancyDashboardPageRoute() {
+  return <DashboardPage />
 }
