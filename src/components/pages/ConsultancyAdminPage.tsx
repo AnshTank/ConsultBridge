@@ -960,6 +960,7 @@ const ConsultancyAdminPage: React.FC = () => {
                   description: formData.get('description') || profile.description,
                   location: formData.get('location') || profile.location,
                   price: formData.get('price') || profile.price,
+                  image: formData.get('image') || profile.image,
                   whyChooseUs: formData.get('whyChooseUs') ? (formData.get('whyChooseUs') as string).split(',').map(item => item.trim()) : profile.whyChooseUs,
                   expertise: formData.get('expertise') ? (formData.get('expertise') as string).split(',').map(item => item.trim()) : profile.expertise,
                   contact: {
