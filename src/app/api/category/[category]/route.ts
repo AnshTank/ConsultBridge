@@ -1,47 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { consultancyData } from '../../../../../data/consultancyData';
+import connectDB from '../../../../lib/mongodb';
+import mongoose from 'mongoose';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { category: string } }
 ) {
   try {
-    const category = params.category;
+    const category = decodeURIComponent(params.category);
     
-    // Convert category-name to category_name format if needed
-    const normalizedCategory = category.replace(/-/g, '_');
-    
-    // Check if this category exists in our data
-    if (consultancyData[normalizedCategory]) {
-      // Return the consultancies in this category
-      const categoryConsultancies = consultancyData[normalizedCategory].map((consultancy, index) => ({
-        ...consultancy,
-        id: `${normalizedCategory}-${index}`
-      }));
-      
-      return NextResponse.json({ 
-        success: true, 
-        data: categoryConsultancies
-      });
-    } else if (consultancyData[category]) {
-      // Try with original category name
-      const categoryConsultancies = consultancyData[category].map((consultancy, index) => ({
-        ...consultancy,
-        id: `${category}-${index}`
-      }));
-      
-      return NextResponse.json({ 
-        success: true, 
-        data: categoryConsultancies
-      });
-    } else {
-      // If category not found, return empty array
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Category not found',
-        availableCategories: Object.keys(consultancyData)
-      }, { status: 404 });
+    await connectDB();
+    const db = mongoose.connection.db;
+    if (!db) {
+      throw new Error('Database connection not established');
     }
+    const consultanciesCollection = db.collection('consultancies');
+    
+    // Search for consultancies by category (case-insensitive)
+    const consultancies = await consultanciesCollection.find({
+      category: { $regex: new RegExp(category, 'i') }
+    }).toArray();
+    
+    const consultanciesWithId = consultancies.map(consultancy => ({
+      ...consultancy,
+      id: consultancy._id.toString()
+    }));
+    
+    return NextResponse.json({ 
+      success: true, 
+      data: consultanciesWithId
+    });
   } catch (error) {
     console.error('Error fetching consultancies by category:', error);
     return NextResponse.json({ 

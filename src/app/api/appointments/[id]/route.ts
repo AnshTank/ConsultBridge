@@ -13,6 +13,9 @@ export async function PUT(
     await connectDB();
 
     const db = mongoose.connection.db;
+    if (!db) {
+      throw new Error('Database connection not established');
+    }
     const appointmentsCollection = db.collection('appointments');
 
     const result = await appointmentsCollection.updateOne(
@@ -52,6 +55,9 @@ export async function DELETE(
     await connectDB();
 
     const db = mongoose.connection.db;
+    if (!db) {
+      throw new Error('Database connection not established');
+    }
     const appointmentsCollection = db.collection('appointments');
 
     const result = await appointmentsCollection.deleteOne(

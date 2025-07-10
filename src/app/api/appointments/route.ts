@@ -11,6 +11,9 @@ export async function POST(request: NextRequest) {
     console.log('Connected to MongoDB');
 
     const db = mongoose.connection.db;
+    if (!db) {
+      throw new Error('Database connection not established');
+    }
     const appointmentsCollection = db.collection("appointments");
     const consultanciesCollection = db.collection("consultancies");
 
@@ -25,7 +28,7 @@ export async function POST(request: NextRequest) {
           consultancyName = consultancy.name;
         }
       } catch (err) {
-        console.log('Error fetching consultancy name:', err.message);
+        console.log('Error fetching consultancy name:', err instanceof Error ? err.message : String(err));
       }
     }
 
@@ -58,7 +61,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to book appointment",
+        error: error instanceof Error ? error.message : "Failed to book appointment",
       },
       { status: 500 }
     );
@@ -82,6 +85,9 @@ export async function GET(request: NextRequest) {
     await connectDB();
     
     const db = mongoose.connection.db;
+    if (!db) {
+      throw new Error('Database connection not established');
+    }
     const appointmentsCollection = db.collection('appointments');
     
     // Find appointments based on the parameter provided

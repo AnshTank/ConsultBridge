@@ -7,6 +7,9 @@ export async function GET(request: NextRequest) {
     await connectDB();
     
     const db = mongoose.connection.db;
+    if (!db) {
+      throw new Error('Database connection not established');
+    }
     const consultanciesCollection = db.collection('consultancies');
     
     const consultancies = await consultanciesCollection.find({}).toArray();

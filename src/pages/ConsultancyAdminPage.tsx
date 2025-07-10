@@ -95,7 +95,7 @@ const ConsultancyAdminPage: React.FC = () => {
       }
     } catch (error) {
       console.error("Error updating appointment status:", error);
-      alert(`Failed to update appointment status: ${error.message}`);
+      alert(`Failed to update appointment status: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -179,8 +179,8 @@ const ConsultancyAdminPage: React.FC = () => {
     confirmed: appointments.filter((a) => a.status === "confirmed" || a.status === "completed").length,
     pending: appointments.filter((a) => a.status === "pending").length,
     revenue: appointments
-      .filter((a) => a.paymentStatus === "paid")
-      .reduce((sum, a) => sum + a.amount, 0),
+      .filter((a: any) => a.paymentStatus === "paid")
+      .reduce((sum: number, a: any) => sum + (a.amount || 0), 0),
   };
 
   // Show logout function
@@ -561,8 +561,8 @@ const ConsultancyAdminPage: React.FC = () => {
               }
               
               // Count appointments per day
-              const appointmentCounts = {};
-              appointments.forEach(apt => {
+              const appointmentCounts: {[key: string]: number} = {};
+              appointments.forEach((apt: any) => {
                 const dateKey = new Date(apt.appointmentDate).toDateString();
                 appointmentCounts[dateKey] = (appointmentCounts[dateKey] || 0) + 1;
               });
@@ -879,7 +879,7 @@ const ConsultancyAdminPage: React.FC = () => {
               
               try {
                 const consultancyId = localStorage.getItem('consultancyId');
-                const formData = new FormData(e.target);
+                const formData = new FormData(e.target as HTMLFormElement);
                 
                 // Password validation
                 const password = formData.get('password');
@@ -898,8 +898,8 @@ const ConsultancyAdminPage: React.FC = () => {
                   description: formData.get('description') || profile.description,
                   location: formData.get('location') || profile.location,
                   price: formData.get('price') || profile.price,
-                  whyChooseUs: formData.get('whyChooseUs') ? formData.get('whyChooseUs').split(',').map(item => item.trim()) : profile.whyChooseUs,
-                  expertise: formData.get('expertise') ? formData.get('expertise').split(',').map(item => item.trim()) : profile.expertise,
+                  whyChooseUs: formData.get('whyChooseUs') ? (formData.get('whyChooseUs') as string).split(',').map(item => item.trim()) : profile.whyChooseUs,
+                  expertise: formData.get('expertise') ? (formData.get('expertise') as string).split(',').map(item => item.trim()) : profile.expertise,
                   contact: {
                     ...profile.contact,
                     email: formData.get('email') || profile.contact?.email,
@@ -930,7 +930,7 @@ const ConsultancyAdminPage: React.FC = () => {
                   alert('Failed to update profile: ' + result.error);
                 }
               } catch (error) {
-                alert('Error updating profile: ' + error.message);
+                alert('Error updating profile: ' + (error instanceof Error ? error.message : String(error)));
               } finally {
                 setIsUpdating(false);
               }

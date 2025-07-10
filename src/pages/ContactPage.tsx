@@ -117,7 +117,7 @@ function ContactPage() {
                       <p className="text-gray-600 leading-relaxed">
                         123 Innovation Drive
                         <br />
-                        Vadodara, P.O. 391760
+                        Vadodara, P.C. 391760
                         <br />
                         India
                       </p>

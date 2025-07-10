@@ -31,7 +31,7 @@ import { createSlug } from "../utils/urlUtils";
 
 
 function Home() {
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isClient, setIsClient] = useState(false);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
@@ -117,7 +117,7 @@ function Home() {
         const result = await response.json();
         
         if (result.success && result.data) {
-          const formattedCategories = result.data.map(cat => ({
+          const formattedCategories = result.data.map((cat: any) => ({
             title: cat.name,
             description: cat.description,
             icon: cat.emoji

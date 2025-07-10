@@ -22,10 +22,10 @@ function BookAppointmentPage() {
   
   // Pre-fill form with URL parameters and user data
   useEffect(() => {
-    const consultancyId = searchParams.get('consultancyId');
-    const appointmentType = searchParams.get('appointmentType');
-    const date = searchParams.get('date');
-    const time = searchParams.get('time');
+    const consultancyId = searchParams?.get('consultancyId');
+    const appointmentType = searchParams?.get('appointmentType');
+    const date = searchParams?.get('date');
+    const time = searchParams?.get('time');
     
     console.log('URL params:', { consultancyId, appointmentType, date, time });
     
@@ -46,7 +46,7 @@ function BookAppointmentPage() {
     try {
       const bookingData = {
         ...formData,
-        consultancyId: searchParams.get('consultancyId'),
+        consultancyId: searchParams?.get('consultancyId'),
         userId: user?.id
       };
       

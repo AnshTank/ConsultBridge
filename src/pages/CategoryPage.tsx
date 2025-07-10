@@ -10,9 +10,9 @@ import { createSlug } from "../utils/urlUtils";
 function CategoryPage() {
   const params = useParams();
   const category = params?.category as string;
-  const [consultancies, setConsultancies] = useState([]);
+  const [consultancies, setConsultancies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [reviewStats, setReviewStats] = useState({});
+  const [reviewStats, setReviewStats] = useState<{[key: string]: any}>({});
 
   useEffect(() => {
     const fetchConsultancies = async () => {
@@ -30,19 +30,22 @@ function CategoryPage() {
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');
           
-          const filteredConsultancies = result.data.filter(consultancy => 
+          const filteredConsultancies = result.data.filter((consultancy: any) => 
             consultancy.category === categoryName
           );
           
           setConsultancies(filteredConsultancies);
           // Fetch review stats for each consultancy
-          const stats = {};
+          const stats: {[key: string]: any} = {};
           for (const consultancy of result.data) {
             try {
               const statsResponse = await fetch(`/api/reviews/stats/${consultancy._id || consultancy.id}`);
               const statsResult = await statsResponse.json();
               if (statsResult.success) {
-                stats[consultancy._id || consultancy.id] = statsResult.data;
+                const key = consultancy._id || consultancy.id;
+                if (key) {
+                  stats[key] = statsResult.data;
+                }
               }
             } catch (error) {
               console.error('Error fetching stats for consultancy:', error);
@@ -64,7 +67,7 @@ function CategoryPage() {
     fetchConsultancies();
   }, [category]);
 
-  const handleViewProfile = (consultancy) => {
+  const handleViewProfile = (consultancy: any) => {
     // Use the MongoDB _id if available, otherwise use category
     const consultancyId = consultancy._id || consultancy.id || createSlug(consultancy.category);
     window.location.href = `/consultancy/${consultancyId}`;
@@ -92,7 +95,7 @@ function CategoryPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, staggerChildren: 0.1 }}
           >
-            {consultancies.map((consultancy, index) => (
+            {consultancies.map((consultancy: any, index: number) => (
               <motion.div 
                 key={index} 
                 className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all h-full flex flex-col transform hover:scale-105"

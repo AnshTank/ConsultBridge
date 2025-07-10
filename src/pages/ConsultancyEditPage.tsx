@@ -20,7 +20,7 @@ import Navbar from "../components/Navbar";
 const ConsultancyEditPage: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const consultancyId = searchParams.get('id');
+  const consultancyId = searchParams?.get('id');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   

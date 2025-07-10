@@ -7,7 +7,7 @@ import Navbar from "../../components/Navbar";
 
 export default function ComingSoonPage() {
   const searchParams = useSearchParams();
-  const platform = searchParams.get('platform') || 'feature';
+  const platform = searchParams?.get('platform') || 'feature';
   
   const platformConfig = {
     twitter: {
@@ -40,7 +40,7 @@ export default function ComingSoonPage() {
     }
   };
 
-  const config = platformConfig[platform] || {
+  const config = platformConfig[platform as keyof typeof platformConfig] || {
     icon: Sparkles,
     name: "Amazing Feature",
     color: "from-purple-500 to-pink-600",

@@ -148,7 +148,7 @@ const DashboardPage: React.FC = () => {
   const filteredAppointments = (appointments || []).filter((appointment) => {
     const matchesSearch =
       searchTerm === "" ||
-      appointment.consultancyName
+      (appointment as any).consultancyName
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
       false;
@@ -362,7 +362,7 @@ const DashboardPage: React.FC = () => {
                     transition={{ duration: 0.4, ease: "easeInOut" }}
                   >
                     <h4 className="text-xl font-semibold text-gray-900">
-                      {appointment.consultancyName || "Appointment"}
+                      {(appointment as any).consultancyName || "Appointment"}
                     </h4>
                     <p className="text-sm text-gray-500">
                       {appointment.message || "Career Growth Consultation"}
@@ -386,9 +386,9 @@ const DashboardPage: React.FC = () => {
                     <div className="flex items-center gap-2 text-gray-600 mt-2">
                       <Video className="w-5 h-5 text-indigo-500" />
                       <p className="text-sm">
-                        {appointment.appointmentType === "online"
+                        {(appointment as any).appointmentType === "online"
                           ? "Online Meeting"
-                          : appointment.appointmentType === "offline"
+                          : (appointment as any).appointmentType === "offline"
                           ? "Office Visit"
                           : "Online Meeting"}
                       </p>

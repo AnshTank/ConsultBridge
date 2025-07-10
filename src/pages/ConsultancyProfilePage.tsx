@@ -7,7 +7,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 function ConsultancyProfilePage({ id }: { id: string }) {
-  const [consultancy, setConsultancy] = useState(null);
+  const [consultancy, setConsultancy] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -65,7 +65,6 @@ function ConsultancyProfilePage({ id }: { id: string }) {
 
       <ConsultancyReviews
         consultancyId={consultancy._id || consultancy.id}
-        reviews={consultancy.reviews}
       />
 
       <Footer />

@@ -21,16 +21,16 @@ const BookingPage: React.FC = () => {
 
   useEffect(() => {
     // Get URL parameters
-    const date = searchParams.get('date');
-    const time = searchParams.get('time');
+    const date = searchParams?.get('date');
+    const time = searchParams?.get('time');
     
     // Convert 12-hour time to 24-hour format for input
-    const convertTo24Hour = (time12h) => {
+    const convertTo24Hour = (time12h: string | null) => {
       if (!time12h) return '';
       const [time, modifier] = time12h.split(' ');
       let [hours, minutes] = time.split(':');
       if (hours === '12') hours = '00';
-      if (modifier === 'PM') hours = parseInt(hours, 10) + 12;
+      if (modifier === 'PM') hours = (parseInt(hours, 10) + 12).toString();
       return `${hours.toString().padStart(2, '0')}:${minutes}`;
     };
     
@@ -41,7 +41,7 @@ const BookingPage: React.FC = () => {
       email: user?.emailAddresses?.[0]?.emailAddress || '',
       contact: user?.phoneNumbers?.[0]?.phoneNumber || '',
       date: date || '',
-      time: convertTo24Hour(time) || ''
+      time: convertTo24Hour(time || null) || ''
     }));
   }, [user, searchParams]);
 
@@ -58,13 +58,13 @@ const BookingPage: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      const consultancyId = searchParams.get('consultancyId');
-      const appointmentType = searchParams.get('appointmentType') || 'online';
+      const consultancyId = searchParams?.get('consultancyId');
+      const appointmentType = searchParams?.get('appointmentType') || 'online';
       
       console.log('URL params:', {
         consultancyId,
         appointmentType,
-        allParams: Object.fromEntries(searchParams.entries())
+        allParams: searchParams ? Object.fromEntries(searchParams.entries()) : {}
       });
       
       if (!consultancyId || consultancyId === 'undefined') {

@@ -25,9 +25,9 @@ export default authMiddleware({
   debug: true,
   afterAuth(auth, req, evt) {
     // For debugging
-    console.log("Auth state:", auth.isPublicRoute, auth.isSignedIn, auth.userId);
+    console.log("Auth state:", auth.isPublicRoute, auth.userId);
     
-    if (auth.isSignedIn && auth.userId) {
+    if (auth.userId) {
       const role = auth.user?.publicMetadata?.role;
       const url = req.nextUrl.pathname;
       

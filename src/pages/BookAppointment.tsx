@@ -5,7 +5,18 @@ import { useUser } from "@clerk/nextjs";
 import AppointmentBooking from "../components/AppointmentBooking";
 import Navbar from "../components/Navbar";
 import PageTransition from "../components/PageTransition";
-import { ConsultancyData } from "../data/consultancyData";
+interface ConsultancyData {
+  _id?: string;
+  id?: string;
+  name: string;
+  category: string;
+  image: string;
+  price: string;
+  availability?: {
+    days: string[];
+    hours: string;
+  };
+}
 
 const BookAppointment: React.FC = () => {
   const params = useParams();
@@ -80,7 +91,7 @@ const BookAppointment: React.FC = () => {
             <AppointmentBooking 
               consultancyId={consultancyId}
               price={consultancy.price}
-              availability={consultancy.availability}
+              availability={consultancy.availability || { days: [], hours: '' }}
             />
           </div>
         </div>

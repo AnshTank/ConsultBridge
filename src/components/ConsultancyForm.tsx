@@ -81,7 +81,7 @@ export default function ConsultancyForm({ onSubmit, initialData, isEditing = fal
       setFormData(prev => ({
         ...prev,
         [parent]: {
-          ...prev[parent as keyof ConsultancyFormData],
+          ...(prev[parent as keyof ConsultancyFormData] as object),
           [child]: value
         }
       }));

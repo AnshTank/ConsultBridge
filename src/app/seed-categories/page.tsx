@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 export default function SeedCategoriesPage() {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState<{success: boolean; error?: string; message?: string} | null>(null);
 
   const handleSeed = async () => {
     setLoading(true);
@@ -14,7 +14,7 @@ export default function SeedCategoriesPage() {
       const data = await response.json();
       setResult(data);
     } catch (error) {
-      setResult({ success: false, error: error.message });
+      setResult({ success: false, error: error instanceof Error ? error.message : String(error) });
     } finally {
       setLoading(false);
     }

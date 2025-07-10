@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { FaStar, FaThumbsUp, FaReply, FaChevronLeft, FaChevronRight, FaUser } from "react-icons/fa";
+import { Star, ThumbsUp, Reply, ChevronLeft, ChevronRight, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser, SignInButton } from "@clerk/nextjs";
 
@@ -10,7 +10,7 @@ interface ReviewSectionProps {
 
 const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
   const { user, isSignedIn } = useUser();
-  const [reviews, setReviews] = useState([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [newReview, setNewReview] = useState("");
   const [newRating, setNewRating] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
@@ -203,7 +203,7 @@ const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
         {isSignedIn ? (
           <>
             <div className="flex items-center mb-6">
-              <FaUser className="text-indigo-600 mr-3" />
+              <User className="text-indigo-600 mr-3" />
               <span className="text-lg font-semibold text-gray-800">
                 Writing as {user?.firstName || user?.username || 'User'}
               </span>
@@ -211,10 +211,10 @@ const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
             <div className="flex items-center mb-4 space-x-2">
               <span className="text-gray-700 font-medium mr-3">Your Rating:</span>
               {[1, 2, 3, 4, 5].map((star) => (
-                <FaStar
+                <Star
                   key={star}
-                  className={`text-2xl cursor-pointer transition-all hover:scale-110 ${
-                    star <= newRating ? "text-yellow-500" : "text-gray-300 hover:text-yellow-400"
+                  className={`w-6 h-6 cursor-pointer transition-all hover:scale-110 ${
+                    star <= newRating ? "text-yellow-500 fill-yellow-500" : "text-gray-300 hover:text-yellow-400"
                   }`}
                   onClick={() => setNewRating(star)}
                 />
@@ -255,7 +255,7 @@ const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
           </>
         ) : (
           <div className="text-center py-8">
-            <FaUser className="text-4xl text-gray-400 mx-auto mb-4" />
+            <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-700 mb-3">
               Sign in to leave a review
             </h3>
@@ -297,11 +297,11 @@ const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
                     </span>
                     <div className="flex space-x-1">
                       {[1, 2, 3, 4, 5].map((star) => (
-                        <FaStar
+                        <Star
                           key={star}
-                          className={`text-xl ${
+                          className={`w-5 h-5 ${
                             star <= (review.rating || 5)
-                              ? "text-yellow-500"
+                              ? "text-yellow-500 fill-yellow-500"
                               : "text-gray-300"
                           }`}
                         />
@@ -330,7 +330,7 @@ const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
                         transition={{ duration: 0.4 }}
                         key={`${review.id || review._id}-${review.likes}`}
                       >
-                        <FaThumbsUp className={`mr-2 ${
+                        <ThumbsUp className={`w-4 h-4 mr-2 ${
                           userLikes.has(review.id || review._id) ? 'text-blue-600' : ''
                         }`} />
                       </motion.div>
@@ -348,11 +348,11 @@ const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
                         onClick={() => setReplyingTo(replyingTo === (review.id || review._id) ? null : (review.id || review._id))}
                         className="flex items-center hover:text-blue-600 transition-all"
                       >
-                        <FaReply className="mr-2" /> Reply
+                        <Reply className="w-4 h-4 mr-2" /> Reply
                       </button>
                     ) : (
                       <span className="flex items-center text-gray-400">
-                        <FaReply className="mr-2" /> Sign in to reply
+                        <Reply className="w-4 h-4 mr-2" /> Sign in to reply
                       </span>
                     )}
                   </div>
@@ -388,7 +388,7 @@ const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
                   
                   {review.replies && review.replies.length > 0 && (
                     <div className="mt-4 pl-8 border-l-2 border-gray-200 space-y-3">
-                      {review.replies.map((reply, replyIndex) => (
+                      {review.replies.map((reply: any, replyIndex: number) => (
                         <div key={replyIndex} className="bg-gray-50 p-3 rounded-lg">
                           <div className="flex items-center mb-1">
                             <span className="font-semibold text-gray-800 text-sm">{reply.user}</span>
@@ -430,7 +430,7 @@ const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
                     disabled={currentPage === 1}
                     className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
                   >
-                    <FaChevronLeft className="w-3 h-3 mr-1" />
+                    <ChevronLeft className="w-3 h-3 mr-1" />
                     Previous
                   </button>
                   
@@ -459,7 +459,7 @@ const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
                     className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
                   >
                     Next
-                    <FaChevronRight className="w-3 h-3 ml-1" />
+                    <ChevronRight className="w-3 h-3 ml-1" />
                   </button>
                 </div>
               </div>

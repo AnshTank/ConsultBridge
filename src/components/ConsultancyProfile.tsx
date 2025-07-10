@@ -86,7 +86,7 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
     const [startTime, endTime] = availability.hours.split(' - ');
     
     // Parse start and end times
-    const parseTime = (timeStr) => {
+    const parseTime = (timeStr: string) => {
       const [time, period] = timeStr.split(' ');
       const [hours, minutes] = time.split(':').map(Number);
       let hour24 = hours;

@@ -17,9 +17,9 @@ function OnboardingContent() {
 
       try {
         // Check if role already exists
-        if (user.publicMetadata?.role) {
+        if (user.unsafeMetadata?.role) {
           setIsLoading(false);
-          if (user.publicMetadata.role === "consultancy") {
+          if (user.unsafeMetadata.role === "consultancy") {
             router.replace("/consultancy-dashboard");
           } else {
             router.replace("/dashboard");
@@ -29,8 +29,8 @@ function OnboardingContent() {
 
         // Update user metadata with role
         await user.update({
-          publicMetadata: {
-            ...user.publicMetadata,
+          unsafeMetadata: {
+            ...user.unsafeMetadata,
             role: mode,
           },
         });

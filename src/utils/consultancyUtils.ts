@@ -11,7 +11,6 @@ export interface ConsultancyProfile {
   expertise: string[];
   whyChooseUs: string;
   website?: string;
-  image: string;
   availability: {
     days: string[];
     hours: string;
