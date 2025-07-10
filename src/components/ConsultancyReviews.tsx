@@ -312,8 +312,8 @@ const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
                   <div className="flex items-center mt-3 space-x-8 text-gray-500 text-lg">
                     <motion.button 
                       onClick={() => handleLike(review.id || review._id)}
-                      whileTap={{ scale: 0.8 }}
-                      className={`flex items-center transition-all ${
+                      whileTap={{ scale: 0.9 }}
+                      className={`flex items-center min-w-[80px] transition-all ${
                         isSignedIn 
                           ? userLikes.has(review.id || review._id)
                             ? 'text-blue-600 cursor-pointer'
@@ -324,34 +324,39 @@ const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
                     >
                       <motion.div
                         animate={{ 
-                          scale: userLikes.has(review.id || review._id) ? [1, 1.3, 1] : 1,
-                          rotate: userLikes.has(review.id || review._id) ? [0, 10, -10, 0] : 0
+                          scale: userLikes.has(review.id || review._id) ? [1, 1.4, 1] : 1,
+                          rotate: userLikes.has(review.id || review._id) ? [0, 15, -10, 0] : 0
                         }}
-                        transition={{ duration: 0.4 }}
-                        key={`${review.id || review._id}-${review.likes}`}
+                        transition={{ 
+                          duration: 0.6,
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 15
+                        }}
+                        key={`${review.id || review._id}-${userLikes.has(review.id || review._id)}`}
                       >
-                        <ThumbsUp className={`w-4 h-4 mr-2 ${
-                          userLikes.has(review.id || review._id) ? 'text-blue-600' : ''
+                        <ThumbsUp className={`w-4 h-4 mr-2 transition-all duration-300 ${
+                          userLikes.has(review.id || review._id) 
+                            ? 'text-blue-600 fill-blue-600 drop-shadow-sm' 
+                            : 'hover:scale-110'
                         }`} />
                       </motion.div>
                       <motion.span
-                        key={review.likes}
-                        initial={{ scale: 1 }}
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ duration: 0.3 }}
+                        layout
+                        className="font-medium"
                       >
-                        {review.likes || 0} Like{(review.likes || 0) !== 1 ? 's' : ''}
+                        {review.likes || 0} Like{(review.likes || 0) === 1 ? '' : 's'}
                       </motion.span>
                     </motion.button>
                     {isSignedIn ? (
                       <button 
                         onClick={() => setReplyingTo(replyingTo === (review.id || review._id) ? null : (review.id || review._id))}
-                        className="flex items-center hover:text-blue-600 transition-all"
+                        className="flex items-center hover:text-blue-600 transition-all min-w-[70px]"
                       >
                         <Reply className="w-4 h-4 mr-2" /> Reply
                       </button>
                     ) : (
-                      <span className="flex items-center text-gray-400">
+                      <span className="flex items-center text-gray-400 min-w-[120px]">
                         <Reply className="w-4 h-4 mr-2" /> Sign in to reply
                       </span>
                     )}
