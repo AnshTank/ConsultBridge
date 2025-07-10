@@ -47,6 +47,8 @@ const ConsultancyAdminPage: React.FC = () => {
   const [selectedDateAppointments, setSelectedDateAppointments] = useState<any[]>([]);
   const [showDateModal, setShowDateModal] = useState(false);
   const [currentAppointmentPage, setCurrentAppointmentPage] = useState(1);
+  const [appointmentsPage, setAppointmentsPage] = useState(1);
+  const appointmentsPerPage = 9;
   const [profileViewsData, setProfileViewsData] = useState({
     totalViews: 0,
     todayViews: 0,
@@ -428,7 +430,9 @@ const ConsultancyAdminPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {appointments.map((appointment) => (
+                {appointments
+                  .slice((appointmentsPage - 1) * appointmentsPerPage, appointmentsPage * appointmentsPerPage)
+                  .map((appointment) => (
                   <tr
                     key={appointment._id}
                     className="border-b hover:bg-gray-50"
@@ -560,6 +564,25 @@ const ConsultancyAdminPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+          
+          {/* Appointments Pagination */}
+          {appointments.length > appointmentsPerPage && (
+            <div className="mt-6 flex justify-center gap-2">
+              {Array.from({ length: Math.ceil(appointments.length / appointmentsPerPage) }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setAppointmentsPage(i + 1)}
+                  className={`px-3 py-1 rounded ${
+                    appointmentsPage === i + 1
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -1020,6 +1043,7 @@ const ConsultancyAdminPage: React.FC = () => {
                       defaultValue={currentProfile.name}
                       required
                       className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="Your consultancy name"
                     />
                   </div>
                   <div>
@@ -1071,15 +1095,17 @@ const ConsultancyAdminPage: React.FC = () => {
                     defaultValue={profile?.description || ''}
                     required
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Describe your consultancy services and expertise..."
                   ></textarea>
                 </div>
                 <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Why Choose Us</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Why Choose Us (comma separated)*</label>
                   <textarea
                     name="whyChooseUs"
                     rows={2}
                     defaultValue={Array.isArray(profile?.whyChooseUs) ? profile.whyChooseUs.join(', ') : (profile?.whyChooseUs || '')}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Expert team, 24/7 support, Proven results"
                   ></textarea>
                 </div>
                 <div className="mt-4">
@@ -1101,6 +1127,7 @@ const ConsultancyAdminPage: React.FC = () => {
                     defaultValue={currentProfile.expertise?.join(', ') || ''}
                     required
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Business Strategy, Market Analysis, Financial Planning"
                   />
                 </div>
               </div>
