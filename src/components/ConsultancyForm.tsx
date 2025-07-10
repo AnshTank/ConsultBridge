@@ -276,7 +276,7 @@ export default function ConsultancyForm({ onSubmit, initialData, isEditing = fal
           <button
             type="button"
             onClick={addExpertise}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 min-w-[60px]"
           >
             Add
           </button>
@@ -291,7 +291,7 @@ export default function ConsultancyForm({ onSubmit, initialData, isEditing = fal
               <button
                 type="button"
                 onClick={() => removeExpertise(exp)}
-                className="text-red-500 hover:text-red-700"
+                className="text-red-500 hover:text-red-700 w-4 h-4 flex items-center justify-center"
               >
                 ×
               </button>
@@ -371,7 +371,7 @@ export default function ConsultancyForm({ onSubmit, initialData, isEditing = fal
       <div className="mt-8">
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
+          className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors min-h-[48px] flex items-center justify-center"
         >
           {isEditing ? 'Update' : 'Create'} Consultancy
         </button>

@@ -371,6 +371,21 @@ const ConsultancySetupForm: React.FC = () => {
 
                         <div className="mt-4">
                           <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Image URL*
+                          </label>
+                          <input
+                            type="url"
+                            name="image"
+                            value={formData.image}
+                            onChange={handleChange}
+                            required
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="https://example.com/image.jpg"
+                          />
+                        </div>
+
+                        <div className="mt-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
                             Expertise (comma separated)*
                           </label>
                           <input

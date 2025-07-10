@@ -396,27 +396,70 @@ const DashboardPage: React.FC = () => {
 
                     {/* Status */}
                     <div className="mt-3 flex items-center gap-2">
-                      {appointment.status === "confirmed" ? (
-                        <CheckCircle className="w-6 h-6 text-green-500" />
-                      ) : appointment.status === "pending" ? (
-                        <Clock className="w-6 h-6 text-yellow-500" />
-                      ) : appointment.status === "completed" ? (
-                        <CheckCircle className="w-6 h-6 text-blue-500" />
-                      ) : (
-                        <XCircle className="w-6 h-6 text-red-500" />
-                      )}
+                      {(() => {
+                        const now = new Date();
+                        const aptDate = new Date(appointment.appointmentDate);
+                        const aptTime = appointment.appointmentTime;
+                        const [time, period] = aptTime.split(' ');
+                        const [hours, minutes] = time.split(':').map(Number);
+                        let hour24 = hours;
+                        if (period === 'PM' && hours !== 12) hour24 += 12;
+                        if (period === 'AM' && hours === 12) hour24 = 0;
+                        aptDate.setHours(hour24, minutes || 0);
+                        
+                        const isExpired = aptDate < now;
+                        const displayStatus = (isExpired && appointment.status === "pending") ? "cancelled" : appointment.status;
+                        
+                        if (displayStatus === "confirmed") {
+                          return <CheckCircle className="w-6 h-6 text-green-500" />;
+                        } else if (displayStatus === "pending") {
+                          return <Clock className="w-6 h-6 text-yellow-500" />;
+                        } else if (displayStatus === "completed") {
+                          return <CheckCircle className="w-6 h-6 text-blue-500" />;
+                        } else {
+                          return <XCircle className="w-6 h-6 text-red-500" />;
+                        }
+                      })()}
                       <p
                         className={`text-lg font-semibold capitalize ${
-                          appointment.status === "confirmed"
-                            ? "text-green-600"
-                            : appointment.status === "pending"
-                            ? "text-yellow-600"
-                            : appointment.status === "completed"
-                            ? "text-blue-600"
-                            : "text-red-600"
+                          (() => {
+                            const now = new Date();
+                            const aptDate = new Date(appointment.appointmentDate);
+                            const aptTime = appointment.appointmentTime;
+                            const [time, period] = aptTime.split(' ');
+                            const [hours, minutes] = time.split(':').map(Number);
+                            let hour24 = hours;
+                            if (period === 'PM' && hours !== 12) hour24 += 12;
+                            if (period === 'AM' && hours === 12) hour24 = 0;
+                            aptDate.setHours(hour24, minutes || 0);
+                            
+                            const isExpired = aptDate < now;
+                            const displayStatus = (isExpired && appointment.status === "pending") ? "cancelled" : appointment.status;
+                            
+                            return displayStatus === "confirmed"
+                              ? "text-green-600"
+                              : displayStatus === "pending"
+                              ? "text-yellow-600"
+                              : displayStatus === "completed"
+                              ? "text-blue-600"
+                              : "text-red-600";
+                          })()
                         }`}
                       >
-                        {appointment.status}
+                        {(() => {
+                          const now = new Date();
+                          const aptDate = new Date(appointment.appointmentDate);
+                          const aptTime = appointment.appointmentTime;
+                          const [time, period] = aptTime.split(' ');
+                          const [hours, minutes] = time.split(':').map(Number);
+                          let hour24 = hours;
+                          if (period === 'PM' && hours !== 12) hour24 += 12;
+                          if (period === 'AM' && hours === 12) hour24 = 0;
+                          aptDate.setHours(hour24, minutes || 0);
+                          
+                          const isExpired = aptDate < now;
+                          return (isExpired && appointment.status === "pending") ? "cancelled" : appointment.status;
+                        })()}
                       </p>
                     </div>
 

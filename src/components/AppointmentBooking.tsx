@@ -81,7 +81,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
         clientPhone: user.phoneNumbers[0]?.phoneNumber || '+1234567890',
         appointmentDate: selectedDate,
         appointmentTime: selectedTime,
-        message: notes || 'Consultation appointment'
+        message: notes || null
       };
       
       console.log('Booking appointment with data:', appointmentData);

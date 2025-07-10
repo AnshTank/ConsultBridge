@@ -16,6 +16,7 @@ const BookingPage: React.FC = () => {
     contact: "",
     date: "",
     time: "",
+    message: "",
     paymentMethod: "Card", // Default payment option
   });
 
@@ -47,7 +48,7 @@ const BookingPage: React.FC = () => {
 
   // Handle form changes
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -82,7 +83,7 @@ const BookingPage: React.FC = () => {
         appointmentDate: new Date(formData.date),
         appointmentTime: formData.time,
         appointmentType,
-        message: `Appointment booked via ${appointmentType} consultation`
+        message: formData.message || null
       };
       
       console.log('Sending appointment data:', appointmentData);
@@ -180,6 +181,19 @@ const BookingPage: React.FC = () => {
               className="w-full px-3 py-2 border rounded-md"
             />
           </div>
+        </div>
+
+        {/* Message */}
+        <div>
+          <label className="block font-medium">Additional Message (Optional)</label>
+          <textarea
+            name="message"
+            value={formData.message || ''}
+            onChange={handleChange}
+            rows={3}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="Any specific requirements or questions..."
+          />
         </div>
 
         {/* Payment Method */}

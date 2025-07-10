@@ -44,6 +44,9 @@ const ConsultancyAdminPage: React.FC = () => {
   const [showProfileViews, setShowProfileViews] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [selectedDateAppointments, setSelectedDateAppointments] = useState<any[]>([]);
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [currentAppointmentPage, setCurrentAppointmentPage] = useState(1);
   const [profileViewsData, setProfileViewsData] = useState({
     totalViews: 0,
     todayViews: 0,
@@ -179,14 +182,27 @@ const ConsultancyAdminPage: React.FC = () => {
     confirmed: appointments.filter((a) => a.status === "confirmed" || a.status === "completed").length,
     pending: appointments.filter((a) => a.status === "pending").length,
     revenue: appointments
-      .filter((a: any) => a.paymentStatus === "paid")
-      .reduce((sum: number, a: any) => sum + (a.amount || 0), 0),
+      .filter((a) => a.status === "confirmed" || a.status === "completed")
+      .reduce((sum: number) => {
+        const price = parseInt(profile?.price?.replace(/[^0-9]/g, '') || '0');
+        return sum + price;
+      }, 0),
   };
 
   // Show logout function
   const handleLogout = () => {
     localStorage.removeItem("consultancyId");
     router.push("/consultancy-setup");
+  };
+
+  const handleDateClick = (date: Date, appointmentsByDate: {[key: string]: any[]}) => {
+    const dateKey = date.toDateString();
+    const dayAppointments = appointmentsByDate[dateKey] || [];
+    if (dayAppointments.length > 0) {
+      setSelectedDateAppointments(dayAppointments);
+      setCurrentAppointmentPage(1);
+      setShowDateModal(true);
+    }
   };
 
   return (
@@ -329,9 +345,20 @@ const ConsultancyAdminPage: React.FC = () => {
                   <div>
                     <Calendar className="w-8 h-8 mb-2" />
                     <h3 className="font-semibold">View Calendar</h3>
-                    <p className="text-sm opacity-90">{appointments.length} appointments</p>
+                    <p className="text-sm opacity-90">{appointments.filter((apt: any) => {
+                      const now = new Date();
+                      const aptDate = new Date(apt.appointmentDate);
+                      const aptTime = apt.appointmentTime;
+                      const [time, period] = aptTime.split(' ');
+                      const [hours, minutes] = time.split(':').map(Number);
+                      let hour24 = hours;
+                      if (period === 'PM' && hours !== 12) hour24 += 12;
+                      if (period === 'AM' && hours === 12) hour24 = 0;
+                      aptDate.setHours(hour24, minutes || 0);
+                      return apt.status === "confirmed" && aptDate > now;
+                    }).length} upcoming</p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex flex-col justify-center">
                     <p className="text-2xl font-bold">{new Date().getDate()}</p>
                     <p className="text-sm">{new Date().toLocaleDateString('en-US', { weekday: 'short' })}</p>
                   </div>
@@ -415,18 +442,21 @@ const ConsultancyAdminPage: React.FC = () => {
                             ? "Custom Service"
                             : currentProfile.category || "Consultation"}
                         </span>
-                        {appointment.message && appointment.message.trim() && (
-                          <button
-                            onClick={() => showNote(appointment.message || "")}
-                            className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs hover:bg-blue-200"
-                          >
-                            View Note
-                          </button>
-                        )}
+                        <button
+                          onClick={() => appointment.message && appointment.message.trim() ? showNote(appointment.message) : null}
+                          className={`px-2 py-1 rounded text-xs ${
+                            appointment.message && appointment.message.trim()
+                              ? "bg-blue-100 text-blue-600 hover:bg-blue-200 cursor-pointer"
+                              : "bg-gray-100 text-gray-400 cursor-not-allowed opacity-50"
+                          }`}
+                          disabled={!appointment.message || !appointment.message.trim()}
+                        >
+                          View Note
+                        </button>
                       </div>
                     </td>
                     <td className="py-3">
-                      {appointment.appointmentDate} at {appointment.appointmentTime}
+                      {new Date(appointment.appointmentDate).toLocaleDateString()} at {appointment.appointmentTime}
                     </td>
                     <td className="py-3">
                       <span
@@ -456,50 +486,64 @@ const ConsultancyAdminPage: React.FC = () => {
                     </td>
                     <td className="py-3">
                       <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        $250 - paid
+                        {profile?.price || '$250'} - paid
                       </span>
                     </td>
                     <td className="py-3">
                       <div className="flex gap-1">
-                        {appointment.status === "pending" && (
-                          <>
-                            <button
-                              onClick={() =>
-                                updateAppointmentStatus(
-                                  appointment._id,
-                                  "confirmed"
-                                )
-                              }
-                              className="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600"
-                            >
-                              Confirm
-                            </button>
-                            <button
-                              onClick={() =>
-                                updateAppointmentStatus(
-                                  appointment._id,
-                                  "cancelled"
-                                )
-                              }
-                              className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
-                            >
-                              Reject
-                            </button>
-                          </>
-                        )}
-                        {appointment.status === "confirmed" && (
-                          <button
-                            onClick={() =>
-                              updateAppointmentStatus(
-                                appointment._id,
-                                "completed"
-                              )
-                            }
-                            className="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600"
-                          >
-                            Complete
-                          </button>
-                        )}
+                        {(() => {
+                          const now = new Date();
+                          const aptDate = new Date(appointment.appointmentDate);
+                          const [time, period] = appointment.appointmentTime.split(' ');
+                          const [hours, minutes] = time.split(':').map(Number);
+                          let hour24 = hours;
+                          if (period === 'PM' && hours !== 12) hour24 += 12;
+                          if (period === 'AM' && hours === 12) hour24 = 0;
+                          aptDate.setHours(hour24, minutes || 0);
+                          
+                          const isExpired = aptDate < now;
+                          
+                          if (isExpired && appointment.status === "pending") {
+                            updateAppointmentStatus(appointment._id, "cancelled");
+                            return (
+                              <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-400">
+                                Expired
+                              </span>
+                            );
+                          }
+                          
+                          if (appointment.status === "pending" && !isExpired) {
+                            return (
+                              <>
+                                <button
+                                  onClick={() => updateAppointmentStatus(appointment._id, "confirmed")}
+                                  className="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600"
+                                >
+                                  Confirm
+                                </button>
+                                <button
+                                  onClick={() => updateAppointmentStatus(appointment._id, "cancelled")}
+                                  className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            );
+                          }
+                          
+                          if (appointment.status === "confirmed" && !isExpired) {
+                            return (
+                              <button
+                                onClick={() => updateAppointmentStatus(appointment._id, "completed")}
+                                className="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600"
+                              >
+                                Complete
+                              </button>
+                            );
+                          }
+                          
+                          return null;
+                        })()}
                       </div>
                     </td>
                   </tr>
@@ -560,12 +604,29 @@ const ConsultancyAdminPage: React.FC = () => {
                 days.push(date);
               }
               
-              // Count appointments per day
+              // Count future confirmed appointments only
+              const now = new Date();
               const appointmentCounts: {[key: string]: number} = {};
-              appointments.forEach((apt: any) => {
-                const dateKey = new Date(apt.appointmentDate).toDateString();
-                appointmentCounts[dateKey] = (appointmentCounts[dateKey] || 0) + 1;
-              });
+              const appointmentsByDate: {[key: string]: any[]} = {};
+              appointments
+                .filter((apt: any) => {
+                  const aptDate = new Date(apt.appointmentDate);
+                  const aptTime = apt.appointmentTime;
+                  const [time, period] = aptTime.split(' ');
+                  const [hours, minutes] = time.split(':').map(Number);
+                  let hour24 = hours;
+                  if (period === 'PM' && hours !== 12) hour24 += 12;
+                  if (period === 'AM' && hours === 12) hour24 = 0;
+                  aptDate.setHours(hour24, minutes || 0);
+                  
+                  return apt.status === "confirmed" && aptDate > now;
+                })
+                .forEach((apt: any) => {
+                  const dateKey = new Date(apt.appointmentDate).toDateString();
+                  appointmentCounts[dateKey] = (appointmentCounts[dateKey] || 0) + 1;
+                  if (!appointmentsByDate[dateKey]) appointmentsByDate[dateKey] = [];
+                  appointmentsByDate[dateKey].push(apt);
+                });
               
               return (
                 <div>
@@ -608,6 +669,7 @@ const ConsultancyAdminPage: React.FC = () => {
                             isToday ? 'ring-2 ring-indigo-500' : ''
                           }`}
                           title={appointmentCount > 0 ? `${appointmentCount} appointment${appointmentCount > 1 ? 's' : ''}` : ''}
+                          onClick={() => handleDateClick(date, appointmentsByDate)}
                         >
                           <span className="font-medium">{date.getDate()}</span>
                           {appointmentCount > 0 && (
@@ -1009,6 +1071,17 @@ const ConsultancyAdminPage: React.FC = () => {
                   ></textarea>
                 </div>
                 <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Image URL*</label>
+                  <input
+                    type="url"
+                    name="image"
+                    defaultValue={profile?.image || ''}
+                    required
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </div>
+                <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Expertise (comma separated)*</label>
                   <input
                     type="text"
@@ -1125,6 +1198,111 @@ const ConsultancyAdminPage: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Date Appointments Modal */}
+      {showDateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-semibold">
+                Appointments ({selectedDateAppointments.length})
+              </h3>
+              <button
+                onClick={() => setShowDateModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {selectedDateAppointments
+                .slice((currentAppointmentPage - 1) * 4, currentAppointmentPage * 4)
+                .map((appointment) => (
+                <div key={appointment._id} className="border rounded-lg p-4 bg-gray-50">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-semibold text-lg">{appointment.clientName}</h4>
+                      <p className="text-gray-600">{appointment.clientEmail}</p>
+                      <p className="text-gray-600">{appointment.clientPhone}</p>
+                      <p className="text-sm text-gray-500 mt-2">
+                        {appointment.appointmentTime} - {appointment.appointmentType || 'online'}
+                      </p>
+                      {appointment.message && (
+                        <p className="text-sm text-gray-700 mt-2 bg-white p-2 rounded">
+                          Note: {appointment.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        appointment.status === "confirmed"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}>
+                        {appointment.status}
+                      </span>
+                      <div className="flex gap-1">
+                        {appointment.status === "pending" && (
+                          <>
+                            <button
+                              onClick={() => {
+                                updateAppointmentStatus(appointment._id, "confirmed");
+                                setShowDateModal(false);
+                              }}
+                              className="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => {
+                                updateAppointmentStatus(appointment._id, "cancelled");
+                                setShowDateModal(false);
+                              }}
+                              className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        )}
+                        {appointment.status === "confirmed" && (
+                          <button
+                            onClick={() => {
+                              updateAppointmentStatus(appointment._id, "completed");
+                              setShowDateModal(false);
+                            }}
+                            className="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600"
+                          >
+                            Complete
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {selectedDateAppointments.length > 4 && (
+              <div className="flex justify-center mt-6 gap-2">
+                {Array.from({ length: Math.ceil(selectedDateAppointments.length / 4) }, (_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentAppointmentPage(i + 1)}
+                    className={`px-3 py-1 rounded ${
+                      currentAppointmentPage === i + 1
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
