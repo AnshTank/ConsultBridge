@@ -21,7 +21,7 @@ export async function GET(
       $and: [
         { category: { $regex: new RegExp(category, 'i') } },
         { _id: { $exists: true } },
-        { name: { $exists: true, $ne: null, $ne: '' } }
+        { name: { $exists: true, $ne: null, $nin: ['', null] } }
       ]
     }).toArray();
     
