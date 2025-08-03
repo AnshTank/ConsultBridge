@@ -200,7 +200,7 @@ We welcome contributions from the community!
 
 ## 📄 License
 
-This project is licensed under the **MIT License**. See the [`LICENSE`](LICENSE.md) file for details.
+This project is licensed under the **MIT License**. See the [`LICENSE`](License.md) file for details.
 
 > Redistribution, manipulation, or use of this code must respect the license terms. Unauthorized commercial use is strictly prohibited.
 
