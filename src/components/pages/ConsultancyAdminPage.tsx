@@ -23,7 +23,7 @@ interface Appointment {
   appointmentDate: string;
   appointmentTime: string;
   appointmentType?: "online" | "offline";
-  status: "confirmed" | "pending" | "completed" | "cancelled";
+  status: "confirmed" | "pending" | "completed" | "cancelled" | "expired";
   message?: string;
   consultancyId: string;
   userId: string;
@@ -37,8 +37,7 @@ const ConsultancyAdminPage: React.FC = () => {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [showNoteModal, setShowNoteModal] = useState(false);
-  const [selectedNote, setSelectedNote] = useState("");
+  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showProfileViews, setShowProfileViews] = useState(false);
@@ -65,9 +64,25 @@ const ConsultancyAdminPage: React.FC = () => {
     });
   }, []);
 
+  // Lock body scroll when any modal is open
+  useEffect(() => {
+    if (showCalendar || showAnalytics || showProfileViews || showEditProfile || showDateModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showCalendar, showAnalytics, showProfileViews, showEditProfile, showDateModal]);
+
+
+
   const updateAppointmentStatus = async (
     appointmentId: string,
-    newStatus: "confirmed" | "pending" | "completed" | "cancelled"
+    newStatus: "confirmed" | "pending" | "completed" | "cancelled" | "expired"
   ) => {
     try {
       console.log('Updating appointment:', appointmentId, 'to status:', newStatus);
@@ -104,9 +119,8 @@ const ConsultancyAdminPage: React.FC = () => {
     }
   };
 
-  const showNote = (note: string) => {
-    setSelectedNote(note);
-    setShowNoteModal(true);
+  const toggleNote = (appointmentId: string) => {
+    setActiveNoteId(activeNoteId === appointmentId ? null : appointmentId);
   };
 
   useEffect(() => {
@@ -449,23 +463,40 @@ const ConsultancyAdminPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-3">
-                      <div className="flex items-center gap-2">
-                        <span>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm font-medium">
                           {appointment.message && appointment.message.trim()
                             ? "Custom Service"
                             : currentProfile.category || "Consultation"}
                         </span>
-                        <button
-                          onClick={() => appointment.message && appointment.message.trim() ? showNote(appointment.message) : null}
-                          className={`px-2 py-1 rounded text-xs ${
-                            appointment.message && appointment.message.trim()
-                              ? "bg-blue-100 text-blue-600 hover:bg-blue-200 cursor-pointer"
-                              : "bg-gray-100 text-gray-400 cursor-not-allowed opacity-50"
-                          }`}
-                          disabled={!appointment.message || !appointment.message.trim()}
-                        >
-                          View Note
-                        </button>
+                        {appointment.message && appointment.message.trim() ? (
+                          <div className="relative">
+                            <button
+                              onClick={() => toggleNote(appointment._id)}
+                              className="bg-blue-100 text-blue-600 hover:bg-blue-200 px-2 py-1 rounded text-xs cursor-pointer w-fit"
+                            >
+                              💭 View Note
+                            </button>
+                            {activeNoteId === appointment._id && (
+                              <div className="absolute left-full top-0 z-50" style={{ marginLeft: '-100px', marginTop: '-4px' }}>
+                                <div className="bg-blue-50 border-2 border-blue-400 rounded-xl p-4 shadow-xl min-w-80 max-w-96 relative">
+                                  <div className="absolute -left-2 top-3 w-4 h-4 bg-blue-50 border-l-2 border-b-2 border-blue-400 transform rotate-45"></div>
+                                  <div className="text-sm text-gray-800 leading-relaxed font-medium pr-6">
+                                    💬 {appointment.message}
+                                  </div>
+                                  <button
+                                    onClick={() => setActiveNoteId(null)}
+                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600 font-bold"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">No note</span>
+                        )}
                       </div>
                     </td>
                     <td className="py-3">
@@ -491,6 +522,8 @@ const ConsultancyAdminPage: React.FC = () => {
                             ? "bg-yellow-100 text-yellow-800"
                             : appointment.status === "completed"
                             ? "bg-blue-100 text-blue-800"
+                            : appointment.status === "expired"
+                            ? "bg-gray-100 text-gray-800"
                             : "bg-red-100 text-red-800"
                         }`}
                       >
@@ -516,15 +549,19 @@ const ConsultancyAdminPage: React.FC = () => {
                           
                           const isExpired = aptDate < now;
                           
+                          // For pending appointments that are past due - show expired button
                           if (isExpired && appointment.status === "pending") {
-                            updateAppointmentStatus(appointment._id, "cancelled");
                             return (
-                              <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-400">
-                                Expired
-                              </span>
+                              <button
+                                onClick={() => updateAppointmentStatus(appointment._id, "expired")}
+                                className="bg-gray-500 text-white px-2 py-1 rounded text-xs hover:bg-gray-600"
+                              >
+                                Mark Expired
+                              </button>
                             );
                           }
                           
+                          // For future pending appointments - show confirm/reject
                           if (appointment.status === "pending" && !isExpired) {
                             return (
                               <>
@@ -544,6 +581,27 @@ const ConsultancyAdminPage: React.FC = () => {
                             );
                           }
                           
+                          // For confirmed appointments that are past due - show complete/expire
+                          if (appointment.status === "confirmed" && isExpired) {
+                            return (
+                              <>
+                                <button
+                                  onClick={() => updateAppointmentStatus(appointment._id, "completed")}
+                                  className="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600"
+                                >
+                                  Complete
+                                </button>
+                                <button
+                                  onClick={() => updateAppointmentStatus(appointment._id, "expired")}
+                                  className="bg-gray-500 text-white px-2 py-1 rounded text-xs hover:bg-gray-600"
+                                >
+                                  Expire
+                                </button>
+                              </>
+                            );
+                          }
+                          
+                          // For future confirmed appointments - show complete
                           if (appointment.status === "confirmed" && !isExpired) {
                             return (
                               <button
@@ -555,6 +613,7 @@ const ConsultancyAdminPage: React.FC = () => {
                             );
                           }
                           
+                          // For completed, cancelled, or expired appointments - no actions
                           return null;
                         })()}
                       </div>
@@ -584,32 +643,87 @@ const ConsultancyAdminPage: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
 
-      {/* Note Modal */}
-      {showNoteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Client Note</h3>
-            <div className="bg-gray-50 p-4 rounded-lg mb-4">
-              <p className="text-gray-700">
-                {selectedNote || "No additional notes provided."}
+        {/* Verification Status Section - Moved to Bottom */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <CheckCircle className="w-5 h-5" />
+            Verification Status
+          </h2>
+          <div className="space-y-4">
+            <div className={`p-4 rounded-lg border-2 ${
+              profile?.status === 'verified' 
+                ? 'bg-green-50 border-green-200'
+                : profile?.status === 'rejected'
+                ? 'bg-red-50 border-red-200'
+                : 'bg-yellow-50 border-yellow-200'
+            }`}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl">
+                  {profile?.status === 'verified' ? '✅' : 
+                   profile?.status === 'rejected' ? '❌' : '⏳'}
+                </span>
+                <span className="font-semibold text-lg">
+                  {profile?.status === 'verified' ? 'Verified' : 
+                   profile?.status === 'rejected' ? 'Rejected' : 'Under Review'}
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 mb-3">
+                {profile?.status === 'verified' 
+                  ? 'Your consultancy is verified and live on the platform!'
+                  : profile?.status === 'rejected'
+                  ? 'Your consultancy was rejected. Please review the feedback and resubmit.'
+                  : 'Your consultancy is under admin review. Usually takes 2-3 working days.'}
               </p>
+              {profile?.status === 'rejected' && profile?.rejectionReason && (
+                <div className="bg-red-100 border border-red-200 rounded p-3 mb-3">
+                  <p className="text-sm font-medium text-red-800 mb-1">Rejection Reason:</p>
+                  <p className="text-sm text-red-700">{profile.rejectionReason}</p>
+                </div>
+              )}
+              {profile?.status === 'rejected' && (
+                <div className="flex gap-2">
+                  {profile?.rejectionReason?.includes('Please verify your phone number and email address to resubmit your application') ? (
+                    <button
+                      onClick={() => {
+                        const consultancyId = localStorage.getItem('consultancyId');
+                        window.location.href = `/verification?consultancy=${consultancyId}`;
+                      }}
+                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors text-sm"
+                    >
+                      📧 Verify Now
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        // Resubmit for verification
+                        fetch(`/api/consultancies/${localStorage.getItem('consultancyId')}/resubmit`, {
+                          method: 'POST'
+                        }).then(res => res.json()).then(result => {
+                          if (result.success) {
+                            alert('✅ Resubmitted for verification!');
+                            window.location.reload();
+                          }
+                        });
+                      }}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                    >
+                      🔄 Resubmit for Verification
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
-            <button
-              onClick={() => setShowNoteModal(false)}
-              className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              Close
-            </button>
           </div>
         </div>
-      )}
+      </div>
+
+
 
       {/* Calendar Modal */}
       {showCalendar && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto relative">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-semibold">Monthly Calendar</h3>
               <button
@@ -741,8 +855,8 @@ const ConsultancyAdminPage: React.FC = () => {
 
       {/* Analytics Modal */}
       {showAnalytics && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-semibold">Analytics Dashboard</h3>
               <button
@@ -844,8 +958,8 @@ const ConsultancyAdminPage: React.FC = () => {
 
       {/* Profile Views Modal */}
       {showProfileViews && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-semibold">Profile Views Analytics</h3>
               <button
@@ -955,8 +1069,8 @@ const ConsultancyAdminPage: React.FC = () => {
 
       {/* Edit Profile Modal */}
       {showEditProfile && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-semibold">Edit Profile</h3>
               <button
@@ -1243,8 +1357,8 @@ const ConsultancyAdminPage: React.FC = () => {
 
       {/* Date Appointments Modal */}
       {showDateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-semibold">
                 Appointments ({selectedDateAppointments.length})
@@ -1345,6 +1459,7 @@ const ConsultancyAdminPage: React.FC = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };

@@ -70,6 +70,8 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [showWhyChooseUsModal, setShowWhyChooseUsModal] = useState(false);
+
+
   const [realRating, setRealRating] = useState(rating || 5.0);
   const [realReviewCount, setRealReviewCount] = useState(reviews || 0);
 

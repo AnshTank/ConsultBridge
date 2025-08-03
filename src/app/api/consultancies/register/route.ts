@@ -26,9 +26,14 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
     
-    // Add timestamps
+    // Add timestamps and default status
     consultancyData.createdAt = new Date();
     consultancyData.updatedAt = new Date();
+    consultancyData.status = 'pending';
+    consultancyData.verification = {
+      emailVerified: false,
+      phoneVerified: false
+    };
     
     // Insert the new consultancy
     const result = await consultanciesCollection.insertOne(consultancyData);

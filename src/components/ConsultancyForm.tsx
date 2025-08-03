@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import VerificationModal from './VerificationModal';
 
 interface ConsultancyFormData {
   id: string;
@@ -21,6 +22,7 @@ interface ConsultancyFormData {
     phone: string;
     email: string;
     website: string;
+    password: string;
   };
 }
 
@@ -67,11 +69,15 @@ export default function ConsultancyForm({ onSubmit, initialData, isEditing = fal
     contact: {
       phone: initialData?.contact?.phone || "",
       email: initialData?.contact?.email || "",
-      website: initialData?.contact?.website || ""
+      website: initialData?.contact?.website || "",
+      password: initialData?.contact?.password || ""
     }
   });
 
   const [expertiseInput, setExpertiseInput] = useState("");
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [consultancyId, setConsultancyId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -122,9 +128,31 @@ export default function ConsultancyForm({ onSubmit, initialData, isEditing = fal
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    setIsSubmitting(true);
+    
+    try {
+      // Register consultancy
+      const response = await fetch('/api/consultancies/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        setConsultancyId(result.consultancyId);
+        setShowVerificationModal(true);
+      } else {
+        alert('Error: ' + result.error);
+      }
+    } catch (error) {
+      alert('Registration failed. Please try again.');
+    }
+    
+    setIsSubmitting(false);
   };
 
   return (
@@ -368,14 +396,39 @@ export default function ConsultancyForm({ onSubmit, initialData, isEditing = fal
         </div>
       </div>
 
+      <div className="mt-6">
+        <label className="block text-sm font-medium mb-2">Password</label>
+        <input
+          type="password"
+          name="contact.password"
+          value={formData.contact.password}
+          onChange={handleInputChange}
+          className="w-full p-3 border rounded-lg"
+          placeholder="Create a secure password"
+          required
+        />
+      </div>
+
       <div className="mt-8">
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors min-h-[48px] flex items-center justify-center"
+          disabled={isSubmitting}
+          className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors min-h-[48px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isEditing ? 'Update' : 'Create'} Consultancy
+          {isSubmitting ? 'Registering...' : (isEditing ? 'Update' : 'Register')} Consultancy
         </button>
       </div>
     </form>
+
+    {/* Verification Modal */}
+    {showVerificationModal && consultancyId && (
+      <VerificationModal
+        isOpen={showVerificationModal}
+        onClose={() => setShowVerificationModal(false)}
+        consultancyId={consultancyId}
+        email={formData.contact.email}
+        phone={formData.contact.phone}
+      />
+    )}
   );
 }

@@ -24,6 +24,11 @@ const ConsultancySetupForm: React.FC = () => {
   const { user, isLoaded } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formType, setFormType] = useState<"new" | "existing">("new");
+  const [verificationStep, setVerificationStep] = useState<"form" | "verify" | "complete">("form");
+  const [emailCode, setEmailCode] = useState("");
+  const [phoneCode, setPhoneCode] = useState("");
+  const [consultancyId, setConsultancyId] = useState("");
+  const [sentCodes, setSentCodes] = useState<{emailCode: string, phoneCode: string} | null>(null);
 
   const [formData, setFormData] = useState({
     // Basic info
@@ -137,13 +142,23 @@ const ConsultancySetupForm: React.FC = () => {
         const result = await response.json();
 
         if (result.success) {
-          // Save consultancyId to localStorage
-          if (result.consultancyId) {
-            localStorage.setItem("consultancyId", result.consultancyId);
+          setConsultancyId(result.consultancyId);
+          
+          // Send verification codes
+          const codeResponse = await fetch("/api/consultancies/send-verification", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ consultancyId: result.consultancyId })
+          });
+          
+          const codeResult = await codeResponse.json();
+          if (codeResult.success) {
+            setSentCodes({
+              emailCode: codeResult.emailCode,
+              phoneCode: codeResult.phoneCode
+            });
+            setVerificationStep("verify");
           }
-
-          alert("Consultancy registered successfully!");
-          window.location.href = "/consultancy-admin";
         } else {
           alert(result.error || "Registration failed. Please try again.");
         }
@@ -163,11 +178,7 @@ const ConsultancySetupForm: React.FC = () => {
         const result = await response.json();
 
         if (result.success) {
-          // Save consultancyId to localStorage
-          if (result.consultancyId) {
-            localStorage.setItem("consultancyId", result.consultancyId);
-          }
-
+          localStorage.setItem("consultancyId", result.consultancyId);
           alert("Login successful!");
           window.location.href = "/consultancy-admin";
         } else {
@@ -181,6 +192,164 @@ const ConsultancySetupForm: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+
+  const handleVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/consultancies/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          consultancyId,
+          emailCode,
+          phoneCode
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setVerificationStep("complete");
+      } else {
+        alert(result.error || "Verification failed. Please try again.");
+      }
+    } catch (error) {
+      alert("Verification failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (verificationStep === "verify") {
+    return (
+      <div>
+        <Navbar />
+        <div className="container mx-auto px-6 py-12">
+          <div className="max-w-md mx-auto">
+            <div className="bg-white rounded-xl shadow-lg p-8">
+              <div className="text-center mb-6">
+                <div className="text-4xl mb-4">📱</div>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">Verify Your Details</h2>
+                <p className="text-gray-600">We've sent verification codes to your email and phone</p>
+                
+                {/* Demo: Show codes for testing */}
+                {sentCodes && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+                    <p className="text-sm font-semibold text-yellow-800 mb-2">📝 Demo Codes (For Testing):</p>
+                    <div className="text-sm text-yellow-700">
+                      <p><strong>Email Code:</strong> {sentCodes.emailCode}</p>
+                      <p><strong>Phone Code:</strong> {sentCodes.phoneCode}</p>
+                    </div>
+                    <p className="text-xs text-yellow-600 mt-2">
+                      In production, these would be sent via SMS/Email
+                    </p>
+                  </div>
+                )}
+              </div>
+              
+              <form onSubmit={handleVerification}>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Verification Code
+                  </label>
+                  <input
+                    type="text"
+                    value={emailCode}
+                    onChange={(e) => setEmailCode(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Enter 6-digit code"
+                    maxLength={6}
+                    required
+                  />
+                </div>
+                
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Verification Code
+                  </label>
+                  <input
+                    type="text"
+                    value={phoneCode}
+                    onChange={(e) => setPhoneCode(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Enter 6-digit code"
+                    maxLength={6}
+                    required
+                  />
+                </div>
+                
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  {isSubmitting ? "Verifying..." : "Verify Codes"}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (verificationStep === "complete") {
+    return (
+      <div>
+        <Navbar />
+        <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border border-green-200">
+            <div className="mb-6">
+              <div className="text-6xl mb-4">🎉</div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                Woohoo! You're In! 🚀
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Your consultancy has been successfully registered and is now under our super-duper verification process!
+              </p>
+            </div>
+            
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center justify-center mb-2">
+                <span className="text-2xl mr-2">⏳</span>
+                <span className="font-semibold text-yellow-800">Status: Under Verification</span>
+              </div>
+              <p className="text-sm text-yellow-700 mb-2">
+                Our team of expert ninjas 🥷 are reviewing your application with the precision of a Swiss watch!
+              </p>
+              <p className="text-xs text-yellow-600">
+                • Usually takes 2-3 working days<br/>
+                • We'll notify you once approved<br/>
+                • You can check status anytime
+              </p>
+            </div>
+            
+            <div className="space-y-3 mb-6">
+              <button
+                onClick={() => window.location.href = "/consultancy-status"}
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
+              >
+                📈 Check Status
+              </button>
+              
+              <button
+                onClick={() => window.location.href = "/"}
+                className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                🏠 Back to Home
+              </button>
+            </div>
+            
+            <p className="text-xs text-gray-500">
+              Questions? We're here to help! Contact us anytime 💬
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -229,6 +398,26 @@ const ConsultancySetupForm: React.FC = () => {
                   }`}
                 >
                   Existing Consultancy
+                </button>
+              </div>
+            </div>
+
+            {/* Status Check Section */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-8">
+              <div className="text-center">
+                <div className="text-2xl mb-2">📊</div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  Already Registered?
+                </h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  Check your consultancy verification status
+                </p>
+                <button
+                  type="button"
+                  onClick={() => window.location.href = "/consultancy-status"}
+                  className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                >
+                  🔍 Check Status
                 </button>
               </div>
             </div>

@@ -22,20 +22,27 @@ export default function FeaturedConsultancies() {
     const fetchFeaturedConsultancies = async () => {
       try {
         const response = await fetch(`/api/consultancies?t=${Date.now()}`, {
-          cache: 'no-store',
+          cache: "no-store",
           headers: {
-            'Cache-Control': 'no-cache'
-          }
+            "Cache-Control": "no-cache",
+          },
         });
         const result = await response.json();
-        
+
         if (result.success && result.data && result.data.length > 0) {
           // Filter out invalid consultancies and get top 3 highest rated
-          const validConsultancies = result.data.filter((c: ConsultancyData) => 
-            c && (c.id || c._id) && c.name && typeof c.name === 'string' && c.name.trim() !== ''
+          const validConsultancies = result.data.filter(
+            (c: ConsultancyData) =>
+              c &&
+              (c.id || c._id) &&
+              c.name &&
+              typeof c.name === "string" &&
+              c.name.trim() !== ""
           );
           const featured = validConsultancies
-            .sort((a: ConsultancyData, b: ConsultancyData) => b.rating - a.rating)
+            .sort(
+              (a: ConsultancyData, b: ConsultancyData) => b.rating - a.rating
+            )
             .slice(0, 3);
           setConsultancies(featured);
         } else {
@@ -43,7 +50,7 @@ export default function FeaturedConsultancies() {
         }
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching consultancies:', error);
+        console.error("Error fetching consultancies:", error);
         setConsultancies([]);
         setLoading(false);
       }
@@ -59,7 +66,10 @@ export default function FeaturedConsultancies() {
           <h3 className="text-3xl font-bold mb-12 text-center">
             Top Rated Consultancies
           </h3>
-          <LoadingScreen variant="dots" message="Loading featured consultancies..." />
+          <LoadingScreen
+            variant="dots"
+            message="Loading featured consultancies..."
+          />
         </div>
       </section>
     );
@@ -72,7 +82,7 @@ export default function FeaturedConsultancies() {
           Top Rated Consultancies
         </h3>
         {consultancies.length > 0 ? (
-          <motion.div 
+          <motion.div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -103,9 +113,12 @@ export default function FeaturedConsultancies() {
             <div className="text-gray-400 mb-4">
               <span className="text-6xl">🏆</span>
             </div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Top-Rated Consultancies Yet</h3>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">
+              No Top-Rated Consultancies Yet
+            </h3>
             <p className="text-gray-500">
-              We're working on bringing you the best consultancy services. Check back soon!
+              We're working on bringing you the best consultancy services. Check
+              back soon!
             </p>
           </div>
         )}

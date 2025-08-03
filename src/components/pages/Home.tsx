@@ -257,8 +257,8 @@ function Home() {
           </div>
         </header>
 
-        <section className="py-20 bg-white overflow-visible">
-          <div className="container mx-auto px-6">
+        <section className="py-20 bg-white overflow-hidden">
+          <div className="container mx-auto px-6 overflow-hidden">
             <div className="text-center mb-16">
               <h3 className="text-4xl font-bold mb-4 text-gray-900">
                 Our Service Categories
@@ -269,7 +269,7 @@ function Home() {
               </p>
             </div>
 
-            <div className="relative max-w-7xl mx-auto px-8">
+            <div className="relative max-w-7xl mx-auto px-8 overflow-hidden">
               <div className="h-[550px] flex items-center justify-center py-24 overflow-hidden">
                 <Swiper
                   effect="coverflow"
@@ -373,10 +373,10 @@ function Home() {
                 </Swiper>
               </div>
 
-              <button className="swiper-button-prev-custom absolute left-0 top-1/2 -translate-y-1/2 z-30 w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:scale-110">
+              <button className="swiper-button-prev-custom absolute left-2 top-1/2 -translate-y-1/2 z-30 w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:scale-110">
                 <ArrowRight className="w-6 h-6 rotate-180" />
               </button>
-              <button className="swiper-button-next-custom absolute right-0 top-1/2 -translate-y-1/2 z-30 w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:scale-110">
+              <button className="swiper-button-next-custom absolute right-2 top-1/2 -translate-y-1/2 z-30 w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:scale-110">
                 <ArrowRight className="w-6 h-6" />
               </button>
             </div>

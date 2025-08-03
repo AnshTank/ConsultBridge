@@ -41,14 +41,25 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
     
+    // Check if consultancy is verified
+    const isVerified = consultancy.status === 'verified';
+    const emailVerified = consultancy.verification?.emailVerified || false;
+    const phoneVerified = consultancy.verification?.phoneVerified || false;
+    
     return NextResponse.json({
       success: true,
       message: 'Login successful',
       consultancyId: consultancy._id.toString(),
+      verified: isVerified,
       consultancy: {
         name: consultancy.name,
         email: consultancy.contact.email,
-        category: consultancy.category
+        category: consultancy.category,
+        status: consultancy.status,
+        emailVerified,
+        phoneVerified,
+        rejectionReason: consultancy.rejectionReason,
+        needsVerification: consultancy.rejectionReason && consultancy.rejectionReason.includes('Please verify your phone number and email address to resubmit your application')
       }
     });
   } catch (error) {

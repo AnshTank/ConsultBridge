@@ -21,6 +21,16 @@ export interface IConsultancy extends Document {
     website: string;
     password: string;
   };
+  status: 'pending' | 'verified' | 'rejected';
+  rejectionReason?: string;
+  verification: {
+    emailVerified: boolean;
+    phoneVerified: boolean;
+    emailCode?: string;
+    phoneCode?: string;
+    emailCodeExpiry?: Date;
+    phoneCodeExpiry?: Date;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -45,6 +55,20 @@ const ConsultancySchema = new Schema<IConsultancy>({
     email: { type: String, required: true },
     website: { type: String, required: true },
     password: { type: String, required: true }
+  },
+  status: { 
+    type: String, 
+    enum: ['pending', 'verified', 'rejected'], 
+    default: 'pending' 
+  },
+  rejectionReason: { type: String },
+  verification: {
+    emailVerified: { type: Boolean, default: false },
+    phoneVerified: { type: Boolean, default: false },
+    emailCode: { type: String },
+    phoneCode: { type: String },
+    emailCodeExpiry: { type: Date },
+    phoneCodeExpiry: { type: Date }
   }
 }, {
   timestamps: true

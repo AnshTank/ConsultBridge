@@ -35,7 +35,8 @@ export async function GET(request: NextRequest) {
     
     const response = NextResponse.json({ 
       success: true, 
-      data: consultanciesWithId
+      data: consultanciesWithId,
+      consultancies: consultanciesWithId
     });
     
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');

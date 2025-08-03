@@ -8,7 +8,9 @@ export interface IAppointment extends Document {
   clientPhone: string;
   appointmentDate: Date;
   appointmentTime: string;
+  appointmentType: 'online' | 'offline';
   message?: string;
+  consultancyName: string;
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
   createdAt: Date;
   updatedAt: Date;
@@ -22,14 +24,28 @@ const AppointmentSchema = new Schema<IAppointment>({
   clientPhone: { type: String, required: true },
   appointmentDate: { type: Date, required: true },
   appointmentTime: { type: String, required: true },
+  appointmentType: { 
+    type: String, 
+    enum: ['online', 'offline'],
+    required: true,
+    default: 'online'
+  },
   message: { type: String },
+  consultancyName: { type: String, required: true },
   status: { 
     type: String, 
     enum: ['pending', 'confirmed', 'cancelled', 'completed'],
     default: 'pending'
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  strict: true,
+  strictQuery: false
 });
 
-export default mongoose.models.Appointment || mongoose.model<IAppointment>('Appointment', AppointmentSchema);
+// Clear any existing model to ensure fresh schema
+if (mongoose.models.Appointment) {
+  delete mongoose.models.Appointment;
+}
+
+export default mongoose.model<IAppointment>('Appointment', AppointmentSchema);
