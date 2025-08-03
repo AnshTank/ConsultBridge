@@ -200,9 +200,9 @@ We welcome contributions from the community!
 
 ## 📄 License
 
-This project is licensed under the **MIT License**.
+This project is licensed under the **MIT License**. See the [`LICENSE`](LICENSE.md) file for details.
 
-> See [`LICENSE.md`](LICENSE.md) for full terms and conditions. Redistribution, manipulation, or use of this code must respect the license terms. Unauthorized commercial use is strictly prohibited.
+> Redistribution, manipulation, or use of this code must respect the license terms. Unauthorized commercial use is strictly prohibited.
 
 ---
 
