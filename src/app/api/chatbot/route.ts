@@ -61,14 +61,19 @@ export async function POST(req: NextRequest) {
   const { chatHistory, bookingState, appointmentAction } = session;
 
   chatHistory.push({ sender: "user", text: userMessage });
+  
+  // Enhanced context awareness - analyze conversation flow
+  const conversationContext = {
+    recentMessages: chatHistory.slice(-5),
+    lastBotMessage: chatHistory.slice().reverse().find(m => m.sender === "bot")?.text || "",
+    userEmotionalState: analyzeEmotionalState(chatHistory),
+    conversationStage: determineConversationStage(chatHistory),
+    topicsDiscussed: extractTopicsFromHistory(chatHistory)
+  };
 
   // Enhanced context awareness for yes/no responses
   const msg = userMessage.toLowerCase();
-  const lastBotMessage =
-    chatHistory
-      .slice()
-      .reverse()
-      .find((m) => m.sender === "bot")?.text || "";
+  const lastBotMessage = conversationContext.lastBotMessage;
 
   // Handle summary/website choice for view details
   if (msg === "summary" || msg === "website" || msg === "chat summary") {
@@ -844,7 +849,7 @@ export async function POST(req: NextRequest) {
 
   // Fallback to advanced NLP if no direct match
   const { matchedConsultancies, userIntent, needsMoreInfo } =
-    await analyzeUserQuery(userMessage, chatHistory);
+    await analyzeUserQuery(userMessage, chatHistory, conversationContext);
 
   const recentHistory = chatHistory
     .slice(-6)
@@ -859,7 +864,8 @@ export async function POST(req: NextRequest) {
     userIntent,
     needsMoreInfo,
     userId,
-    chatHistory
+    chatHistory,
+    conversationContext
   );
 
   // Handle special responses (auth, category navigation, etc.)
@@ -1534,8 +1540,59 @@ async function handleAppointmentAction(
   }
 }
 
+// Helper functions for conversation context
+function analyzeEmotionalState(chatHistory: any[]) {
+  const recentMessages = chatHistory.slice(-3).filter(m => m.sender === "user");
+  const allText = recentMessages.map(m => m.text).join(" ").toLowerCase();
+  
+  const emotions = {
+    frustrated: ["frustrated", "annoyed", "angry", "upset", "mad"],
+    sad: ["sad", "disappointed", "depressed", "down", "failed", "failure"],
+    anxious: ["worried", "anxious", "nervous", "scared", "concerned"],
+    confused: ["confused", "lost", "don't know", "unsure", "help"],
+    positive: ["excited", "happy", "great", "awesome", "good"]
+  };
+  
+  for (const [emotion, keywords] of Object.entries(emotions)) {
+    if (keywords.some(keyword => allText.includes(keyword))) {
+      return emotion;
+    }
+  }
+  
+  return "neutral";
+}
+
+function determineConversationStage(chatHistory: any[]) {
+  const messageCount = chatHistory.length;
+  if (messageCount <= 2) return "greeting";
+  if (messageCount <= 4) return "understanding";
+  if (messageCount <= 8) return "helping";
+  return "ongoing";
+}
+
+function extractTopicsFromHistory(chatHistory: any[]) {
+  const allText = chatHistory.map(m => m.text).join(" ").toLowerCase();
+  const topics = [];
+  
+  const topicKeywords = {
+    interview: ["interview", "job interview", "failed interview"],
+    career: ["career", "job", "work", "employment"],
+    business: ["business", "startup", "company"],
+    personal: ["personal", "life", "relationship"],
+    financial: ["money", "financial", "finance", "investment"]
+  };
+  
+  for (const [topic, keywords] of Object.entries(topicKeywords)) {
+    if (keywords.some(keyword => allText.includes(keyword))) {
+      topics.push(topic);
+    }
+  }
+  
+  return topics;
+}
+
 // Advanced NLP with Semantic Analysis & Context Understanding
-async function analyzeUserQuery(userMessage: string, history: any[]) {
+async function analyzeUserQuery(userMessage: string, history: any[], conversationContext?: any) {
   const msg = userMessage.toLowerCase();
   const tokens = tokenize(msg);
   const context = extractContext(history);
@@ -2458,10 +2515,17 @@ function generateIntelligentResponse(
   userIntent: any,
   needsMoreInfo: boolean,
   userId: string | null = null,
-  chatHistory: any[] = []
+  chatHistory: any[] = [],
+  conversationContext?: any
 ) {
   const msg = userMessage.toLowerCase();
   const isFirstMessage = history.length <= 2;
+  
+  // Use conversation context for better responses
+  const emotionalState = conversationContext?.userEmotionalState || "neutral";
+  const conversationStage = conversationContext?.conversationStage || "greeting";
+  const topicsDiscussed = conversationContext?.topicsDiscussed || [];
+  const recentContext = conversationContext?.recentMessages?.map(m => m.text).join(" ").toLowerCase() || "";
 
   // Greetings with auth-aware messaging
   if (
@@ -2492,13 +2556,26 @@ function generateIntelligentResponse(
     return "Hello! I'm Shaan, your personal consultant assistant at ConsultBridge - India's most trusted consulting platform! 🎆 I'm here to understand your specific needs and connect you with top-rated experts across 10+ categories. Whether it's business strategy, financial planning, legal advice, or personal growth - I'll find the perfect consultant for you. What challenge or goal are you working on today?";
   }
 
-  // Empathetic responses for personal situations
+  // Enhanced empathetic responses for personal situations with conversation flow
+  if (
+    msg.includes("failed") && (msg.includes("interview") || msg.includes("job"))
+  ) {
+    const empathyResponses = [
+      "I'm really sorry to hear about your interview. That must be incredibly disappointing, especially when you were hoping for that opportunity. 😔 Interview rejections can feel personal, but they often have nothing to do with your worth or capabilities. Sometimes it's just not the right fit, timing, or they had internal candidates.\n\nHow are you feeling about it? Would you like to talk through what happened, or are you looking for advice on next steps?",
+      "Oh no, that's tough news about the interview. 💙 I can imagine how deflating that must feel, especially if you really wanted that position. Interview outcomes can be so unpredictable - sometimes it's about company culture fit, budget constraints, or they already had someone in mind.\n\nWhat's going through your mind right now? Are you looking to process what happened or thinking about your next move?",
+      "I'm sorry that interview didn't work out. That's genuinely disappointing, and it's completely normal to feel frustrated or discouraged right now. 🤗 These setbacks can be really hard, especially when you've invested time and energy preparing.\n\nDo you want to talk about what you're thinking or feeling? Sometimes it helps to process these experiences before jumping into next steps."
+    ];
+    
+    chatHistory.push({ sender: "bot", text: empathyResponses[Math.floor(Math.random() * empathyResponses.length)] });
+    return empathyResponses[Math.floor(Math.random() * empathyResponses.length)];
+  }
+
   if (
     msg.includes("failed") ||
     msg.includes("failure") ||
     msg.includes("exam")
   ) {
-    return "I'm sorry to hear about your exam. That must be really frustrating, especially after putting in effort. Sometimes setbacks can actually lead us to better opportunities. Would you like to talk to a career counselor or educational consultant who can help you plan your next steps and explore alternative paths?";
+    return "I'm sorry to hear about that setback. That must be really frustrating, especially after putting in effort. Sometimes these experiences, while difficult, can actually redirect us toward better opportunities. How are you feeling about it right now?";
   }
 
   // Check if user wants to see all categories - EARLY DETECTION
@@ -2762,6 +2839,33 @@ function generateIntelligentResponse(
     return "Starting a new business requires solid financial planning! I can connect you with financial consultants who specialize in startup funding, business financial planning, and cash flow management. What type of business are you starting?";
   }
 
+  // Handle direct help requests - user wants advice, not consultancy
+  if (
+    (msg.includes("i dont need") || msg.includes("don't need") || msg.includes("dont need")) &&
+    (msg.includes("consultancy") || msg.includes("consultant"))
+  ) {
+    return "I understand! You're looking for direct advice rather than consultant recommendations. I'm here to help however I can. What specific guidance or support are you looking for? I can try to offer some general insights or suggestions.";
+  }
+
+  // Handle "direct help" requests
+  if (msg.includes("direct help") || msg.includes("direct advice")) {
+    if (topicsDiscussed.includes("interview") || contextText.includes("interview")) {
+      return "Absolutely! Let me give you some direct advice about interviews and job searching:\n\n**After a Failed Interview:**\n1. **Don't take it personally** - Most rejections aren't about you as a person\n2. **Ask for feedback** - Reach out politely asking what you could improve\n3. **Reflect honestly** - What went well? What could be better?\n4. **Practice more** - Do mock interviews with friends or family\n5. **Research better** - Learn more about the company and role next time\n\n**Moving Forward:**\n- Apply to multiple positions (don't put all hopes in one)\n- Network actively (many jobs come through connections)\n- Keep improving your skills\n- Stay positive and persistent\n\nWhat specific aspect would you like me to elaborate on?";
+    }
+    return "I'd be happy to give you direct advice! What specific situation or challenge would you like help with? The more details you share, the better I can tailor my suggestions.";
+  }
+
+  if (
+    msg.includes("suggest") && msg.includes("solution") && 
+    !msg.includes("consultant") && !msg.includes("book")
+  ) {
+    if (contextText.includes("interview") && contextText.includes("failed")) {
+      return "Here are some practical steps you can take after a failed interview:\n\n**Immediate Steps:**\n1. **Process the emotions** - It's normal to feel disappointed\n2. **Ask for feedback** - Send a polite email asking for constructive feedback\n3. **Reflect objectively** - What went well? What could improve?\n\n**Skill Building:**\n4. **Practice interviews** - Mock interviews with friends or record yourself\n5. **Research techniques** - Learn about STAR method for behavioral questions\n6. **Address gaps** - If technical skills were lacking, focus on learning\n\n**Next Applications:**\n7. **Apply broadly** - Don't rely on just one opportunity\n8. **Network actively** - Many jobs come through connections\n9. **Tailor applications** - Customize resume and cover letter for each role\n\n**Mindset:**\n10. **Stay resilient** - One rejection doesn't define your capabilities\n\nWhat specific aspect would you like to work on first? 💪";
+    }
+    
+    return "I'd be happy to help you brainstorm solutions! Could you tell me a bit more about the specific situation or challenge you're facing? The more context you give me, the better I can tailor my suggestions to your needs.";
+  }
+
   // Handle no consultancies found with funny messages
   if (consultancies.length === 0 && userIntent.showConsultancies) {
     const funnyMessages = [
@@ -2839,6 +2943,25 @@ function generateIntelligentResponse(
         ? " These highly-rated professionals can help you soon."
         : "";
 
+    // Only show consultancies if user is actually ready for professional help
+    const isReadyForConsultants = 
+      msg.includes("consultant") || 
+      msg.includes("professional") || 
+      msg.includes("expert") || 
+      msg.includes("book") ||
+      msg.includes("appointment") ||
+      contextText.includes("need professional") ||
+      contextText.includes("want consultant");
+    
+    if (!isReadyForConsultants && userIntent.confidence < 0.8) {
+      // Offer both direct help and professional options, considering emotional state
+      const supportiveMessage = emotionalState === "sad" || emotionalState === "frustrated" 
+        ? "I can see you're going through a tough time. "
+        : "";
+      
+      return `${supportiveMessage}I can help you in two ways:\n\n**Direct Support**: I can offer advice and suggestions right here in our conversation\n\n**Professional Help**: I can connect you with expert consultants who specialize in your area\n\nWhich would you prefer? Just say "direct help" for immediate advice or "find consultant" for professional services.`;
+    }
+
     return `${confidenceMessage}\n\n${suggestions}\n\nWould you like to book a consultation with any of these top-rated specialists?${urgencyNote}`;
   }
 
@@ -2899,19 +3022,48 @@ function generateIntelligentResponse(
     return "Great question! Consultation fees vary by expertise and service type. Each consultant sets their own pricing based on their experience and specialization. Once I understand your needs and find the right consultant, you'll see their exact pricing before booking. What type of consultation are you interested in?";
   }
 
-  // Smarter default responses based on detected patterns
-  const tokens = tokenize(userMessage.toLowerCase());
-  if (tokens.length > 3 && userIntent.confidence > 0.2) {
-    return "I understand you're looking for help, and I want to find you the perfect consultant. Let me search our database for experts who match your specific needs.";
+  // Context-aware conversation flow - use provided conversation context
+  const contextText = recentContext || chatHistory.slice(-3).map(m => m.text).join(" ").toLowerCase();
+  
+  // If user is continuing a conversation about a personal issue, be supportive
+  if (topicsDiscussed.includes("interview") || contextText.includes("interview") || contextText.includes("failed")) {
+    if (msg.includes("what") || msg.includes("how") || msg.includes("help")) {
+      return "I'm here to support you through this. What specific aspect would you like help with? Are you looking for:\n\n• **Emotional support** - Processing feelings and staying motivated\n• **Practical advice** - Next steps for job searching and applications\n• **Interview skills** - Preparation tips and practice strategies\n• **Career planning** - Exploring different paths and opportunities\n• **Professional help** - Connecting with career consultants\n\nJust let me know what feels most helpful right now. 🤗";
+    }
   }
 
-  // Default - ask for clarification only when truly unclear
+  // Smarter default responses based on detected patterns and emotional state
+  const tokens = tokenize(userMessage.toLowerCase());
+  if (tokens.length > 3 && userIntent.confidence > 0.2) {
+    // Only suggest consultants if user seems ready for professional help
+    if (msg.includes("professional") || msg.includes("expert") || msg.includes("consultant")) {
+      return "I understand you're looking for professional help. Let me search our database for experts who match your specific needs.";
+    } else {
+      // Adjust response based on emotional state
+      if (emotionalState === "sad" || emotionalState === "frustrated") {
+        return "I can sense you're going through a challenging time. I'm here to help in whatever way feels most supportive. Would you like me to offer some direct advice, or would you prefer to talk to a professional consultant who specializes in your situation?";
+      } else {
+        return "I'm here to help! Could you tell me more about what you're looking for? Are you seeking direct advice, professional consultation, or just someone to talk through your situation with?";
+      }
+    }
+  }
+
+  // Default - ask for clarification with context awareness
+  if (emotionalState === "sad" || emotionalState === "frustrated") {
+    const supportiveQuestions = [
+      "I'm here to listen and help. What's on your mind right now? Whether you need someone to talk to or practical advice, I'm here for you. 💙",
+      "It sounds like you're dealing with something challenging. I'm here to support you however I can. What would be most helpful - talking through your feelings or getting some practical guidance?",
+      "I can sense this might be a difficult time for you. I'm here to help in whatever way feels right. What's weighing on your mind?"
+    ];
+    return supportiveQuestions[Math.floor(Math.random() * supportiveQuestions.length)];
+  }
+  
   const clarifyingQuestions = [
-    "I want to make sure I find you the perfect consultant on ConsultBridge. Could you describe the specific challenge or goal you need help with? 🎯",
-    "To connect you with the right expert from our platform, tell me more about your situation. What area do you need assistance in?",
-    "ConsultBridge has amazing consultants across all categories! What type of professional guidance are you looking for today?",
-    "Let me understand your needs better so I can find the ideal consultant for you. What specific problem or project would you like expert help with? 🚀",
-    "I'm here to help you discover the perfect consultant on ConsultBridge! Whether it's business, finance, legal, health, or any other area - what's your main focus right now?",
+    "I'm here to help! What's on your mind today? Whether you need advice, want to talk something through, or are looking for professional guidance - just let me know. 😊",
+    "How can I best support you today? I can offer direct advice, help you think through situations, or connect you with professional consultants if needed.",
+    "I'm here to help however you need! What specific challenge or goal are you working on? I can provide guidance or connect you with experts.",
+    "What brings you here today? Whether you need someone to brainstorm with, want professional advice, or just need to talk something through - I'm here! 🤗",
+    "I'm ready to help! What would be most useful for you right now - direct advice, professional consultation, or just a supportive conversation?"
   ];
 
   return clarifyingQuestions[
