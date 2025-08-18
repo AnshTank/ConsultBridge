@@ -1969,7 +1969,7 @@ async function analyzeUserQuery(userMessage: string, history: any[], conversatio
       intentAnalysis.confidence > 0.7 && intentAnalysis.readyForSuggestions,
     needsMoreInfo:
       intentAnalysis.confidence < 0.6 || !intentAnalysis.specificEnough,
-    conversationStage: determineConversationStage(history, intentAnalysis),
+    conversationStage: determineConversationStage(history),
   };
 
   // Advanced consultancy matching with semantic similarity
@@ -2307,13 +2307,7 @@ function detectUrgency(message: string): string {
   return "low";
 }
 
-// Determine conversation stage
-function determineConversationStage(history: any[], analysis: any): string {
-  if (history.length <= 2) return "greeting";
-  if (analysis.confidence < 0.4) return "clarification";
-  if (analysis.confidence < 0.7) return "refinement";
-  return "recommendation";
-}
+
 
 // Precise consultancy matching with strict relevance filtering
 async function findSemanticMatches(
