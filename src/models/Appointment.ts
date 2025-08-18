@@ -11,7 +11,7 @@ export interface IAppointment extends Document {
   appointmentType: 'online' | 'offline';
   message?: string;
   consultancyName: string;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'expired';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,7 +34,7 @@ const AppointmentSchema = new Schema<IAppointment>({
   consultancyName: { type: String, required: true },
   status: { 
     type: String, 
-    enum: ['pending', 'confirmed', 'cancelled', 'completed'],
+    enum: ['pending', 'confirmed', 'cancelled', 'completed', 'expired'],
     default: 'pending'
   }
 }, {

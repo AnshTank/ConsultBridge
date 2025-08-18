@@ -29,7 +29,7 @@ export default function PrivacyPage() {
                   Last updated: January 15, 2025
                 </p>
                 <p className="text-sm text-gray-600 mt-2">
-                  Effective Date: January 1, 2025
+                  Effective Date: January 16, 2025
                 </p>
               </div>
 

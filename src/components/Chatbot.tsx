@@ -701,7 +701,7 @@ export default function Chatbot() {
                     </p>
                     <button
                       onClick={() => {
-                        window.open(msg.allCategories.url, "_blank");
+                        window.open(msg.allCategories?.url, "_blank");
                       }}
                       className="mt-2 text-xs bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-600 transition flex items-center gap-1"
                     >

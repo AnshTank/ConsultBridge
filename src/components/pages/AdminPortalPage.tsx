@@ -23,6 +23,7 @@ interface Consultancy {
   category: string;
   description: string;
   location: string;
+  price?: string;
   contact: {
     email: string;
     phone: string;
@@ -37,6 +38,13 @@ interface Consultancy {
   rating: number;
   reviews: number;
   createdAt: string;
+  image?: string;
+  expertise?: string[];
+  availability?: {
+    days: string[];
+    hours: string;
+  };
+  whyChooseUs?: string[];
 }
 
 const AdminPortalPage: React.FC = () => {
@@ -507,7 +515,7 @@ const AdminPortalPage: React.FC = () => {
               <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
                 <div className="flex gap-3">
                   <button
-                    onClick={() => viewImage(selectedConsultancy.image)}
+                    onClick={() => viewImage(selectedConsultancy.image || '')}
                     className="bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600 transition-colors flex items-center gap-2"
                   >
                     🖼️ View Image

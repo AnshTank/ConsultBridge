@@ -221,9 +221,9 @@ export default function ConsultancyDetailsPage() {
                           <Mail className="w-4 h-4" />
                           <span className="font-semibold">Email:</span> {consultancy.contact?.email}
                           {consultancy.verification?.emailVerified ? (
-                            <CheckCircle className="w-4 h-4 text-green-500" title="Verified" />
+                            <CheckCircle className="w-4 h-4 text-green-500" />
                           ) : (
-                            <XCircle className="w-4 h-4 text-red-500" title="Not Verified" />
+                            <XCircle className="w-4 h-4 text-red-500" />
                           )}
                         </div>
                         {!consultancy.verification?.emailVerified && (
@@ -240,9 +240,9 @@ export default function ConsultancyDetailsPage() {
                           <Phone className="w-4 h-4" />
                           <span className="font-semibold">Phone:</span> {consultancy.contact?.phone}
                           {consultancy.verification?.phoneVerified ? (
-                            <CheckCircle className="w-4 h-4 text-green-500" title="Verified" />
+                            <CheckCircle className="w-4 h-4 text-green-500" />
                           ) : (
-                            <XCircle className="w-4 h-4 text-red-500" title="Not Verified" />
+                            <XCircle className="w-4 h-4 text-red-500" />
                           )}
                         </div>
                         {!consultancy.verification?.phoneVerified && (

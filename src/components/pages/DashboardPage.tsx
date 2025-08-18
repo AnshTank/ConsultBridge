@@ -208,7 +208,7 @@ const DashboardPage: React.FC = () => {
     } catch (error) {
       console.error("Error cancelling appointment:", error);
     }
-    setModal({ id: null, action: null });
+    setModal({ id: null, action: null, position: null });
   };
 
   // Handle appointment removal
@@ -235,7 +235,7 @@ const DashboardPage: React.FC = () => {
       console.error("Error removing appointment:", error);
       alert(`Failed to remove appointment: ${error instanceof Error ? error.message : String(error)}`);
     }
-    setModal({ id: null, action: null });
+    setModal({ id: null, action: null, position: null });
   };
 
   return (

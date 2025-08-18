@@ -9,6 +9,14 @@ const sessionStorage = new Map<
   string,
   {
     chatHistory: { sender: "user" | "bot"; text: string }[];
+    conversationMemory: {
+      userProblem: string;
+      problemCategory: string;
+      emotionalState: string;
+      topicsDiscussed: string[];
+      lastProblemMention: number;
+      hasSharedProblem: boolean;
+    };
     bookingState: {
       selectedConsultancy: any;
       step: number;
@@ -27,6 +35,14 @@ function getSession(sessionId: string) {
   if (!sessionStorage.has(sessionId)) {
     sessionStorage.set(sessionId, {
       chatHistory: [],
+      conversationMemory: {
+        userProblem: "",
+        problemCategory: "",
+        emotionalState: "neutral",
+        topicsDiscussed: [],
+        lastProblemMention: 0,
+        hasSharedProblem: false,
+      },
       bookingState: {
         selectedConsultancy: null,
         step: 0,
@@ -58,9 +74,12 @@ export async function POST(req: NextRequest) {
 
   // Get session data
   const session = getSession(sessionId);
-  const { chatHistory, bookingState, appointmentAction } = session;
+  const { chatHistory, conversationMemory, bookingState, appointmentAction } = session;
 
   chatHistory.push({ sender: "user", text: userMessage });
+  
+  // Update conversation memory
+  updateConversationMemory(conversationMemory, userMessage, chatHistory);
   
   // Enhanced context awareness - analyze conversation flow
   const conversationContext = {
@@ -434,7 +453,7 @@ export async function POST(req: NextRequest) {
     userMessage.toLowerCase().includes("admin report") ||
     userMessage.toLowerCase().includes("analytics")
   ) {
-    return await handleAdminReport();
+    return await handleAdminReport(session);
   }
 
   // Handle ongoing appointment actions
@@ -853,8 +872,7 @@ export async function POST(req: NextRequest) {
 
   const recentHistory = chatHistory
     .slice(-6)
-    .map((m) => `${m.sender === "user" ? "User" : "Shaan"}: ${m.text}`)
-    .join("\n");
+    .map((m) => `${m.sender === "user" ? "User" : "Shaan"}: ${m.text}`);
 
   // Intelligent conversational AI with context awareness
   const response = generateIntelligentResponse(
@@ -865,7 +883,8 @@ export async function POST(req: NextRequest) {
     needsMoreInfo,
     userId,
     chatHistory,
-    conversationContext
+    conversationContext,
+    conversationMemory
   );
 
   // Handle special responses (auth, category navigation, etc.)
@@ -1282,7 +1301,7 @@ async function handleBookingStep(
 
 // Appointment Management Functions
 async function handleRescheduleStart(userId: string | null, session: any) {
-  const { chatHistory } = session;
+  const { chatHistory, appointmentAction } = session;
   if (!userId) {
     const reply =
       "To reschedule appointments, you'll need to sign in first. This ensures we're updating the right appointments securely.";
@@ -1330,7 +1349,7 @@ async function handleRescheduleStart(userId: string | null, session: any) {
 }
 
 async function handleCancelStart(userId: string | null, session: any) {
-  const { chatHistory } = session;
+  const { chatHistory, appointmentAction } = session;
   if (!userId) {
     const reply =
       "To cancel appointments, you'll need to sign in first. This ensures we're canceling the right appointments securely.";
@@ -1538,6 +1557,59 @@ async function handleAppointmentAction(
       status: 200,
     });
   }
+}
+
+// Function to update conversation memory
+function updateConversationMemory(memory: any, userMessage: string, chatHistory: any[]) {
+  const msg = userMessage.toLowerCase();
+  
+  // Detect if user is sharing a problem
+  const problemIndicators = [
+    "failed", "failure", "problem", "issue", "trouble", "struggling", "difficult",
+    "challenge", "stuck", "confused", "lost", "worried", "stressed", "anxious",
+    "disappointed", "frustrated", "upset", "sad", "depressed", "rejected"
+  ];
+  
+  const hasProblemIndicator = problemIndicators.some(indicator => msg.includes(indicator));
+  
+  if (hasProblemIndicator && !memory.hasSharedProblem) {
+    // Extract the problem context
+    if (msg.includes("failed") && msg.includes("interview")) {
+      memory.userProblem = "a failed job interview";
+      memory.problemCategory = "career";
+      memory.hasSharedProblem = true;
+      memory.lastProblemMention = Date.now();
+    } else if (msg.includes("lost") && msg.includes("job")) {
+      memory.userProblem = "job loss";
+      memory.problemCategory = "career";
+      memory.hasSharedProblem = true;
+      memory.lastProblemMention = Date.now();
+    } else if (msg.includes("business") && (msg.includes("failing") || msg.includes("struggling"))) {
+      memory.userProblem = "business challenges";
+      memory.problemCategory = "business";
+      memory.hasSharedProblem = true;
+      memory.lastProblemMention = Date.now();
+    } else if (msg.includes("financial") && (msg.includes("problem") || msg.includes("trouble"))) {
+      memory.userProblem = "financial difficulties";
+      memory.problemCategory = "finance";
+      memory.hasSharedProblem = true;
+      memory.lastProblemMention = Date.now();
+    } else if (hasProblemIndicator) {
+      // Generic problem detection
+      memory.userProblem = "personal challenges";
+      memory.problemCategory = "general";
+      memory.hasSharedProblem = true;
+      memory.lastProblemMention = Date.now();
+    }
+  }
+  
+  // Update emotional state
+  memory.emotionalState = analyzeEmotionalState(chatHistory);
+  
+  // Update topics discussed
+  const currentTopics = extractTopicsFromHistory(chatHistory);
+  const combinedTopics = memory.topicsDiscussed.concat(currentTopics);
+  memory.topicsDiscussed = Array.from(new Set(combinedTopics));
 }
 
 // Helper functions for conversation context
@@ -2505,12 +2577,13 @@ async function findSemanticMatches(
 function generateIntelligentResponse(
   userMessage: string,
   consultancies: any[],
-  history: any[],
+  history: string[],
   userIntent: any,
   needsMoreInfo: boolean,
   userId: string | null = null,
   chatHistory: any[] = [],
-  conversationContext?: any
+  conversationContext?: any,
+  conversationMemory?: any
 ) {
   const msg = userMessage.toLowerCase();
   const isFirstMessage = history.length <= 2;
@@ -2519,7 +2592,7 @@ function generateIntelligentResponse(
   const emotionalState = conversationContext?.userEmotionalState || "neutral";
   const conversationStage = conversationContext?.conversationStage || "greeting";
   const topicsDiscussed = conversationContext?.topicsDiscussed || [];
-  const recentContext = conversationContext?.recentMessages?.map(m => m.text).join(" ").toLowerCase() || "";
+  const recentContext = conversationContext?.recentMessages?.map((m: any) => m.text).join(" ").toLowerCase() || "";
 
   // Greetings with auth-aware messaging
   if (
@@ -2841,6 +2914,9 @@ function generateIntelligentResponse(
     return "I understand! You're looking for direct advice rather than consultant recommendations. I'm here to help however I can. What specific guidance or support are you looking for? I can try to offer some general insights or suggestions.";
   }
 
+  // Context-aware conversation flow with memory
+  const contextText = recentContext || chatHistory.slice(-3).map(m => m.text).join(" ").toLowerCase();
+  
   // Handle "direct help" requests
   if (msg.includes("direct help") || msg.includes("direct advice")) {
     if (topicsDiscussed.includes("interview") || contextText.includes("interview")) {
@@ -3016,8 +3092,22 @@ function generateIntelligentResponse(
     return "Great question! Consultation fees vary by expertise and service type. Each consultant sets their own pricing based on their experience and specialization. Once I understand your needs and find the right consultant, you'll see their exact pricing before booking. What type of consultation are you interested in?";
   }
 
-  // Context-aware conversation flow - use provided conversation context
-  const contextText = recentContext || chatHistory.slice(-3).map(m => m.text).join(" ").toLowerCase();
+  // Use conversation memory to provide contextual responses
+  if (conversationMemory?.hasSharedProblem && conversationMemory.userProblem) {
+    // User has already shared their problem, provide contextual help
+    if (msg.includes("what") || msg.includes("how") || msg.includes("help")) {
+      if (conversationMemory.problemCategory === "career" || conversationMemory.userProblem.includes("interview")) {
+        return `I remember you're dealing with ${conversationMemory.userProblem}. I'm here to support you through this. What specific aspect would you like help with?\n\n• **Emotional support** - Processing feelings and staying motivated\n• **Practical advice** - Next steps for job searching and applications\n• **Interview skills** - Preparation tips and practice strategies\n• **Career planning** - Exploring different paths and opportunities\n• **Professional help** - Connecting with career consultants\n\nJust let me know what feels most helpful right now. 🤗`;
+      } else {
+        return `I haven't forgotten about ${conversationMemory.userProblem} that you mentioned earlier. How can I best help you with this? Would you like direct advice or should I connect you with a professional who specializes in this area?`;
+      }
+    }
+    
+    // If user seems to be asking for general help but we know their problem
+    if ((msg.includes("need") || msg.includes("want")) && msg.includes("help")) {
+      return `I remember you're dealing with ${conversationMemory.userProblem}. Based on what you've shared, I can help you in several ways. Would you like me to offer some direct advice about this situation, or would you prefer to speak with a professional consultant who specializes in ${conversationMemory.problemCategory} matters?`;
+    }
+  }
   
   // If user is continuing a conversation about a personal issue, be supportive
   if (topicsDiscussed.includes("interview") || contextText.includes("interview") || contextText.includes("failed")) {
@@ -3042,7 +3132,27 @@ function generateIntelligentResponse(
     }
   }
 
-  // Default - ask for clarification with context awareness
+  // Default - ask for clarification with context awareness and memory
+  if (conversationMemory.hasSharedProblem && conversationMemory.userProblem) {
+    // User has already shared their problem, don't ask again
+    if (emotionalState === "sad" || emotionalState === "frustrated") {
+      const contextualResponses = [
+        `I remember you mentioned ${conversationMemory.userProblem.toLowerCase()}. That's still weighing on your mind, isn't it? How are you feeling about it now? 💙`,
+        `You shared earlier about ${conversationMemory.userProblem.toLowerCase()}. I'm here to continue supporting you through this. What aspect would you like to focus on?`,
+        `I haven't forgotten about ${conversationMemory.userProblem.toLowerCase()} that you mentioned. How can I best help you with this right now? 🤗`
+      ];
+      return contextualResponses[Math.floor(Math.random() * contextualResponses.length)];
+    } else {
+      const followUpResponses = [
+        `Earlier you mentioned ${conversationMemory.userProblem.toLowerCase()}. How would you like me to help you with this? I can offer direct advice or connect you with professionals.`,
+        `I remember you're dealing with ${conversationMemory.userProblem.toLowerCase()}. What specific aspect would you like to work on next?`,
+        `You shared about ${conversationMemory.userProblem.toLowerCase()}. What would be most helpful right now - practical advice or professional guidance?`
+      ];
+      return followUpResponses[Math.floor(Math.random() * followUpResponses.length)];
+    }
+  }
+  
+  // First time or no clear problem shared yet
   if (emotionalState === "sad" || emotionalState === "frustrated") {
     const supportiveQuestions = [
       "I'm here to listen and help. What's on your mind right now? Whether you need someone to talk to or practical advice, I'm here for you. 💙",
@@ -3092,7 +3202,8 @@ async function updateExpiredAppointments() {
 }
 
 // Admin Functions
-async function handleAdminReport() {
+async function handleAdminReport(session: any) {
+  const { chatHistory } = session;
   // Update expired appointments first
   await updateExpiredAppointments();
 

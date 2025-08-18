@@ -36,7 +36,7 @@ export default function TermsPage() {
                   Last updated: January 15, 2025
                 </p>
                 <p className="text-sm text-gray-600 mt-2">
-                  Effective Date: January 1, 2025
+                  Effective Date: January 16, 2025
                 </p>
                 <p className="text-sm text-green-700 mt-2 font-medium">
                   Version 2.1 - Enhanced for better clarity and user protection

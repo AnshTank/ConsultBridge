@@ -156,6 +156,7 @@ export default function ConsultancyForm({ onSubmit, initialData, isEditing = fal
   };
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold mb-6">{isEditing ? 'Edit' : 'Add'} Consultancy</h2>
       
@@ -430,5 +431,6 @@ export default function ConsultancyForm({ onSubmit, initialData, isEditing = fal
         phone={formData.contact.phone}
       />
     )}
+    </>
   );
 }
