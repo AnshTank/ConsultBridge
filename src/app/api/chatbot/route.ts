@@ -16,6 +16,9 @@ const sessionStorage = new Map<
       topicsDiscussed: string[];
       lastProblemMention: number;
       hasSharedProblem: boolean;
+      recentContext: any[];
+      communicationStyle: string;
+      conversationFlow: string;
     };
     bookingState: {
       selectedConsultancy: any;
@@ -42,6 +45,9 @@ function getSession(sessionId: string) {
         topicsDiscussed: [],
         lastProblemMention: 0,
         hasSharedProblem: false,
+        recentContext: [],
+        communicationStyle: "neutral",
+        conversationFlow: "greeting",
       },
       bookingState: {
         selectedConsultancy: null,
@@ -1559,79 +1565,163 @@ async function handleAppointmentAction(
   }
 }
 
-// Function to update conversation memory
+// Enhanced conversation memory with better context understanding
 function updateConversationMemory(memory: any, userMessage: string, chatHistory: any[]) {
   const msg = userMessage.toLowerCase();
   
-  // Detect if user is sharing a problem
-  const problemIndicators = [
-    "failed", "failure", "problem", "issue", "trouble", "struggling", "difficult",
-    "challenge", "stuck", "confused", "lost", "worried", "stressed", "anxious",
-    "disappointed", "frustrated", "upset", "sad", "depressed", "rejected"
-  ];
+  // Enhanced problem detection with better context
+  const problemPatterns = {
+    career: {
+      keywords: ["failed interview", "job interview", "interview failed", "didn't get job", "job rejection", "unemployed", "lost job", "career stuck"],
+      description: "career/job challenges"
+    },
+    business: {
+      keywords: ["business failing", "startup struggling", "company problems", "business issues", "revenue down", "losing customers"],
+      description: "business difficulties"
+    },
+    financial: {
+      keywords: ["money problems", "financial trouble", "debt issues", "can't afford", "broke", "financial crisis"],
+      description: "financial problems"
+    },
+    personal: {
+      keywords: ["relationship problems", "family issues", "personal struggles", "feeling lost", "depression", "anxiety"],
+      description: "personal challenges"
+    },
+    health: {
+      keywords: ["health problems", "medical issues", "feeling sick", "mental health", "stress", "burnout"],
+      description: "health concerns"
+    }
+  };
   
-  const hasProblemIndicator = problemIndicators.some(indicator => msg.includes(indicator));
-  
-  if (hasProblemIndicator && !memory.hasSharedProblem) {
-    // Extract the problem context
-    if (msg.includes("failed") && msg.includes("interview")) {
-      memory.userProblem = "a failed job interview";
-      memory.problemCategory = "career";
+  // Check for specific problems
+  for (const [category, pattern] of Object.entries(problemPatterns)) {
+    if (pattern.keywords.some(keyword => msg.includes(keyword)) && !memory.hasSharedProblem) {
+      memory.userProblem = pattern.description;
+      memory.problemCategory = category;
       memory.hasSharedProblem = true;
       memory.lastProblemMention = Date.now();
-    } else if (msg.includes("lost") && msg.includes("job")) {
-      memory.userProblem = "job loss";
-      memory.problemCategory = "career";
-      memory.hasSharedProblem = true;
-      memory.lastProblemMention = Date.now();
-    } else if (msg.includes("business") && (msg.includes("failing") || msg.includes("struggling"))) {
-      memory.userProblem = "business challenges";
-      memory.problemCategory = "business";
-      memory.hasSharedProblem = true;
-      memory.lastProblemMention = Date.now();
-    } else if (msg.includes("financial") && (msg.includes("problem") || msg.includes("trouble"))) {
-      memory.userProblem = "financial difficulties";
-      memory.problemCategory = "finance";
-      memory.hasSharedProblem = true;
-      memory.lastProblemMention = Date.now();
-    } else if (hasProblemIndicator) {
-      // Generic problem detection
-      memory.userProblem = "personal challenges";
-      memory.problemCategory = "general";
-      memory.hasSharedProblem = true;
-      memory.lastProblemMention = Date.now();
+      break;
     }
   }
   
-  // Update emotional state
-  memory.emotionalState = analyzeEmotionalState(chatHistory);
+  // Store recent conversation context (last 3 exchanges)
+  memory.recentContext = chatHistory.slice(-6).map(m => ({
+    sender: m.sender,
+    text: m.text,
+    timestamp: Date.now()
+  }));
   
-  // Update topics discussed
-  const currentTopics = extractTopicsFromHistory(chatHistory);
+  // Track user's communication style
+  if (msg.includes("bro") || msg.includes("dude") || msg.includes("man")) {
+    memory.communicationStyle = "casual";
+  } else if (msg.includes("please") || msg.includes("thank you") || msg.includes("sir")) {
+    memory.communicationStyle = "formal";
+  }
+  
+  // Update emotional state with more nuance
+  memory.emotionalState = analyzeEmotionalStateAdvanced(chatHistory);
+  
+  // Track conversation flow
+  memory.conversationFlow = determineConversationFlow(chatHistory, memory);
+  
+  // Update topics with better extraction
+  const currentTopics = extractTopicsAdvanced(userMessage, chatHistory);
   const combinedTopics = memory.topicsDiscussed.concat(currentTopics);
   memory.topicsDiscussed = Array.from(new Set(combinedTopics));
 }
 
-// Helper functions for conversation context
-function analyzeEmotionalState(chatHistory: any[]) {
-  const recentMessages = chatHistory.slice(-3).filter(m => m.sender === "user");
+// Advanced emotional state analysis
+function analyzeEmotionalStateAdvanced(chatHistory: any[]) {
+  const recentMessages = chatHistory.slice(-4).filter(m => m.sender === "user");
   const allText = recentMessages.map(m => m.text).join(" ").toLowerCase();
   
-  const emotions = {
-    frustrated: ["frustrated", "annoyed", "angry", "upset", "mad"],
-    sad: ["sad", "disappointed", "depressed", "down", "failed", "failure"],
-    anxious: ["worried", "anxious", "nervous", "scared", "concerned"],
-    confused: ["confused", "lost", "don't know", "unsure", "help"],
-    positive: ["excited", "happy", "great", "awesome", "good"]
+  const emotionPatterns = {
+    frustrated: {
+      keywords: ["frustrated", "annoyed", "angry", "upset", "mad", "pissed", "irritated"],
+      intensity: 0.8
+    },
+    sad: {
+      keywords: ["sad", "disappointed", "depressed", "down", "failed", "failure", "devastated", "heartbroken"],
+      intensity: 0.9
+    },
+    anxious: {
+      keywords: ["worried", "anxious", "nervous", "scared", "concerned", "stressed", "panic"],
+      intensity: 0.7
+    },
+    confused: {
+      keywords: ["confused", "lost", "don't know", "unsure", "help", "stuck", "clueless"],
+      intensity: 0.6
+    },
+    hopeful: {
+      keywords: ["hope", "maybe", "trying", "working on", "getting better", "improving"],
+      intensity: 0.5
+    },
+    positive: {
+      keywords: ["excited", "happy", "great", "awesome", "good", "amazing", "fantastic"],
+      intensity: 0.3
+    }
   };
   
-  for (const [emotion, keywords] of Object.entries(emotions)) {
-    if (keywords.some(keyword => allText.includes(keyword))) {
-      return emotion;
+  let detectedEmotion = "neutral";
+  let highestIntensity = 0;
+  
+  for (const [emotion, pattern] of Object.entries(emotionPatterns)) {
+    const matchCount = pattern.keywords.filter(keyword => allText.includes(keyword)).length;
+    if (matchCount > 0 && pattern.intensity > highestIntensity) {
+      detectedEmotion = emotion;
+      highestIntensity = pattern.intensity;
     }
   }
   
-  return "neutral";
+  return detectedEmotion;
+}
+
+// Determine conversation flow
+function determineConversationFlow(chatHistory: any[], memory: any) {
+  const messageCount = chatHistory.length;
+  const lastUserMessage = chatHistory.slice().reverse().find(m => m.sender === "user")?.text.toLowerCase() || "";
+  
+  if (messageCount <= 2) return "greeting";
+  if (memory.hasSharedProblem && !lastUserMessage.includes("consultant") && !lastUserMessage.includes("professional")) {
+    return "problem_discussion";
+  }
+  if (lastUserMessage.includes("help") || lastUserMessage.includes("advice")) {
+    return "seeking_help";
+  }
+  if (lastUserMessage.includes("consultant") || lastUserMessage.includes("professional")) {
+    return "ready_for_consultant";
+  }
+  return "general_conversation";
+}
+
+// Advanced topic extraction
+function extractTopicsAdvanced(userMessage: string, chatHistory: any[]) {
+  const msg = userMessage.toLowerCase();
+  const topics = [];
+  
+  const topicPatterns = {
+    interview: ["interview", "job interview", "failed interview", "interview process"],
+    career: ["career", "job", "work", "employment", "profession", "workplace"],
+    business: ["business", "startup", "company", "entrepreneur", "venture"],
+    finance: ["money", "financial", "finance", "investment", "debt", "budget"],
+    health: ["health", "medical", "doctor", "wellness", "fitness", "mental health"],
+    education: ["study", "school", "college", "university", "exam", "course"],
+    relationship: ["relationship", "family", "friends", "dating", "marriage"],
+    technology: ["tech", "software", "app", "website", "programming", "IT"]
+  };
+  
+  for (const [topic, keywords] of Object.entries(topicPatterns)) {
+    if (keywords.some(keyword => msg.includes(keyword))) {
+      topics.push(topic);
+    }
+  }
+  
+  return topics;
+}
+
+// Helper functions for conversation context
+function analyzeEmotionalState(chatHistory: any[]) {
+  return analyzeEmotionalStateAdvanced(chatHistory);
 }
 
 function determineConversationStage(chatHistory: any[]) {
@@ -2623,18 +2713,41 @@ function generateIntelligentResponse(
     return "Hello! I'm Shaan, your personal consultant assistant at ConsultBridge - India's most trusted consulting platform! 🎆 I'm here to understand your specific needs and connect you with top-rated experts across 10+ categories. Whether it's business strategy, financial planning, legal advice, or personal growth - I'll find the perfect consultant for you. What challenge or goal are you working on today?";
   }
 
-  // Enhanced empathetic responses for personal situations with conversation flow
-  if (
-    msg.includes("failed") && (msg.includes("interview") || msg.includes("job"))
-  ) {
-    const empathyResponses = [
-      "I'm really sorry to hear about your interview. That must be incredibly disappointing, especially when you were hoping for that opportunity. 😔 Interview rejections can feel personal, but they often have nothing to do with your worth or capabilities. Sometimes it's just not the right fit, timing, or they had internal candidates.\n\nHow are you feeling about it? Would you like to talk through what happened, or are you looking for advice on next steps?",
-      "Oh no, that's tough news about the interview. 💙 I can imagine how deflating that must feel, especially if you really wanted that position. Interview outcomes can be so unpredictable - sometimes it's about company culture fit, budget constraints, or they already had someone in mind.\n\nWhat's going through your mind right now? Are you looking to process what happened or thinking about your next move?",
-      "I'm sorry that interview didn't work out. That's genuinely disappointing, and it's completely normal to feel frustrated or discouraged right now. 🤗 These setbacks can be really hard, especially when you've invested time and energy preparing.\n\nDo you want to talk about what you're thinking or feeling? Sometimes it helps to process these experiences before jumping into next steps."
+  // Human-like contextual responses based on conversation memory
+  if (conversationMemory?.hasSharedProblem && conversationMemory.userProblem) {
+    // User has shared a problem - respond contextually
+    if (msg.includes("failed") && msg.includes("interview")) {
+      const interviewResponses = [
+        "Ugh, that really sucks about the interview! 😔 I can totally understand how frustrating that must be. Interview rejections always sting, especially when you put yourself out there and really wanted it.\n\nWant to talk about what happened? Sometimes it helps to just vent about it, or we could think through what might help for next time. What feels right for you?",
+        "Oh man, that's really disappointing about the interview. 💔 I hate when that happens - you get your hopes up and then... nothing. It's like, what did I do wrong, you know?\n\nHow are you holding up? Are you the type who wants to analyze what went wrong, or do you just need someone to say 'that sucks' and move on? I'm here either way.",
+        "Damn, sorry to hear about the interview not working out. That's always a gut punch, especially if you felt like it went well. 😕\n\nI know it's easy to say, but try not to take it too personally. Sometimes these things are just out of our control - they might have had an internal candidate or budget got cut. What's your next move?"
+      ];
+      return interviewResponses[Math.floor(Math.random() * interviewResponses.length)];
+    }
+    
+    // Follow-up responses for ongoing conversations
+    if (msg.includes("what") || msg.includes("how") || msg.includes("help")) {
+      const followUpResponses = [
+        `So about ${conversationMemory.userProblem} - what specifically is on your mind? I'm here to help however I can, whether that's just talking it through or finding some practical solutions.`,
+        `I remember you mentioned ${conversationMemory.userProblem}. What aspect of this is bothering you most right now? We can tackle this step by step.`,
+        `You know, regarding ${conversationMemory.userProblem} - I'm curious what would feel most helpful right now? Sometimes just having someone listen makes a difference, other times you need actionable advice. What's your vibe?"
+      ];
+      return followUpResponses[Math.floor(Math.random() * followUpResponses.length)];
+    }
+  }
+  
+  // Handle when user seems to be asking something unrelated but we have context
+  if (conversationMemory?.hasSharedProblem && !msg.includes(conversationMemory.problemCategory)) {
+    const contextualResponses = [
+      `I hear you on that. By the way, how are you doing with ${conversationMemory.userProblem}? Still on your mind or have you moved past it?`,
+      `Got it. And hey, just checking in - how are things going with ${conversationMemory.userProblem} we talked about earlier?`,
+      `Makes sense. Quick check-in though - how are you feeling about ${conversationMemory.userProblem} now? Any updates on that front?"
     ];
     
-    chatHistory.push({ sender: "bot", text: empathyResponses[Math.floor(Math.random() * empathyResponses.length)] });
-    return empathyResponses[Math.floor(Math.random() * empathyResponses.length)];
+    // Only ask occasionally, not every time
+    if (Math.random() > 0.7) {
+      return contextualResponses[Math.floor(Math.random() * contextualResponses.length)];
+    }
   }
 
   if (
@@ -3132,47 +3245,55 @@ function generateIntelligentResponse(
     }
   }
 
-  // Default - ask for clarification with context awareness and memory
-  if (conversationMemory.hasSharedProblem && conversationMemory.userProblem) {
-    // User has already shared their problem, don't ask again
+  // Natural conversation flow based on context and memory
+  if (conversationMemory?.hasSharedProblem && conversationMemory.userProblem) {
+    // User has shared a problem - be contextual and natural
     if (emotionalState === "sad" || emotionalState === "frustrated") {
-      const contextualResponses = [
-        `I remember you mentioned ${conversationMemory.userProblem.toLowerCase()}. That's still weighing on your mind, isn't it? How are you feeling about it now? 💙`,
-        `You shared earlier about ${conversationMemory.userProblem.toLowerCase()}. I'm here to continue supporting you through this. What aspect would you like to focus on?`,
-        `I haven't forgotten about ${conversationMemory.userProblem.toLowerCase()} that you mentioned. How can I best help you with this right now? 🤗`
+      const naturalResponses = [
+        `Hey, I can tell you're still processing ${conversationMemory.userProblem}. That's totally normal - these things take time to work through. What's going through your head right now?`,
+        `I remember you were dealing with ${conversationMemory.userProblem}. Sounds like it's still on your mind? Want to talk about where you're at with it?`,
+        `You know, about ${conversationMemory.userProblem} - I can sense you're still working through it. What would help most right now? Just venting, or thinking through next steps?"
       ];
-      return contextualResponses[Math.floor(Math.random() * contextualResponses.length)];
+      return naturalResponses[Math.floor(Math.random() * naturalResponses.length)];
     } else {
-      const followUpResponses = [
-        `Earlier you mentioned ${conversationMemory.userProblem.toLowerCase()}. How would you like me to help you with this? I can offer direct advice or connect you with professionals.`,
-        `I remember you're dealing with ${conversationMemory.userProblem.toLowerCase()}. What specific aspect would you like to work on next?`,
-        `You shared about ${conversationMemory.userProblem.toLowerCase()}. What would be most helpful right now - practical advice or professional guidance?`
+      const casualFollowUps = [
+        `So, how are things going with ${conversationMemory.userProblem}? Any progress or still figuring it out?`,
+        `I remember you mentioned ${conversationMemory.userProblem}. What's the latest on that front?`,
+        `Hey, just checking in - how are you handling ${conversationMemory.userProblem} these days? Better, worse, or about the same?"
       ];
-      return followUpResponses[Math.floor(Math.random() * followUpResponses.length)];
+      return casualFollowUps[Math.floor(Math.random() * casualFollowUps.length)];
     }
   }
   
-  // First time or no clear problem shared yet
+  // Natural responses based on emotional state
   if (emotionalState === "sad" || emotionalState === "frustrated") {
-    const supportiveQuestions = [
-      "I'm here to listen and help. What's on your mind right now? Whether you need someone to talk to or practical advice, I'm here for you. 💙",
-      "It sounds like you're dealing with something challenging. I'm here to support you however I can. What would be most helpful - talking through your feelings or getting some practical guidance?",
-      "I can sense this might be a difficult time for you. I'm here to help in whatever way feels right. What's weighing on your mind?"
+    const empathicResponses = [
+      "I can tell something's bothering you. Want to talk about it? Sometimes it helps just to get it out there.",
+      "You seem like you're going through something tough right now. I'm here if you want to share what's on your mind.",
+      "Sounds like you're dealing with some stuff. What's weighing on you? I'm a good listener."
     ];
-    return supportiveQuestions[Math.floor(Math.random() * supportiveQuestions.length)];
+    return empathicResponses[Math.floor(Math.random() * empathicResponses.length)];
   }
   
-  const clarifyingQuestions = [
-    "I'm here to help! What's on your mind today? Whether you need advice, want to talk something through, or are looking for professional guidance - just let me know. 😊",
-    "How can I best support you today? I can offer direct advice, help you think through situations, or connect you with professional consultants if needed.",
-    "I'm here to help however you need! What specific challenge or goal are you working on? I can provide guidance or connect you with experts.",
-    "What brings you here today? Whether you need someone to brainstorm with, want professional advice, or just need to talk something through - I'm here! 🤗",
-    "I'm ready to help! What would be most useful for you right now - direct advice, professional consultation, or just a supportive conversation?"
+  if (emotionalState === "confused") {
+    const clarifyingResponses = [
+      "I can sense you're trying to figure something out. What's got you puzzled? Maybe we can work through it together.",
+      "Seems like you're stuck on something. What's the situation? Sometimes talking it through helps clarify things.",
+      "You sound a bit unsure about something. What's the dilemma? I'm here to help you think it through."
+    ];
+    return clarifyingResponses[Math.floor(Math.random() * clarifyingResponses.length)];
+  }
+  
+  // Default natural conversation starters
+  const naturalQuestions = [
+    "What's on your mind today? I'm here to chat about whatever you need.",
+    "How can I help you out? Whether it's advice, just talking, or finding the right professional - I'm game for whatever.",
+    "What brings you here? I'm ready to help with whatever you're dealing with.",
+    "So what's going on? I'm here to listen and help however I can.",
+    "What's up? What can I help you with today?"
   ];
 
-  return clarifyingQuestions[
-    Math.floor(Math.random() * clarifyingQuestions.length)
-  ];
+  return naturalQuestions[Math.floor(Math.random() * naturalQuestions.length)];
 }
 
 // Function to update expired appointments
