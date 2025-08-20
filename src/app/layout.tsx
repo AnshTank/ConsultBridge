@@ -5,6 +5,7 @@ import "../index.css";
 import Chatbot from "@/components/Chatbot";
 import UniqueTransitions from "../components/UniqueTransitions";
 import "../styles/page-transitions.css";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -13,7 +14,8 @@ export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "ConsultBridge - Connect with Expert Consultants",
-  description: "Find and book consultations with verified experts across various industries. Get professional advice tailored to your needs.",
+  description:
+    "Find and book consultations with verified experts across various industries. Get professional advice tailored to your needs.",
 };
 
 export default function RootLayout({
@@ -30,9 +32,8 @@ export default function RootLayout({
           className={`${inter.className} page-transition`}
           style={{ overflowX: "hidden" }}
         >
-          <UniqueTransitions>
-            {children}
-          </UniqueTransitions>
+          <SpeedInsights />
+          <UniqueTransitions>{children}</UniqueTransitions>
           <Chatbot />
         </body>
       </html>
