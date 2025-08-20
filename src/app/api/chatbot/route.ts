@@ -3,6 +3,11 @@ import connectDB from "../../../lib/mongodb";
 import Consultancy from "../../../models/Consultancy";
 import Appointment from "../../../models/Appointment";
 import { generatePDFReceipt } from "../../../lib/pdfGenerator";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+// Initialize Gemini AI
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // Session-based storage for chat history and states
 const sessionStorage = new Map<
@@ -80,25 +85,46 @@ export async function POST(req: NextRequest) {
 
   // Get session data
   const session = getSession(sessionId);
-  const { chatHistory, conversationMemory, bookingState, appointmentAction } = session;
+  const { chatHistory, conversationMemory, bookingState, appointmentAction } =
+    session;
 
   chatHistory.push({ sender: "user", text: userMessage });
-  
+
   // Update conversation memory
   updateConversationMemory(conversationMemory, userMessage, chatHistory);
-  
+
   // Enhanced context awareness - analyze conversation flow
   const conversationContext = {
     recentMessages: chatHistory.slice(-5),
-    lastBotMessage: chatHistory.slice().reverse().find(m => m.sender === "bot")?.text || "",
+    lastBotMessage:
+      chatHistory
+        .slice()
+        .reverse()
+        .find((m) => m.sender === "bot")?.text || "",
     userEmotionalState: analyzeEmotionalState(chatHistory),
     conversationStage: determineConversationStage(chatHistory),
-    topicsDiscussed: extractTopicsFromHistory(chatHistory)
+    topicsDiscussed: extractTopicsFromHistory(chatHistory),
   };
 
   // Enhanced context awareness for yes/no responses
   const msg = userMessage.toLowerCase();
   const lastBotMessage = conversationContext.lastBotMessage;
+  
+  // EARLY DETECTION: Check for interview failure context to prevent wrong suggestions
+  if (msg.includes("feeling") && msg.includes("low")) {
+    // Check recent chat history for interview context
+    const recentMessages = chatHistory.slice(-3).map(m => m.text.toLowerCase()).join(' ');
+    if (recentMessages.includes('interview') || recentMessages.includes('failed')) {
+      conversationMemory.userProblem = "interview failure";
+      conversationMemory.problemCategory = "career";
+      conversationMemory.hasSharedProblem = true;
+      conversationMemory.emotionalState = "sad";
+      
+      const reply = "Yeah, I get that. Interview failures can really mess with your confidence. It's totally normal to feel low after putting yourself out there like that.\n\nLook, you don't have to bounce back immediately or be all positive right now. Sometimes you just need to feel crappy for a bit, and that's okay.\n\nWhen you're ready though - whether that's now or later - I can help you figure out what's next. Could be anything from just talking through what happened, to prepping better for next time, or even connecting you with someone who knows the job market inside out.\n\nWhat feels right for you right now?";
+      chatHistory.push({ sender: "bot", text: reply });
+      return new Response(JSON.stringify({ reply, sessionId, chatHistory }), { status: 200 });
+    }
+  }
 
   // Handle summary/website choice for view details
   if (msg === "summary" || msg === "website" || msg === "chat summary") {
@@ -129,33 +155,53 @@ export async function POST(req: NextRequest) {
             if (consultancy) {
               const rating = consultancy.rating || 0;
               const ratingText =
-                rating > 0 ? `⭐ ${rating.toFixed(1)}/5` : "New";
+                rating > 0 ? "⭐ " + rating.toFixed(1) + "/5" : "New";
               const expertise = Array.isArray(consultancy.expertise)
                 ? consultancy.expertise.join(", ")
                 : "General consulting";
               const whyChooseUs = Array.isArray(consultancy.whyChooseUs)
                 ? consultancy.whyChooseUs
                     .slice(0, 3)
-                    .map((reason) => `• ${reason}`)
+                    .map((reason) => "• " + reason)
                     .join("\n")
                 : "• Professional service\n• Expert guidance";
 
               const summary =
-                `📋 ${consultancy.name} Summary\n\n` +
-                `🏷️ Category: ${consultancy.category}\n` +
-                `📍 Location: ${consultancy.location}\n` +
-                `${ratingText} (${consultancy.reviews || 0} reviews)\n` +
-                `💰 Price: ${consultancy.price || "Contact for pricing"}\n\n` +
-                `🎯 Expertise: ${expertise}\n\n` +
-                `📝 About: ${
-                  consultancy.description || "Professional consulting services"
-                }\n\n` +
-                `✨ Why Choose Us:\n${whyChooseUs}\n\n` +
-                `📞 Contact: ${
-                  consultancy.contact?.email || "Available on booking"
-                }\n` +
-                `🌐 Website: ${consultancy.contact?.website || "N/A"}\n\n` +
-                `Would you like to book a consultation with ${consultancy.name}?`;
+                "📋 " +
+                consultancy.name +
+                " Summary\n\n" +
+                "🏷️ Category: " +
+                consultancy.category +
+                "\n" +
+                "📍 Location: " +
+                consultancy.location +
+                "\n" +
+                ratingText +
+                " (" +
+                (consultancy.reviews || 0) +
+                " reviews)\n" +
+                "💰 Price: " +
+                (consultancy.price || "Contact for pricing") +
+                "\n\n" +
+                "🎯 Expertise: " +
+                expertise +
+                "\n\n" +
+                "📝 About: " +
+                (consultancy.description ||
+                  "Professional consulting services") +
+                "\n\n" +
+                "✨ Why Choose Us:\n" +
+                whyChooseUs +
+                "\n\n" +
+                "📞 Contact: " +
+                (consultancy.contact?.email || "Available on booking") +
+                "\n" +
+                "🌐 Website: " +
+                (consultancy.contact?.website || "N/A") +
+                "\n\n" +
+                "Would you like to book a consultation with " +
+                consultancy.name +
+                "?";
 
               chatHistory.push({ sender: "bot", text: summary });
               return new Response(
@@ -186,7 +232,10 @@ export async function POST(req: NextRequest) {
             { status: 200 }
           );
         } else if (msg === "website") {
-          const reply = `Great choice! I'll open the detailed page for ${consultancyName} on our website.`;
+          const reply =
+            "Great choice! I'll open the detailed page for " +
+            consultancyName +
+            " on our website.";
           chatHistory.push({ sender: "bot", text: reply });
 
           // Find consultancy and return navigation info
@@ -227,80 +276,115 @@ export async function POST(req: NextRequest) {
     msg === "ok" ||
     msg === "yep"
   ) {
-    let reply = "";
+    let category = "";
     if (
       lastBotMessage.includes("health") ||
       lastBotMessage.includes("wellness") ||
       lastBotMessage.includes("medical") ||
       lastBotMessage.includes("fitness")
     ) {
-      reply =
-        "Great! I'll help you find health and wellness experts. Let me search for top-rated consultants who can assist with your health needs.";
+      category = "health";
     } else if (
       lastBotMessage.includes("travel") ||
       lastBotMessage.includes("hospitality") ||
       lastBotMessage.includes("trip") ||
       lastBotMessage.includes("event management")
     ) {
-      reply =
-        "Perfect! I'll find travel and hospitality consultants for you. Let me search for experienced professionals who can help with your travel and hospitality needs.";
+      category = "travel";
     } else if (
       lastBotMessage.includes("business") ||
       lastBotMessage.includes("startup") ||
       lastBotMessage.includes("entrepreneur")
     ) {
-      reply =
-        "Perfect! I'll find business consultants for you. Let me search for experienced professionals who can help with your business needs.";
+      category = "business";
     } else if (
       lastBotMessage.includes("legal") ||
       lastBotMessage.includes("attorney") ||
       lastBotMessage.includes("lawyer")
     ) {
-      reply =
-        "Understood! I'll connect you with legal experts. Let me find qualified attorneys and legal consultants for your situation.";
+      category = "legal";
     } else if (
       lastBotMessage.includes("financial") ||
       lastBotMessage.includes("finance") ||
       lastBotMessage.includes("money")
     ) {
-      reply =
-        "Excellent! I'll help you find financial advisors. Let me search for certified financial consultants who can assist with your needs.";
+      category = "finance";
     } else if (
       lastBotMessage.includes("technology") ||
       lastBotMessage.includes("tech") ||
       lastBotMessage.includes("software") ||
       lastBotMessage.includes("IT")
     ) {
-      reply =
-        "Awesome! I'll find technology consultants for you. Let me search for tech experts who can help with your technology needs.";
+      category = "technology";
     } else if (
       lastBotMessage.includes("career") ||
       lastBotMessage.includes("job") ||
       lastBotMessage.includes("employment")
     ) {
-      reply =
-        "Great! I'll find career consultants for you. Let me search for career experts who can help with your professional development.";
+      category = "career";
     } else if (
       lastBotMessage.includes("lifestyle") ||
       lastBotMessage.includes("personal growth") ||
       lastBotMessage.includes("life coaching")
     ) {
-      reply =
-        "Wonderful! I'll find lifestyle and personal growth consultants for you. Let me search for coaches who can help with your personal development.";
+      category = "lifestyle";
     } else if (
       lastBotMessage.includes("real estate") ||
       lastBotMessage.includes("property") ||
       lastBotMessage.includes("housing")
     ) {
-      reply =
-        "Excellent! I'll find real estate consultants for you. Let me search for property experts who can help with your real estate needs.";
+      category = "realestate";
     }
 
-    if (reply) {
-      chatHistory.push({ sender: "bot", text: reply });
-      return new Response(JSON.stringify({ reply, sessionId, chatHistory }), {
-        status: 200,
-      });
+    if (category) {
+      // Actually search for consultancies
+      const matchedConsultancies = await findSemanticMatches(
+        userMessage,
+        category,
+        tokenize(userMessage)
+      );
+
+      if (matchedConsultancies.length > 0) {
+        const suggestions = matchedConsultancies
+          .slice(0, 3)
+          .map((c, i) => {
+            const description = c.description || "Professional consulting services";
+            const truncatedDesc = description.length > 200 ? description.substring(0, 200) + "..." : description;
+            const rating = c.rating || 0;
+            const ratingText = rating > 0 ? `⭐ ${rating.toFixed(1)}/5` : "New";
+            return `${i + 1}. ${c.name} - ${ratingText}\n   ${truncatedDesc}`;
+          })
+          .join("\n\n");
+
+        const categoryNames = {
+          health: "Health & Wellness",
+          travel: "Travel & Hospitality", 
+          business: "Business Strategy",
+          legal: "Legal Advisory",
+          finance: "Financial Services",
+          technology: "Technology",
+          career: "Career Consultation",
+          lifestyle: "Lifestyle & Personal Growth",
+          realestate: "Real Estate & Housing"
+        };
+        const reply = `Perfect! Here are top ${categoryNames[category as keyof typeof categoryNames] || category} consultants for you:\n\n${suggestions}\n\nWould you like to book a consultation with any of these specialists?`;
+        chatHistory.push({ sender: "bot", text: reply });
+
+        return new Response(
+          JSON.stringify({
+            reply,
+            sessionId,
+            chatHistory,
+            consultancies: matchedConsultancies.slice(0, 3).map((c) => ({
+              _id: c._id,
+              name: c.name,
+              category: c.category,
+              description: c.description,
+            })),
+          }),
+          { status: 200 }
+        );
+      }
     }
   }
 
@@ -343,7 +427,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (consultancyName) {
-      const reply = `Great! I can show you details about ${consultancyName} in two ways:\n\n🔍 Chat Summary - Quick overview right here in our conversation\n🌐 View on Website - Complete detailed page with all information\n\nHow would you like to view the details? Just say "summary" for chat or "website" for the full page experience!`;
+      const reply =
+        "Great! I can show you details about " +
+        consultancyName +
+        ' in two ways:\n\n🔍 Chat Summary - Quick overview right here in our conversation\n🌐 View on Website - Complete detailed page with all information\n\nHow would you like to view the details? Just say "summary" for chat or "website" for the full page experience!';
       chatHistory.push({ sender: "bot", text: reply });
       return new Response(JSON.stringify({ reply, sessionId, chatHistory }), {
         status: 200,
@@ -529,7 +616,10 @@ export async function POST(req: NextRequest) {
       if (consultancy) {
         // Check verification status
         if (consultancy.status !== "verified") {
-          const reply = `I apologize, but ${consultancy.name} is currently under verification by our admin team. 🔍\n\nFor your safety and to ensure quality service, we only allow bookings with verified consultancies. This consultancy will be available for booking once the verification process is complete.\n\nWould you like me to suggest other verified consultants in the same category?`;
+          const reply =
+            "I apologize, but " +
+            consultancy.name +
+            " is currently under verification by our admin team. 🔍\n\nFor your safety and to ensure quality service, we only allow bookings with verified consultancies. This consultancy will be available for booking once the verification process is complete.\n\nWould you like me to suggest other verified consultants in the same category?";
           chatHistory.push({ sender: "bot", text: reply });
           return new Response(JSON.stringify({ reply }), { status: 200 });
         }
@@ -546,16 +636,20 @@ export async function POST(req: NextRequest) {
           "Friday",
         ];
 
-        const reply = `Excellent choice! Let's book your appointment with ${
-          consultancy.name
-        }.\n\nAvailable Days: ${availableDays.join(", ")}\nHours: ${
-          consultancy.availability?.hours || "9:00 AM - 6:00 PM"
-        }\n\nWhat date works best for you?\nFormat: YYYY-MM-DD (e.g., ${minDate.getFullYear()}-${String(
-          minDate.getMonth() + 1
-        ).padStart(2, "0")}-${String(minDate.getDate()).padStart(
-          2,
-          "0"
-        )})\n\nNote: Date must be tomorrow or later and on an available day.`;
+        const reply =
+          "Excellent choice! Let's book your appointment with " +
+          consultancy.name +
+          ".\n\nAvailable Days: " +
+          availableDays.join(", ") +
+          "\nHours: " +
+          (consultancy.availability?.hours || "9:00 AM - 6:00 PM") +
+          "\n\nWhat date works best for you?\nFormat: YYYY-MM-DD (e.g., " +
+          minDate.getFullYear() +
+          "-" +
+          String(minDate.getMonth() + 1).padStart(2, "0") +
+          "-" +
+          String(minDate.getDate()).padStart(2, "0") +
+          ")\n\nNote: Date must be tomorrow or later and on an available day.";
         chatHistory.push({ sender: "bot", text: reply });
         return new Response(JSON.stringify({ reply }), { status: 200 });
       }
@@ -566,6 +660,77 @@ export async function POST(req: NextRequest) {
       "I'd be happy to help you book an appointment! Which consultancy would you like to schedule with? Please let me know the name.";
     chatHistory.push({ sender: "bot", text: reply });
     return new Response(JSON.stringify({ reply }), { status: 200 });
+  }
+
+  // Handle search processing responses that need to show progress and results
+  const searchProcessingPhrases = [
+    "let me search", "let me find", "i'll search", "i'll find", "searching for", "finding"
+  ];
+  
+  if (searchProcessingPhrases.some(phrase => msg.includes(phrase))) {
+    // Determine category from the message
+    let searchCategory = "";
+    if (msg.includes("career") || msg.includes("job")) searchCategory = "career";
+    else if (msg.includes("business") || msg.includes("startup")) searchCategory = "business";
+    else if (msg.includes("legal") || msg.includes("lawyer")) searchCategory = "legal";
+    else if (msg.includes("financial") || msg.includes("finance")) searchCategory = "finance";
+    else if (msg.includes("health") || msg.includes("medical")) searchCategory = "health";
+    else if (msg.includes("technology") || msg.includes("tech")) searchCategory = "technology";
+    else if (msg.includes("travel") || msg.includes("hospitality")) searchCategory = "travel";
+    else if (msg.includes("lifestyle") || msg.includes("personal")) searchCategory = "lifestyle";
+    else if (msg.includes("real estate") || msg.includes("property")) searchCategory = "realestate";
+    
+    if (searchCategory) {
+      const matchedConsultancies = await findSemanticMatches(
+        userMessage,
+        searchCategory,
+        tokenize(userMessage)
+      );
+
+      if (matchedConsultancies.length > 0) {
+        const suggestions = matchedConsultancies
+          .slice(0, 3)
+          .map((c, i) => {
+            const description = c.description || "Professional consulting services";
+            const truncatedDesc = description.length > 200 ? description.substring(0, 200) + "..." : description;
+            const rating = c.rating || 0;
+            const ratingText = rating > 0 ? `⭐ ${rating.toFixed(1)}/5` : "New";
+            return `${i + 1}. ${c.name} - ${ratingText}\n   ${truncatedDesc}`;
+          })
+          .join("\n\n");
+
+        const categoryNames = {
+          career: "Career Consultation",
+          business: "Business Strategy", 
+          legal: "Legal Advisory",
+          finance: "Financial Services",
+          health: "Health & Wellness",
+          technology: "Technology",
+          travel: "Travel & Hospitality",
+          lifestyle: "Lifestyle & Personal Growth",
+          realestate: "Real Estate & Housing"
+        };
+        
+        const reply = `Found ${matchedConsultancies.length} excellent ${categoryNames[searchCategory as keyof typeof categoryNames]} specialists for you:\n\n${suggestions}\n\nWould you like to book a consultation with any of these top-rated experts?`;
+        chatHistory.push({ sender: "bot", text: reply });
+
+        return new Response(
+          JSON.stringify({
+            reply,
+            sessionId,
+            chatHistory,
+            consultancies: matchedConsultancies.slice(0, 3).map((c) => ({
+              _id: c._id,
+              name: c.name,
+              category: c.category,
+              description: c.description,
+            })),
+            processingSearch: true
+          }),
+          { status: 200 }
+        );
+      }
+    }
   }
 
   // Direct intent detection for common user expressions
@@ -808,14 +973,22 @@ export async function POST(req: NextRequest) {
   }
 
   // If direct intent detected, find consultancies immediately
+  // BUT CHECK FOR PERSONAL ISSUES FIRST
   if (detectedCategory) {
-    const matchedConsultancies = await findSemanticMatches(
-      userMessage,
-      detectedCategory,
-      tokenize(userMessage)
-    );
+    // Don't suggest business consultants if user is dealing with personal issues
+    if (conversationMemory.hasSharedProblem && 
+        (conversationMemory.userProblem.includes("interview") || 
+         conversationMemory.problemCategory === "career")) {
+      // Skip consultancy suggestions for personal issues
+      detectedCategory = null;
+    } else {
+      const matchedConsultancies = await findSemanticMatches(
+        userMessage,
+        detectedCategory,
+        tokenize(userMessage)
+      );
 
-    if (matchedConsultancies.length > 0) {
+      if (matchedConsultancies.length > 0) {
       const suggestions = matchedConsultancies
         .slice(0, 3)
         .map((c, i) => {
@@ -827,7 +1000,9 @@ export async function POST(req: NextRequest) {
               : description;
           const rating = c.rating || 0;
           const ratingText = rating > 0 ? `⭐ ${rating.toFixed(1)}/5` : "New";
-          return `${i + 1}. ${c.name} - ${ratingText}\n   ${truncatedDesc}`;
+          return (
+            i + 1 + ". " + c.name + " - " + ratingText + "\n   " + truncatedDesc
+          );
         })
         .join("\n\n");
 
@@ -850,25 +1025,49 @@ export async function POST(req: NextRequest) {
           "Great! Here are real estate experts who can assist with your property needs:",
       };
 
-      const reply = `${
-        categoryResponses[detectedCategory as keyof typeof categoryResponses]
-      }\n\n${suggestions}\n\nWould you like to book a consultation with any of these specialists?`;
+      const reply =
+        categoryResponses[detectedCategory as keyof typeof categoryResponses] +
+        "\n\n" +
+        suggestions +
+        "\n\nWould you like to book a consultation with any of these specialists?";
       chatHistory.push({ sender: "bot", text: reply });
 
-      return new Response(
-        JSON.stringify({
-          reply,
-          sessionId,
-          chatHistory,
-          consultancies: matchedConsultancies.slice(0, 3).map((c) => ({
-            _id: c._id,
-            name: c.name,
-            category: c.category,
-            description: c.description,
-          })),
-        }),
-        { status: 200 }
-      );
+        return new Response(
+          JSON.stringify({
+            reply,
+            sessionId,
+            chatHistory,
+            consultancies: matchedConsultancies.slice(0, 3).map((c) => ({
+              _id: c._id,
+              name: c.name,
+              category: c.category,
+              description: c.description,
+            })),
+          }),
+          { status: 200 }
+        );
+      }
+    }
+  }
+
+  // HYBRID APPROACH: Check if we should use AI or local logic
+  const useAI = shouldUseAI(userMessage, chatHistory, conversationMemory);
+  console.log('=== AI DECISION ===');
+  console.log('User message:', userMessage);
+  console.log('Should use AI:', useAI);
+  
+  if (useAI) {
+    console.log('Calling AI...');
+    const aiResponse = await getAIResponse(userMessage, chatHistory, conversationMemory);
+    console.log('AI Response:', aiResponse);
+    if (aiResponse) {
+      chatHistory.push({ sender: "bot", text: aiResponse });
+      return new Response(JSON.stringify({ 
+        reply: aiResponse, 
+        sessionId, 
+        chatHistory,
+        aiGenerated: true 
+      }), { status: 200 });
     }
   }
 
@@ -878,7 +1077,7 @@ export async function POST(req: NextRequest) {
 
   const recentHistory = chatHistory
     .slice(-6)
-    .map((m) => `${m.sender === "user" ? "User" : "Shaan"}: ${m.text}`);
+    .map((m) => (m.sender === "user" ? "User" : "Shaan") + ": " + m.text);
 
   // Intelligent conversational AI with context awareness
   const response = generateIntelligentResponse(
@@ -1011,12 +1210,14 @@ async function handleBookingStep(
     // Check if date is in the past
     if (selectedDate <= today) {
       const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-      const reply = `Sorry, that date is in the past or today. Please choose a future date.\nEarliest available: ${tomorrow.getFullYear()}-${String(
-        tomorrow.getMonth() + 1
-      ).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(
-        2,
-        "0"
-      )}\n\nWhat date would you like?`;
+      const reply =
+        "Sorry, that date is in the past or today. Please choose a future date.\nEarliest available: " +
+        tomorrow.getFullYear() +
+        "-" +
+        String(tomorrow.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(tomorrow.getDate()).padStart(2, "0") +
+        "\n\nWhat date would you like?";
       chatHistory.push({ sender: "bot", text: reply });
       return new Response(JSON.stringify({ reply }), { status: 200 });
     }
@@ -1566,36 +1767,80 @@ async function handleAppointmentAction(
 }
 
 // Enhanced conversation memory with better context understanding
-function updateConversationMemory(memory: any, userMessage: string, chatHistory: any[]) {
+function updateConversationMemory(
+  memory: any,
+  userMessage: string,
+  chatHistory: any[]
+) {
   const msg = userMessage.toLowerCase();
-  
+
   // Enhanced problem detection with better context
   const problemPatterns = {
     career: {
-      keywords: ["failed interview", "job interview", "interview failed", "didn't get job", "job rejection", "unemployed", "lost job", "career stuck"],
-      description: "career/job challenges"
+      keywords: [
+        "failed interview",
+        "job interview",
+        "interview failed",
+        "didn't get job",
+        "job rejection",
+        "unemployed",
+        "lost job",
+        "career stuck",
+      ],
+      description: "career/job challenges",
     },
     business: {
-      keywords: ["business failing", "startup struggling", "company problems", "business issues", "revenue down", "losing customers"],
-      description: "business difficulties"
+      keywords: [
+        "business failing",
+        "startup struggling",
+        "company problems",
+        "business issues",
+        "revenue down",
+        "losing customers",
+      ],
+      description: "business difficulties",
     },
     financial: {
-      keywords: ["money problems", "financial trouble", "debt issues", "can't afford", "broke", "financial crisis"],
-      description: "financial problems"
+      keywords: [
+        "money problems",
+        "financial trouble",
+        "debt issues",
+        "can't afford",
+        "broke",
+        "financial crisis",
+      ],
+      description: "financial problems",
     },
     personal: {
-      keywords: ["relationship problems", "family issues", "personal struggles", "feeling lost", "depression", "anxiety"],
-      description: "personal challenges"
+      keywords: [
+        "relationship problems",
+        "family issues",
+        "personal struggles",
+        "feeling lost",
+        "depression",
+        "anxiety",
+      ],
+      description: "personal challenges",
     },
     health: {
-      keywords: ["health problems", "medical issues", "feeling sick", "mental health", "stress", "burnout"],
-      description: "health concerns"
-    }
+      keywords: [
+        "health problems",
+        "medical issues",
+        "feeling sick",
+        "mental health",
+        "stress",
+        "burnout",
+      ],
+      description: "health concerns",
+    },
   };
-  
+
   // Check for specific problems
   for (const [category, pattern] of Object.entries(problemPatterns)) {
-    if (pattern.keywords.some(keyword => msg.includes(keyword)) && !memory.hasSharedProblem) {
+    if (
+      pattern.keywords.some((keyword) => msg.includes(keyword)) &&
+      !memory.hasSharedProblem
+    ) {
       memory.userProblem = pattern.description;
       memory.problemCategory = category;
       memory.hasSharedProblem = true;
@@ -1603,27 +1848,31 @@ function updateConversationMemory(memory: any, userMessage: string, chatHistory:
       break;
     }
   }
-  
+
   // Store recent conversation context (last 3 exchanges)
-  memory.recentContext = chatHistory.slice(-6).map(m => ({
+  memory.recentContext = chatHistory.slice(-6).map((m) => ({
     sender: m.sender,
     text: m.text,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   }));
-  
+
   // Track user's communication style
   if (msg.includes("bro") || msg.includes("dude") || msg.includes("man")) {
     memory.communicationStyle = "casual";
-  } else if (msg.includes("please") || msg.includes("thank you") || msg.includes("sir")) {
+  } else if (
+    msg.includes("please") ||
+    msg.includes("thank you") ||
+    msg.includes("sir")
+  ) {
     memory.communicationStyle = "formal";
   }
-  
+
   // Update emotional state with more nuance
   memory.emotionalState = analyzeEmotionalStateAdvanced(chatHistory);
-  
+
   // Track conversation flow
   memory.conversationFlow = determineConversationFlow(chatHistory, memory);
-  
+
   // Update topics with better extraction
   const currentTopics = extractTopicsAdvanced(userMessage, chatHistory);
   const combinedTopics = memory.topicsDiscussed.concat(currentTopics);
@@ -1632,63 +1881,130 @@ function updateConversationMemory(memory: any, userMessage: string, chatHistory:
 
 // Advanced emotional state analysis
 function analyzeEmotionalStateAdvanced(chatHistory: any[]) {
-  const recentMessages = chatHistory.slice(-4).filter(m => m.sender === "user");
-  const allText = recentMessages.map(m => m.text).join(" ").toLowerCase();
-  
+  const recentMessages = chatHistory
+    .slice(-4)
+    .filter((m) => m.sender === "user");
+  const allText = recentMessages
+    .map((m) => m.text)
+    .join(" ")
+    .toLowerCase();
+
   const emotionPatterns = {
     frustrated: {
-      keywords: ["frustrated", "annoyed", "angry", "upset", "mad", "pissed", "irritated"],
-      intensity: 0.8
+      keywords: [
+        "frustrated",
+        "annoyed",
+        "angry",
+        "upset",
+        "mad",
+        "pissed",
+        "irritated",
+      ],
+      intensity: 0.8,
     },
     sad: {
-      keywords: ["sad", "disappointed", "depressed", "down", "failed", "failure", "devastated", "heartbroken"],
-      intensity: 0.9
+      keywords: [
+        "sad",
+        "disappointed",
+        "depressed",
+        "down",
+        "failed",
+        "failure",
+        "devastated",
+        "heartbroken",
+      ],
+      intensity: 0.9,
     },
     anxious: {
-      keywords: ["worried", "anxious", "nervous", "scared", "concerned", "stressed", "panic"],
-      intensity: 0.7
+      keywords: [
+        "worried",
+        "anxious",
+        "nervous",
+        "scared",
+        "concerned",
+        "stressed",
+        "panic",
+      ],
+      intensity: 0.7,
     },
     confused: {
-      keywords: ["confused", "lost", "don't know", "unsure", "help", "stuck", "clueless"],
-      intensity: 0.6
+      keywords: [
+        "confused",
+        "lost",
+        "don't know",
+        "unsure",
+        "help",
+        "stuck",
+        "clueless",
+      ],
+      intensity: 0.6,
     },
     hopeful: {
-      keywords: ["hope", "maybe", "trying", "working on", "getting better", "improving"],
-      intensity: 0.5
+      keywords: [
+        "hope",
+        "maybe",
+        "trying",
+        "working on",
+        "getting better",
+        "improving",
+      ],
+      intensity: 0.5,
     },
     positive: {
-      keywords: ["excited", "happy", "great", "awesome", "good", "amazing", "fantastic"],
-      intensity: 0.3
-    }
+      keywords: [
+        "excited",
+        "happy",
+        "great",
+        "awesome",
+        "good",
+        "amazing",
+        "fantastic",
+      ],
+      intensity: 0.3,
+    },
   };
-  
+
   let detectedEmotion = "neutral";
   let highestIntensity = 0;
-  
+
   for (const [emotion, pattern] of Object.entries(emotionPatterns)) {
-    const matchCount = pattern.keywords.filter(keyword => allText.includes(keyword)).length;
+    const matchCount = pattern.keywords.filter((keyword) =>
+      allText.includes(keyword)
+    ).length;
     if (matchCount > 0 && pattern.intensity > highestIntensity) {
       detectedEmotion = emotion;
       highestIntensity = pattern.intensity;
     }
   }
-  
+
   return detectedEmotion;
 }
 
 // Determine conversation flow
 function determineConversationFlow(chatHistory: any[], memory: any) {
   const messageCount = chatHistory.length;
-  const lastUserMessage = chatHistory.slice().reverse().find(m => m.sender === "user")?.text.toLowerCase() || "";
-  
+  const lastUserMessage =
+    chatHistory
+      .slice()
+      .reverse()
+      .find((m) => m.sender === "user")
+      ?.text.toLowerCase() || "";
+
   if (messageCount <= 2) return "greeting";
-  if (memory.hasSharedProblem && !lastUserMessage.includes("consultant") && !lastUserMessage.includes("professional")) {
+  if (
+    memory.hasSharedProblem &&
+    !lastUserMessage.includes("consultant") &&
+    !lastUserMessage.includes("professional")
+  ) {
     return "problem_discussion";
   }
   if (lastUserMessage.includes("help") || lastUserMessage.includes("advice")) {
     return "seeking_help";
   }
-  if (lastUserMessage.includes("consultant") || lastUserMessage.includes("professional")) {
+  if (
+    lastUserMessage.includes("consultant") ||
+    lastUserMessage.includes("professional")
+  ) {
     return "ready_for_consultant";
   }
   return "general_conversation";
@@ -1698,24 +2014,36 @@ function determineConversationFlow(chatHistory: any[], memory: any) {
 function extractTopicsAdvanced(userMessage: string, chatHistory: any[]) {
   const msg = userMessage.toLowerCase();
   const topics = [];
-  
+
   const topicPatterns = {
-    interview: ["interview", "job interview", "failed interview", "interview process"],
+    interview: [
+      "interview",
+      "job interview",
+      "failed interview",
+      "interview process",
+    ],
     career: ["career", "job", "work", "employment", "profession", "workplace"],
     business: ["business", "startup", "company", "entrepreneur", "venture"],
     finance: ["money", "financial", "finance", "investment", "debt", "budget"],
-    health: ["health", "medical", "doctor", "wellness", "fitness", "mental health"],
+    health: [
+      "health",
+      "medical",
+      "doctor",
+      "wellness",
+      "fitness",
+      "mental health",
+    ],
     education: ["study", "school", "college", "university", "exam", "course"],
     relationship: ["relationship", "family", "friends", "dating", "marriage"],
-    technology: ["tech", "software", "app", "website", "programming", "IT"]
+    technology: ["tech", "software", "app", "website", "programming", "IT"],
   };
-  
+
   for (const [topic, keywords] of Object.entries(topicPatterns)) {
-    if (keywords.some(keyword => msg.includes(keyword))) {
+    if (keywords.some((keyword) => msg.includes(keyword))) {
       topics.push(topic);
     }
   }
-  
+
   return topics;
 }
 
@@ -1733,28 +2061,35 @@ function determineConversationStage(chatHistory: any[]) {
 }
 
 function extractTopicsFromHistory(chatHistory: any[]) {
-  const allText = chatHistory.map(m => m.text).join(" ").toLowerCase();
+  const allText = chatHistory
+    .map((m) => m.text)
+    .join(" ")
+    .toLowerCase();
   const topics = [];
-  
+
   const topicKeywords = {
     interview: ["interview", "job interview", "failed interview"],
     career: ["career", "job", "work", "employment"],
     business: ["business", "startup", "company"],
     personal: ["personal", "life", "relationship"],
-    financial: ["money", "financial", "finance", "investment"]
+    financial: ["money", "financial", "finance", "investment"],
   };
-  
+
   for (const [topic, keywords] of Object.entries(topicKeywords)) {
-    if (keywords.some(keyword => allText.includes(keyword))) {
+    if (keywords.some((keyword) => allText.includes(keyword))) {
       topics.push(topic);
     }
   }
-  
+
   return topics;
 }
 
 // Advanced NLP with Semantic Analysis & Context Understanding
-async function analyzeUserQuery(userMessage: string, history: any[], conversationContext?: any) {
+async function analyzeUserQuery(
+  userMessage: string,
+  history: any[],
+  conversationContext?: any
+) {
   const msg = userMessage.toLowerCase();
   const tokens = tokenize(msg);
   const context = extractContext(history);
@@ -2469,8 +2804,6 @@ function detectUrgency(message: string): string {
   return "low";
 }
 
-
-
 // Precise consultancy matching with strict relevance filtering
 async function findSemanticMatches(
   query: string,
@@ -2677,12 +3010,17 @@ function generateIntelligentResponse(
 ) {
   const msg = userMessage.toLowerCase();
   const isFirstMessage = history.length <= 2;
-  
+
   // Use conversation context for better responses
   const emotionalState = conversationContext?.userEmotionalState || "neutral";
-  const conversationStage = conversationContext?.conversationStage || "greeting";
+  const conversationStage =
+    conversationContext?.conversationStage || "greeting";
   const topicsDiscussed = conversationContext?.topicsDiscussed || [];
-  const recentContext = conversationContext?.recentMessages?.map((m: any) => m.text).join(" ").toLowerCase() || "";
+  const recentContext =
+    conversationContext?.recentMessages
+      ?.map((m: any) => m.text)
+      .join(" ")
+      .toLowerCase() || "";
 
   // Greetings with auth-aware messaging
   if (
@@ -2718,35 +3056,50 @@ function generateIntelligentResponse(
     // User has shared a problem - respond contextually
     if (msg.includes("failed") && msg.includes("interview")) {
       const interviewResponses = [
-        "Ugh, that really sucks about the interview! 😔 I can totally understand how frustrating that must be. Interview rejections always sting, especially when you put yourself out there and really wanted it.\n\nWant to talk about what happened? Sometimes it helps to just vent about it, or we could think through what might help for next time. What feels right for you?",
-        "Oh man, that's really disappointing about the interview. 💔 I hate when that happens - you get your hopes up and then... nothing. It's like, what did I do wrong, you know?\n\nHow are you holding up? Are you the type who wants to analyze what went wrong, or do you just need someone to say 'that sucks' and move on? I'm here either way.",
-        "Damn, sorry to hear about the interview not working out. That's always a gut punch, especially if you felt like it went well. 😕\n\nI know it's easy to say, but try not to take it too personally. Sometimes these things are just out of our control - they might have had an internal candidate or budget got cut. What's your next move?"
+        "Ugh, that really sucks about the interview. I can totally get how frustrating that must be - you put yourself out there and it didn't work out. That always stings.\n\nWant to talk about what happened? Sometimes it helps to just dump it all out, or we could think through what might help for next time. What feels right for you?",
+        "Oh man, that's really disappointing. I hate when that happens - you get your hopes up and then... nothing. It's like, what did I do wrong, you know?\n\nHow are you holding up? Are you the type who wants to analyze what went wrong, or do you just need someone to say 'that sucks' and move on? I'm here either way.",
+        "Damn, sorry to hear about the interview not working out. That's always a gut punch, especially if you felt like it went well.\n\nI know it's easy to say, but try not to take it too personally. Sometimes these things are just out of our control - they might have had an internal candidate or budget got cut. What's your next move?",
       ];
-      return interviewResponses[Math.floor(Math.random() * interviewResponses.length)];
+      return interviewResponses[
+        Math.floor(Math.random() * interviewResponses.length)
+      ];
     }
-    
+
     // Follow-up responses for ongoing conversations
     if (msg.includes("what") || msg.includes("how") || msg.includes("help")) {
       const followUpResponses = [
-        `So about ${conversationMemory.userProblem} - what specifically is on your mind? I'm here to help however I can, whether that's just talking it through or finding some practical solutions.`,
-        `I remember you mentioned ${conversationMemory.userProblem}. What aspect of this is bothering you most right now? We can tackle this step by step.`,
-        `You know, regarding ${conversationMemory.userProblem} - I'm curious what would feel most helpful right now? Sometimes just having someone listen makes a difference, other times you need actionable advice. What's your vibe?"
+        `So about that ${conversationMemory.userProblem} thing - what's specifically eating at you? I'm here to help however I can, whether that's just talking it through or figuring out some practical next steps.`,
+        `I remember you mentioned ${conversationMemory.userProblem}. What part of this is bugging you most right now? We can work through this together.`,
+        `You know, about ${conversationMemory.userProblem} - what would actually help right now? Sometimes you just need someone to listen, other times you need a game plan. What's your vibe?`,
       ];
-      return followUpResponses[Math.floor(Math.random() * followUpResponses.length)];
+      return followUpResponses[
+        Math.floor(Math.random() * followUpResponses.length)
+      ];
     }
   }
-  
+
   // Handle when user seems to be asking something unrelated but we have context
-  if (conversationMemory?.hasSharedProblem && !msg.includes(conversationMemory.problemCategory)) {
+  if (
+    conversationMemory?.hasSharedProblem &&
+    !msg.includes(conversationMemory.problemCategory)
+  ) {
     const contextualResponses = [
-      `I hear you on that. By the way, how are you doing with ${conversationMemory.userProblem}? Still on your mind or have you moved past it?`,
-      `Got it. And hey, just checking in - how are things going with ${conversationMemory.userProblem} we talked about earlier?`,
-      `Makes sense. Quick check-in though - how are you feeling about ${conversationMemory.userProblem} now? Any updates on that front?"
+      "I hear you. By the way, how are you doing with that " +
+        conversationMemory.userProblem +
+        " situation? Still weighing on you or have you moved past it?",
+      "Got it. Hey, just checking in - how are things with " +
+        conversationMemory.userProblem +
+        " that we talked about?",
+      "Makes sense. Quick check-in though - how are you feeling about " +
+        conversationMemory.userProblem +
+        " now? Any updates?",
     ];
-    
+
     // Only ask occasionally, not every time
     if (Math.random() > 0.7) {
-      return contextualResponses[Math.floor(Math.random() * contextualResponses.length)];
+      return contextualResponses[
+        Math.floor(Math.random() * contextualResponses.length)
+      ];
     }
   }
 
@@ -2755,7 +3108,7 @@ function generateIntelligentResponse(
     msg.includes("failure") ||
     msg.includes("exam")
   ) {
-    return "I'm sorry to hear about that setback. That must be really frustrating, especially after putting in effort. Sometimes these experiences, while difficult, can actually redirect us toward better opportunities. How are you feeling about it right now?";
+    return "Ugh, that really sucks. I can tell you're disappointed about this - anyone would be after putting in the effort. These kinds of setbacks hit different, you know? But honestly, sometimes the stuff that feels like failures end up steering us toward something better. How are you processing all this?";
   }
 
   // Check if user wants to see all categories - EARLY DETECTION
@@ -2784,9 +3137,12 @@ function generateIntelligentResponse(
     ];
 
     const categoryList = allCategories
-      .map((cat, i) => `${i + 1}. ${cat.name}`)
+      .map((cat, i) => i + 1 + ". " + cat.name)
       .join("\n");
-    const reply = `Here are all 10 categories available on ConsultBridge:\n\n${categoryList}\n\nYou can explore any category by saying "all [category name]" or click the browse button below to see all categories on ConsultBridge.`;
+    const reply =
+      "Here are all 10 categories available on ConsultBridge:\n\n" +
+      categoryList +
+      '\n\nYou can explore any category by saying "all [category name]" or click the browse button below to see all categories on ConsultBridge.';
 
     return {
       reply: String(reply),
@@ -2944,7 +3300,10 @@ function generateIntelligentResponse(
 
   for (const pattern of categoryNavigationPatterns) {
     if (pattern.keywords.some((keyword) => msg.includes(keyword))) {
-      const reply = `Great! Here are all the ${pattern.displayName} consultancies available on ConsultBridge. You can navigate through them to find the perfect match for your needs.`;
+      const reply =
+        "Great! Here are all the " +
+        pattern.displayName +
+        " consultancies available on ConsultBridge. You can navigate through them to find the perfect match for your needs.";
 
       // Return category navigation response
       return {
@@ -2952,7 +3311,7 @@ function generateIntelligentResponse(
         categoryNavigation: {
           category: pattern.category,
           categoryName: pattern.displayName,
-          url: `http://localhost:3000/category/${pattern.category}`,
+          url: "http://localhost:3000/category/" + pattern.category,
         },
         isSpecialResponse: true,
       };
@@ -2995,7 +3354,7 @@ function generateIntelligentResponse(
     msg.includes("unemployed") ||
     msg.includes("career change")
   ) {
-    return "Career transitions can be challenging, but they're also opportunities for growth. I can help you connect with career counselors, resume experts, or business consultants who specialize in helping people navigate career changes and find new opportunities. What specific area would you like guidance on?";
+    return "Man, career stuff is tough. Losing a job or thinking about changing paths can feel overwhelming. But you know what? Sometimes these transitions end up being the best thing that happened to us - even if it doesn't feel that way right now.\n\nI can connect you with career counselors, resume experts, or business consultants who really know their stuff when it comes to career changes. What specific area do you want to tackle first?";
   }
 
   if (
@@ -3003,7 +3362,7 @@ function generateIntelligentResponse(
     msg.includes("divorce") ||
     msg.includes("family")
   ) {
-    return "Personal relationships can be complex and emotionally challenging. I can connect you with relationship counselors, family therapists, or life coaches who specialize in helping people work through these situations. What kind of support are you looking for?";
+    return "Relationship stuff is never easy, is it? Whether it's family drama, relationship issues, or going through a divorce - this kind of thing can really mess with your head and heart.\n\nI can connect you with relationship counselors, family therapists, or life coaches who actually get what you're going through. What kind of support feels right for you right now?";
   }
 
   // Enhanced understanding for complex queries
@@ -3021,32 +3380,45 @@ function generateIntelligentResponse(
 
   // Handle direct help requests - user wants advice, not consultancy
   if (
-    (msg.includes("i dont need") || msg.includes("don't need") || msg.includes("dont need")) &&
+    (msg.includes("i dont need") ||
+      msg.includes("don't need") ||
+      msg.includes("dont need")) &&
     (msg.includes("consultancy") || msg.includes("consultant"))
   ) {
     return "I understand! You're looking for direct advice rather than consultant recommendations. I'm here to help however I can. What specific guidance or support are you looking for? I can try to offer some general insights or suggestions.";
   }
 
   // Context-aware conversation flow with memory
-  const contextText = recentContext || chatHistory.slice(-3).map(m => m.text).join(" ").toLowerCase();
-  
+  const contextText =
+    recentContext ||
+    chatHistory
+      .slice(-3)
+      .map((m) => m.text)
+      .join(" ")
+      .toLowerCase();
+
   // Handle "direct help" requests
   if (msg.includes("direct help") || msg.includes("direct advice")) {
-    if (topicsDiscussed.includes("interview") || contextText.includes("interview")) {
-      return "Absolutely! Let me give you some direct advice about interviews and job searching:\n\n**After a Failed Interview:**\n1. **Don't take it personally** - Most rejections aren't about you as a person\n2. **Ask for feedback** - Reach out politely asking what you could improve\n3. **Reflect honestly** - What went well? What could be better?\n4. **Practice more** - Do mock interviews with friends or family\n5. **Research better** - Learn more about the company and role next time\n\n**Moving Forward:**\n- Apply to multiple positions (don't put all hopes in one)\n- Network actively (many jobs come through connections)\n- Keep improving your skills\n- Stay positive and persistent\n\nWhat specific aspect would you like me to elaborate on?";
+    if (
+      topicsDiscussed.includes("interview") ||
+      contextText.includes("interview")
+    ) {
+      return "Absolutely! Here's some real talk about interviews and job searching:\n\n**After a Failed Interview:**\n1. **Don't take it personally** - Seriously, most rejections have nothing to do with you as a person\n2. **Ask for feedback** - Shoot them a polite email asking what you could improve (some will actually respond)\n3. **Be honest with yourself** - What went well? What felt off?\n4. **Practice more** - Do mock interviews with friends or even record yourself\n5. **Do your homework** - Research the company and role better next time\n\n**Moving Forward:**\n- Apply to multiple places (don't put all your eggs in one basket)\n- Network like crazy (seriously, so many jobs come through connections)\n- Keep leveling up your skills\n- Stay persistent but don't let it consume you\n\nWhat part of this do you want to dig into more?";
     }
-    return "I'd be happy to give you direct advice! What specific situation or challenge would you like help with? The more details you share, the better I can tailor my suggestions.";
+    return "For sure! I'm here to give you straight advice. What specific situation are you dealing with? The more you tell me, the better I can help.";
   }
 
   if (
-    msg.includes("suggest") && msg.includes("solution") && 
-    !msg.includes("consultant") && !msg.includes("book")
+    msg.includes("suggest") &&
+    msg.includes("solution") &&
+    !msg.includes("consultant") &&
+    !msg.includes("book")
   ) {
     if (contextText.includes("interview") && contextText.includes("failed")) {
-      return "Here are some practical steps you can take after a failed interview:\n\n**Immediate Steps:**\n1. **Process the emotions** - It's normal to feel disappointed\n2. **Ask for feedback** - Send a polite email asking for constructive feedback\n3. **Reflect objectively** - What went well? What could improve?\n\n**Skill Building:**\n4. **Practice interviews** - Mock interviews with friends or record yourself\n5. **Research techniques** - Learn about STAR method for behavioral questions\n6. **Address gaps** - If technical skills were lacking, focus on learning\n\n**Next Applications:**\n7. **Apply broadly** - Don't rely on just one opportunity\n8. **Network actively** - Many jobs come through connections\n9. **Tailor applications** - Customize resume and cover letter for each role\n\n**Mindset:**\n10. **Stay resilient** - One rejection doesn't define your capabilities\n\nWhat specific aspect would you like to work on first? 💪";
+      return "Alright, here's what you can do after a failed interview:\n\n**Right Now:**\n1. **Feel the feelings** - It sucks, and that's okay. Don't pretend it doesn't hurt\n2. **Ask for feedback** - Send a polite email asking what you could improve (worth a shot)\n3. **Be real with yourself** - What went well? What felt awkward?\n\n**Level Up:**\n4. **Practice interviews** - Mock interviews with friends or record yourself talking\n5. **Learn the tricks** - Look up the STAR method for behavioral questions\n6. **Fill the gaps** - If you lacked certain skills, start learning them\n\n**Next Round:**\n7. **Cast a wide net** - Don't put all your hopes in one place\n8. **Network like crazy** - Seriously, so many jobs come through connections\n9. **Customize everything** - Tailor your resume and cover letter for each role\n\n**Keep Your Head Up:**\n10. **Remember this** - One 'no' doesn't define what you're capable of\n\nWhat part of this feels most important to tackle first?";
     }
-    
-    return "I'd be happy to help you brainstorm solutions! Could you tell me a bit more about the specific situation or challenge you're facing? The more context you give me, the better I can tailor my suggestions to your needs.";
+
+    return "I'm totally down to help you figure this out! What's the specific situation you're dealing with? The more you tell me about what's going on, the better I can help you brainstorm some actual solutions.";
   }
 
   // Handle no consultancies found with funny messages
@@ -3099,16 +3471,24 @@ function generateIntelligentResponse(
           "☆".repeat(emptyStars);
 
         const ratingText =
-          rating > 0 ? `${starDisplay} (${rating.toFixed(1)})` : "New";
+          rating > 0 ? starDisplay + " (" + rating.toFixed(1) + ")" : "New";
 
         const matchScore =
           c.score && c.score > 0 && c.score <= 1
-            ? `• ${Math.round(c.score * 100)}% match`
+            ? "• " + Math.round(c.score * 100) + "% match"
             : "";
 
-        return `${i + 1}. ${
-          c.name
-        } - ${ratingText}${matchScore}\n   ${truncatedDesc}`;
+        return (
+          i +
+          1 +
+          ". " +
+          c.name +
+          " - " +
+          ratingText +
+          matchScore +
+          "\n   " +
+          truncatedDesc
+        );
       })
       .join("\n\n");
 
@@ -3127,25 +3507,35 @@ function generateIntelligentResponse(
         : "";
 
     // Only show consultancies if user is actually ready for professional help
-    const isReadyForConsultants = 
-      msg.includes("consultant") || 
-      msg.includes("professional") || 
-      msg.includes("expert") || 
+    const isReadyForConsultants =
+      msg.includes("consultant") ||
+      msg.includes("professional") ||
+      msg.includes("expert") ||
       msg.includes("book") ||
       msg.includes("appointment") ||
       contextText.includes("need professional") ||
       contextText.includes("want consultant");
-    
+
     if (!isReadyForConsultants && userIntent.confidence < 0.8) {
       // Offer both direct help and professional options, considering emotional state
-      const supportiveMessage = emotionalState === "sad" || emotionalState === "frustrated" 
-        ? "I can see you're going through a tough time. "
-        : "";
-      
-      return `${supportiveMessage}I can help you in two ways:\n\n**Direct Support**: I can offer advice and suggestions right here in our conversation\n\n**Professional Help**: I can connect you with expert consultants who specialize in your area\n\nWhich would you prefer? Just say "direct help" for immediate advice or "find consultant" for professional services.`;
+      const supportiveMessage =
+        emotionalState === "sad" || emotionalState === "frustrated"
+          ? "I can see you're going through a tough time. "
+          : "";
+
+      return (
+        supportiveMessage +
+        'I can help you in two ways:\n\n**Direct Support**: I can offer advice and suggestions right here in our conversation\n\n**Professional Help**: I can connect you with expert consultants who specialize in your area\n\nWhich would you prefer? Just say "direct help" for immediate advice or "find consultant" for professional services.'
+      );
     }
 
-    return `${confidenceMessage}\n\n${suggestions}\n\nWould you like to book a consultation with any of these top-rated specialists?${urgencyNote}`;
+    return (
+      confidenceMessage +
+      "\n\n" +
+      suggestions +
+      "\n\nWould you like to book a consultation with any of these top-rated specialists?" +
+      urgencyNote
+    );
   }
 
   // Intelligent category-specific responses based on detected intent
@@ -3209,21 +3599,45 @@ function generateIntelligentResponse(
   if (conversationMemory?.hasSharedProblem && conversationMemory.userProblem) {
     // User has already shared their problem, provide contextual help
     if (msg.includes("what") || msg.includes("how") || msg.includes("help")) {
-      if (conversationMemory.problemCategory === "career" || conversationMemory.userProblem.includes("interview")) {
-        return `I remember you're dealing with ${conversationMemory.userProblem}. I'm here to support you through this. What specific aspect would you like help with?\n\n• **Emotional support** - Processing feelings and staying motivated\n• **Practical advice** - Next steps for job searching and applications\n• **Interview skills** - Preparation tips and practice strategies\n• **Career planning** - Exploring different paths and opportunities\n• **Professional help** - Connecting with career consultants\n\nJust let me know what feels most helpful right now. 🤗`;
+      if (
+        conversationMemory.problemCategory === "career" ||
+        conversationMemory.userProblem.includes("interview")
+      ) {
+        return (
+          "I remember you're dealing with " +
+          conversationMemory.userProblem +
+          ". I'm here to support you through this. What specific aspect would you like help with?\n\n• **Emotional support** - Processing feelings and staying motivated\n• **Practical advice** - Next steps for job searching and applications\n• **Interview skills** - Preparation tips and practice strategies\n• **Career planning** - Exploring different paths and opportunities\n• **Professional help** - Connecting with career consultants\n\nJust let me know what feels most helpful right now. 🤗"
+        );
       } else {
-        return `I haven't forgotten about ${conversationMemory.userProblem} that you mentioned earlier. How can I best help you with this? Would you like direct advice or should I connect you with a professional who specializes in this area?`;
+        return (
+          "I haven't forgotten about " +
+          conversationMemory.userProblem +
+          " that you mentioned earlier. How can I best help you with this? Would you like direct advice or should I connect you with a professional who specializes in this area?"
+        );
       }
     }
-    
+
     // If user seems to be asking for general help but we know their problem
-    if ((msg.includes("need") || msg.includes("want")) && msg.includes("help")) {
-      return `I remember you're dealing with ${conversationMemory.userProblem}. Based on what you've shared, I can help you in several ways. Would you like me to offer some direct advice about this situation, or would you prefer to speak with a professional consultant who specializes in ${conversationMemory.problemCategory} matters?`;
+    if (
+      (msg.includes("need") || msg.includes("want")) &&
+      msg.includes("help")
+    ) {
+      return (
+        "I remember you're dealing with " +
+        conversationMemory.userProblem +
+        ". Based on what you've shared, I can help you in several ways. Would you like me to offer some direct advice about this situation, or would you prefer to speak with a professional consultant who specializes in " +
+        conversationMemory.problemCategory +
+        " matters?"
+      );
     }
   }
-  
+
   // If user is continuing a conversation about a personal issue, be supportive
-  if (topicsDiscussed.includes("interview") || contextText.includes("interview") || contextText.includes("failed")) {
+  if (
+    topicsDiscussed.includes("interview") ||
+    contextText.includes("interview") ||
+    contextText.includes("failed")
+  ) {
     if (msg.includes("what") || msg.includes("how") || msg.includes("help")) {
       return "I'm here to support you through this. What specific aspect would you like help with? Are you looking for:\n\n• **Emotional support** - Processing feelings and staying motivated\n• **Practical advice** - Next steps for job searching and applications\n• **Interview skills** - Preparation tips and practice strategies\n• **Career planning** - Exploring different paths and opportunities\n• **Professional help** - Connecting with career consultants\n\nJust let me know what feels most helpful right now. 🤗";
     }
@@ -3233,7 +3647,11 @@ function generateIntelligentResponse(
   const tokens = tokenize(userMessage.toLowerCase());
   if (tokens.length > 3 && userIntent.confidence > 0.2) {
     // Only suggest consultants if user seems ready for professional help
-    if (msg.includes("professional") || msg.includes("expert") || msg.includes("consultant")) {
+    if (
+      msg.includes("professional") ||
+      msg.includes("expert") ||
+      msg.includes("consultant")
+    ) {
       return "I understand you're looking for professional help. Let me search our database for experts who match your specific needs.";
     } else {
       // Adjust response based on emotional state
@@ -3250,47 +3668,67 @@ function generateIntelligentResponse(
     // User has shared a problem - be contextual and natural
     if (emotionalState === "sad" || emotionalState === "frustrated") {
       const naturalResponses = [
-        `Hey, I can tell you're still processing ${conversationMemory.userProblem}. That's totally normal - these things take time to work through. What's going through your head right now?`,
-        `I remember you were dealing with ${conversationMemory.userProblem}. Sounds like it's still on your mind? Want to talk about where you're at with it?`,
-        `You know, about ${conversationMemory.userProblem} - I can sense you're still working through it. What would help most right now? Just venting, or thinking through next steps?"
+        "Hey, I can tell you're still processing " +
+          conversationMemory.userProblem +
+          ". That's totally normal - these things take time to work through. What's going through your head right now?",
+        "I remember you were dealing with " +
+          conversationMemory.userProblem +
+          ". Sounds like it's still on your mind? Want to talk about where you're at with it?",
+        "You know, about " +
+          conversationMemory.userProblem +
+          " - I can sense you're still working through it. What would help most right now? Just venting, or thinking through next steps?",
       ];
-      return naturalResponses[Math.floor(Math.random() * naturalResponses.length)];
+      return naturalResponses[
+        Math.floor(Math.random() * naturalResponses.length)
+      ];
     } else {
       const casualFollowUps = [
-        `So, how are things going with ${conversationMemory.userProblem}? Any progress or still figuring it out?`,
-        `I remember you mentioned ${conversationMemory.userProblem}. What's the latest on that front?`,
-        `Hey, just checking in - how are you handling ${conversationMemory.userProblem} these days? Better, worse, or about the same?"
+        "So, how are things going with " +
+          conversationMemory.userProblem +
+          "? Any progress or still figuring it out?",
+        "I remember you mentioned " +
+          conversationMemory.userProblem +
+          ". What's the latest on that front?",
+        "Hey, just checking in - how are you handling " +
+          conversationMemory.userProblem +
+          " these days? Better, worse, or about the same?",
       ];
-      return casualFollowUps[Math.floor(Math.random() * casualFollowUps.length)];
+      return casualFollowUps[
+        Math.floor(Math.random() * casualFollowUps.length)
+      ];
     }
   }
-  
+
   // Natural responses based on emotional state
   if (emotionalState === "sad" || emotionalState === "frustrated") {
     const empathicResponses = [
       "I can tell something's bothering you. Want to talk about it? Sometimes it helps just to get it out there.",
       "You seem like you're going through something tough right now. I'm here if you want to share what's on your mind.",
-      "Sounds like you're dealing with some stuff. What's weighing on you? I'm a good listener."
+      "Sounds like you're dealing with some stuff. What's weighing on you? I'm a good listener.",
     ];
-    return empathicResponses[Math.floor(Math.random() * empathicResponses.length)];
+    return empathicResponses[
+      Math.floor(Math.random() * empathicResponses.length)
+    ];
   }
-  
+
   if (emotionalState === "confused") {
     const clarifyingResponses = [
       "I can sense you're trying to figure something out. What's got you puzzled? Maybe we can work through it together.",
       "Seems like you're stuck on something. What's the situation? Sometimes talking it through helps clarify things.",
-      "You sound a bit unsure about something. What's the dilemma? I'm here to help you think it through."
+      "You sound a bit unsure about something. What's the dilemma? I'm here to help you think it through.",
     ];
-    return clarifyingResponses[Math.floor(Math.random() * clarifyingResponses.length)];
+    return clarifyingResponses[
+      Math.floor(Math.random() * clarifyingResponses.length)
+    ];
   }
-  
+
   // Default natural conversation starters
   const naturalQuestions = [
     "What's on your mind today? I'm here to chat about whatever you need.",
     "How can I help you out? Whether it's advice, just talking, or finding the right professional - I'm game for whatever.",
     "What brings you here? I'm ready to help with whatever you're dealing with.",
     "So what's going on? I'm here to listen and help however I can.",
-    "What's up? What can I help you with today?"
+    "What's up? What can I help you with today?",
   ];
 
   return naturalQuestions[Math.floor(Math.random() * naturalQuestions.length)];
@@ -3319,6 +3757,61 @@ async function updateExpiredAppointments() {
     console.log(
       `Updated ${expiredAppointments.length} appointments to expired status`
     );
+  }
+}
+
+// AI Helper Functions
+function shouldUseAI(userMessage: string, chatHistory: any[], conversationMemory: any): boolean {
+  const msg = userMessage.toLowerCase();
+  
+  // Use LOCAL for these (fast, specific responses)
+  const localPatterns = [
+    'book appointment', 'schedule', 'cancel', 'reschedule', 'my bookings',
+    'all categories', 'all career', 'all legal', 'all business', 'all health',
+    'about consultbridge', 'what is consultbridge', 'categories',
+    'summary', 'website', 'view details'
+  ];
+  
+  if (localPatterns.some(pattern => msg.includes(pattern))) {
+    return false;
+  }
+  
+  // Use AI for natural conversations, complex queries, emotional support
+  const aiPatterns = [
+    'i failed', 'feeling', 'help me', 'what should i do', 'advice',
+    'confused', 'lost', 'dont know', 'struggling', 'worried',
+    'how to', 'why', 'explain', 'tell me about'
+  ];
+  
+  return aiPatterns.some(pattern => msg.includes(pattern)) || 
+         conversationMemory?.hasSharedProblem ||
+         chatHistory.length > 4;
+}
+
+async function getAIResponse(userMessage: string, chatHistory: any[], conversationMemory: any): Promise<string | null> {
+  try {
+    const recentHistory = chatHistory.slice(-6).map(m => 
+      `${m.sender === 'user' ? 'User' : 'Shaan'}: ${m.text}`
+    ).join('\n');
+    
+    const context = conversationMemory?.hasSharedProblem ? 
+      `User previously shared: ${conversationMemory.userProblem}` : '';
+    
+    const prompt = `You are Shaan, ConsultBridge's friendly AI assistant. You help users find consultants and provide emotional support.
+
+Context: ${context}
+Recent conversation:
+${recentHistory}
+
+User: ${userMessage}
+
+Respond naturally as Shaan. Keep it conversational, supportive, and under 200 words. If user needs consultants, suggest they can search or browse categories.`;
+    
+    const result = await model.generateContent(prompt);
+    return result.response.text();
+  } catch (error) {
+    console.error('AI Error:', error);
+    return null;
   }
 }
 

@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^4.29.12",
+    "@google/genai": "^1.15.0",
+    "@google/generative-ai": "^0.24.1",
     "chrono-node": "^2.8.3",
     "framer-motion": "^11.11.17",
     "lucide-react": "^0.460.0",

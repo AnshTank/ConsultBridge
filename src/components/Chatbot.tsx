@@ -247,8 +247,49 @@ export default function Chatbot() {
           "Sorry, there was an issue processing your request. Please try again.";
       }
 
-      // If payment is processing, show realistic animated loader
-      if (data.processingPayment) {
+      // If search is processing, show search animation
+      if (data.processingSearch) {
+        setMessages((prev) => [
+          ...prev,
+          { sender: "bot", text: "🔍 Searching our database..." },
+        ]);
+
+        // Step 1: Analyzing requirements
+        setTimeout(() => {
+          setMessages((prev) => [
+            ...prev.slice(0, -1),
+            { sender: "bot", text: "🧠 Analyzing your requirements..." },
+          ]);
+        }, 1000);
+
+        // Step 2: Matching consultants
+        setTimeout(() => {
+          setMessages((prev) => [
+            ...prev.slice(0, -1),
+            { sender: "bot", text: "⚡ Matching you with top consultants..." },
+          ]);
+        }, 2000);
+
+        // Step 3: Verifying credentials
+        setTimeout(() => {
+          setMessages((prev) => [
+            ...prev.slice(0, -1),
+            { sender: "bot", text: "✅ Verifying consultant credentials..." },
+          ]);
+        }, 3000);
+
+        // Final: Show results
+        setTimeout(() => {
+          setMessages((prev) => [
+            ...prev.slice(0, -1),
+            {
+              sender: "bot",
+              text: data.reply,
+              consultancies: data.consultancies,
+            },
+          ]);
+        }, 4000);
+      } else if (data.processingPayment) {
         setMessages((prev) => [
           ...prev,
           { sender: "bot", text: "🔄 Processing your payment..." },
