@@ -34,6 +34,44 @@ export async function GET(
   }
 }
 
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await dbConnect();
+    
+    const { id } = params;
+    const body = await request.json();
+    
+    const updatedConsultancy = await Consultancy.findByIdAndUpdate(
+      id,
+      body,
+      { new: true, runValidators: true }
+    );
+    
+    if (!updatedConsultancy) {
+      return NextResponse.json(
+        { success: false, error: 'Consultancy not found' },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json({
+      success: true,
+      data: updatedConsultancy,
+      message: 'Consultancy updated successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error updating consultancy:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to update consultancy' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }

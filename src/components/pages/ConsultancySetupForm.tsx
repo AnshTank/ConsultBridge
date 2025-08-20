@@ -117,7 +117,7 @@ const ConsultancySetupForm: React.FC = () => {
           location: formData.location,
           expertise: formData.expertise.split(",").map((item) => item.trim()),
           price: formData.price,
-          whyChooseUs: formData.whyChooseUs,
+          whyChooseUs: formData.whyChooseUs.split(",").map((item) => item.trim()).filter(item => item.length > 0),
           availability: {
             days: formData.availableDays,
             hours: formData.availableHours,

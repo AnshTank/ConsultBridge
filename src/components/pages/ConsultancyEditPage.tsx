@@ -15,7 +15,7 @@ import {
   ArrowLeft,
   Camera
 } from "lucide-react";
-import Navbar from "../Navbar";
+
 
 const ConsultancyEditPage: React.FC = () => {
   const router = useRouter();
@@ -23,6 +23,7 @@ const ConsultancyEditPage: React.FC = () => {
   const consultancyId = searchParams?.get('id');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+
   
   const [formData, setFormData] = useState({
     name: "",
@@ -55,13 +56,24 @@ const ConsultancyEditPage: React.FC = () => {
   ];
 
   useEffect(() => {
+    // Remove loading overlay if it exists
+    const overlay = document.querySelector('.page-loading-overlay');
+    if (overlay) {
+      setTimeout(() => {
+        overlay.classList.add('fade-out');
+        setTimeout(() => overlay.remove(), 300);
+      }, 800);
+    }
+    
     const fetchProfile = async () => {
       if (!consultancyId) {
         router.push('/consultancy-admin');
         return;
       }
 
+
       try {
+        setLoading(true);
         const response = await fetch(`/api/consultancies/${consultancyId}`);
         const result = await response.json();
 
@@ -129,7 +141,8 @@ const ConsultancyEditPage: React.FC = () => {
         contact: {
           phone: formData.phone,
           email: formData.email,
-          website: formData.website
+          website: formData.website,
+          password: "defaultPassword123" // Keep existing password
         }
       };
       
@@ -157,35 +170,55 @@ const ConsultancyEditPage: React.FC = () => {
     }
   };
 
+
+
   if (loading) {
     return (
-      <div>
-        <Navbar />
-        <div className="container mx-auto px-6 py-12">
-          <div className="text-center">Loading profile...</div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">✏️</div>
+          <div className="text-xl font-medium text-gray-700 mb-2">Loading Edit Profile</div>
+          <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <Navbar />
-      <div className="container mx-auto px-6 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="container mx-auto px-6 py-8">
         <div className="max-w-3xl mx-auto">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="flex items-center gap-4 mb-6">
+          {/* Simple Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-3 bg-white px-6 py-3 rounded-full shadow-lg border border-indigo-100">
               <button
-                onClick={() => router.push('/consultancy-admin')}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                onClick={() => {
+                  // Create loading overlay
+                  const overlay = document.createElement('div');
+                  overlay.className = 'page-loading-overlay';
+                  overlay.innerHTML = `
+                    <div class="text-center">
+                      <div class="text-4xl mb-4">📋</div>
+                      <div class="text-xl font-medium text-gray-700 mb-2">Loading Admin Panel</div>
+                      <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto"></div>
+                    </div>
+                  `;
+                  document.body.appendChild(overlay);
+                  
+                  setTimeout(() => {
+                    router.push('/consultancy-admin');
+                  }, 300);
+                }}
+                className="p-2 hover:bg-indigo-50 rounded-full transition-colors"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-5 h-5 text-indigo-600" />
               </button>
-              <div>
-                <h1 className="text-3xl font-bold">Edit Profile</h1>
-                <p className="text-gray-600">Update your consultancy information</p>
-              </div>
+              <div className="text-2xl">✏️</div>
+              <h1 className="text-xl font-bold text-gray-800">Edit Profile</h1>
             </div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-lg p-8">
 
             <form onSubmit={handleSubmit}>
               {/* Image Section */}
@@ -319,7 +352,7 @@ const ConsultancyEditPage: React.FC = () => {
                       value={formData.description}
                       onChange={handleChange}
                       required
-                      rows={3}
+                      rows={5}
                       className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="Tell potential clients about your consultancy services..."
                     ></textarea>
@@ -470,7 +503,23 @@ const ConsultancyEditPage: React.FC = () => {
               <div className="flex gap-4">
                 <button
                   type="button"
-                  onClick={() => router.push('/consultancy-admin')}
+                  onClick={() => {
+                    // Create loading overlay
+                    const overlay = document.createElement('div');
+                    overlay.className = 'page-loading-overlay';
+                    overlay.innerHTML = `
+                      <div class="text-center">
+                        <div class="text-4xl mb-4">📋</div>
+                        <div class="text-xl font-medium text-gray-700 mb-2">Loading Admin Panel</div>
+                        <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto"></div>
+                      </div>
+                    `;
+                    document.body.appendChild(overlay);
+                    
+                    setTimeout(() => {
+                      router.push('/consultancy-admin');
+                    }, 300);
+                  }}
                   className="flex-1 bg-gray-500 text-white py-3 px-4 rounded-lg hover:bg-gray-600 transition-colors"
                 >
                   Cancel

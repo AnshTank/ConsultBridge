@@ -5,6 +5,8 @@ import "../index.css";
 import Chatbot from "@/components/Chatbot";
 import UniqueTransitions from "../components/UniqueTransitions";
 import "../styles/page-transitions.css";
+import "../styles/scroll-modal.css";
+import "../styles/page-loading.css";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -31,6 +33,7 @@ export default function RootLayout({
         <body
           className={`${inter.className} page-transition`}
           style={{ overflowX: "hidden" }}
+          id="app-body"
         >
           <SpeedInsights />
           <UniqueTransitions>{children}</UniqueTransitions>

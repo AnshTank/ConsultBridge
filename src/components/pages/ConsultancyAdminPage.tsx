@@ -47,6 +47,7 @@ const ConsultancyAdminPage: React.FC = () => {
   const [showDateModal, setShowDateModal] = useState(false);
   const [currentAppointmentPage, setCurrentAppointmentPage] = useState(1);
   const [appointmentsPage, setAppointmentsPage] = useState(1);
+  const [navigatingToEdit, setNavigatingToEdit] = useState(false);
   const appointmentsPerPage = 9;
   const [profileViewsData, setProfileViewsData] = useState({
     totalViews: 0,
@@ -64,17 +65,27 @@ const ConsultancyAdminPage: React.FC = () => {
     });
   }, []);
 
-  // Lock body scroll when any modal is open
+  // Remove loading overlay and lock body scroll when any modal is open
   useEffect(() => {
+    // Remove loading overlay if it exists
+    const overlay = document.querySelector('.page-loading-overlay');
+    if (overlay) {
+      setTimeout(() => {
+        overlay.classList.add('fade-out');
+        setTimeout(() => overlay.remove(), 300);
+      }, 800);
+    }
+    
+    const body = document.getElementById('app-body');
     if (showCalendar || showAnalytics || showProfileViews || showEditProfile || showDateModal) {
-      document.body.style.overflow = 'hidden';
+      body?.classList.add('modal-open');
     } else {
-      document.body.style.overflow = 'unset';
+      body?.classList.remove('modal-open');
     }
     
     // Cleanup on unmount
     return () => {
-      document.body.style.overflow = 'unset';
+      body?.classList.remove('modal-open');
     };
   }, [showCalendar, showAnalytics, showProfileViews, showEditProfile, showDateModal]);
 
@@ -336,17 +347,35 @@ const ConsultancyAdminPage: React.FC = () => {
                   {currentProfile.price || "Not set"}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => window.open(`/consultancy/${localStorage.getItem('consultancyId')}`, '_blank')}
-                  className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+                  className="bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2 font-medium"
                 >
                   <Eye className="w-4 h-4" />
                   View Profile
                 </button>
                 <button
-                  onClick={() => setShowEditProfile(true)}
-                  className="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                  onClick={() => {
+                    setNavigatingToEdit(true);
+                    // Create loading overlay
+                    const overlay = document.createElement('div');
+                    overlay.className = 'page-loading-overlay';
+                    overlay.innerHTML = `
+                      <div class="text-center">
+                        <div class="text-4xl mb-4">✏️</div>
+                        <div class="text-xl font-medium text-gray-700 mb-2">Loading Edit Profile</div>
+                        <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto"></div>
+                      </div>
+                    `;
+                    document.body.appendChild(overlay);
+                    
+                    setTimeout(() => {
+                      router.push(`/consultancy-edit?id=${localStorage.getItem('consultancyId')}`);
+                    }, 300);
+                  }}
+                  disabled={navigatingToEdit}
+                  className="bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 font-medium disabled:opacity-50"
                 >
                   <Edit className="w-4 h-4" />
                   Edit Profile
@@ -357,69 +386,75 @@ const ConsultancyAdminPage: React.FC = () => {
 
           {/* Quick Actions */}
           <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
               <Settings className="w-5 h-5" />
               Quick Actions
             </h2>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-4">
               <button
                 onClick={() => setShowCalendar(true)}
-                className="w-full bg-gradient-to-r from-green-400 to-green-600 text-white p-4 rounded-lg hover:from-green-500 hover:to-green-700 transition-all"
+                className="w-full bg-gradient-to-r from-green-400 to-green-600 text-white p-4 rounded-lg hover:from-green-500 hover:to-green-700 transition-all shadow-md"
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <Calendar className="w-8 h-8 mb-2" />
-                    <h3 className="font-semibold">View Calendar</h3>
-                    <p className="text-sm opacity-90">{appointments.filter((apt: any) => {
-                      const now = new Date();
-                      const aptDate = new Date(apt.appointmentDate);
-                      const aptTime = apt.appointmentTime;
-                      const [time, period] = aptTime.split(' ');
-                      const [hours, minutes] = time.split(':').map(Number);
-                      let hour24 = hours;
-                      if (period === 'PM' && hours !== 12) hour24 += 12;
-                      if (period === 'AM' && hours === 12) hour24 = 0;
-                      aptDate.setHours(hour24, minutes || 0);
-                      return apt.status === "confirmed" && aptDate > now;
-                    }).length} upcoming</p>
+                  <div className="flex items-center gap-3">
+                    <Calendar className="w-6 h-6" />
+                    <div className="text-left">
+                      <h3 className="font-semibold text-base">View Calendar</h3>
+                      <p className="text-sm opacity-90">{appointments.filter((apt: any) => {
+                        const now = new Date();
+                        const aptDate = new Date(apt.appointmentDate);
+                        const aptTime = apt.appointmentTime;
+                        const [time, period] = aptTime.split(' ');
+                        const [hours, minutes] = time.split(':').map(Number);
+                        let hour24 = hours;
+                        if (period === 'PM' && hours !== 12) hour24 += 12;
+                        if (period === 'AM' && hours === 12) hour24 = 0;
+                        aptDate.setHours(hour24, minutes || 0);
+                        return apt.status === "confirmed" && aptDate > now;
+                      }).length} upcoming</p>
+                    </div>
                   </div>
-                  <div className="text-right flex flex-col justify-center">
+                  <div className="text-right">
                     <p className="text-2xl font-bold">{new Date().getDate()}</p>
-                    <p className="text-sm">{new Date().toLocaleDateString('en-US', { weekday: 'short' })}</p>
+                    <p className="text-sm opacity-90">{new Date().toLocaleDateString('en-US', { weekday: 'short' })}</p>
                   </div>
                 </div>
               </button>
 
               <button
                 onClick={() => setShowAnalytics(true)}
-                className="w-full bg-gradient-to-r from-purple-400 to-purple-600 text-white p-4 rounded-lg hover:from-purple-500 hover:to-purple-700 transition-all"
+                className="w-full bg-gradient-to-r from-purple-400 to-purple-600 text-white p-4 rounded-lg hover:from-purple-500 hover:to-purple-700 transition-all shadow-md"
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <BarChart3 className="w-8 h-8 mb-2" />
-                    <h3 className="font-semibold">View Analytics</h3>
-                    <p className="text-sm opacity-90">Detailed insights</p>
+                  <div className="flex items-center gap-3">
+                    <BarChart3 className="w-6 h-6" />
+                    <div className="text-left">
+                      <h3 className="font-semibold text-base">View Analytics</h3>
+                      <p className="text-sm opacity-90">Detailed insights</p>
+                    </div>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold">{stats.confirmed}</p>
-                    <p className="text-sm">confirmed</p>
+                    <p className="text-sm opacity-90">confirmed</p>
                   </div>
                 </div>
               </button>
 
               <button
                 onClick={() => setShowProfileViews(true)}
-                className="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white p-4 rounded-lg hover:from-blue-500 hover:to-blue-700 transition-all"
+                className="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white p-4 rounded-lg hover:from-blue-500 hover:to-blue-700 transition-all shadow-md"
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <Eye className="w-8 h-8 mb-2" />
-                    <h3 className="font-semibold">Profile Views</h3>
-                    <p className="text-sm opacity-90">View analytics</p>
+                  <div className="flex items-center gap-3">
+                    <Eye className="w-6 h-6" />
+                    <div className="text-left">
+                      <h3 className="font-semibold text-base">Profile Views</h3>
+                      <p className="text-sm opacity-90">View analytics</p>
+                    </div>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold">{profileViewsData.weekViews}</p>
-                    <p className="text-sm">this week</p>
+                    <p className="text-sm opacity-90">this week</p>
                   </div>
                 </div>
               </button>
@@ -722,8 +757,15 @@ const ConsultancyAdminPage: React.FC = () => {
 
       {/* Calendar Modal */}
       {showCalendar && (
-        <div className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto relative">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          style={{ top: `${window.scrollY}px`, height: '100vh' }}
+          onClick={() => setShowCalendar(false)}
+        >
+          <div 
+            className="bg-white rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-semibold">Monthly Calendar</h3>
               <button
@@ -855,8 +897,15 @@ const ConsultancyAdminPage: React.FC = () => {
 
       {/* Analytics Modal */}
       {showAnalytics && (
-        <div className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          style={{ top: `${window.scrollY}px`, height: '100vh' }}
+          onClick={() => setShowAnalytics(false)}
+        >
+          <div 
+            className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-semibold">Analytics Dashboard</h3>
               <button
@@ -958,8 +1007,15 @@ const ConsultancyAdminPage: React.FC = () => {
 
       {/* Profile Views Modal */}
       {showProfileViews && (
-        <div className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          style={{ top: `${window.scrollY}px`, height: '100vh' }}
+          onClick={() => setShowProfileViews(false)}
+        >
+          <div 
+            className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-semibold">Profile Views Analytics</h3>
               <button
@@ -1069,8 +1125,15 @@ const ConsultancyAdminPage: React.FC = () => {
 
       {/* Edit Profile Modal */}
       {showEditProfile && (
-        <div className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          style={{ top: `${window.scrollY}px`, height: '100vh' }}
+          onClick={() => setShowEditProfile(false)}
+        >
+          <div 
+            className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-semibold">Edit Profile</h3>
               <button
@@ -1357,8 +1420,15 @@ const ConsultancyAdminPage: React.FC = () => {
 
       {/* Date Appointments Modal */}
       {showDateModal && (
-        <div className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          style={{ top: `${window.scrollY}px`, height: '100vh' }}
+          onClick={() => setShowDateModal(false)}
+        >
+          <div 
+            className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-semibold">
                 Appointments ({selectedDateAppointments.length})
