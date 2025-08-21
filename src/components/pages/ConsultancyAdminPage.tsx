@@ -76,11 +76,11 @@ const ConsultancyAdminPage: React.FC = () => {
       }, 800);
     }
     
-    const body = document.getElementById('app-body');
+    const body = document.body;
     if (showCalendar || showAnalytics || showProfileViews || showEditProfile || showDateModal) {
-      body?.classList.add('modal-open');
+      body.classList.add('modal-open');
     } else {
-      body?.classList.remove('modal-open');
+      body.classList.remove('modal-open');
     }
     
     // Cleanup on unmount

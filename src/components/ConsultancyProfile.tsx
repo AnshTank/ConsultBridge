@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Calendar,
   Clock,
@@ -70,6 +70,19 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [showWhyChooseUsModal, setShowWhyChooseUsModal] = useState(false);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (showWhyChooseUsModal) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, [showWhyChooseUsModal]);
 
 
   const [realRating, setRealRating] = useState(rating || 5.0);

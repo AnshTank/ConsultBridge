@@ -45,6 +45,19 @@ export default function ConsultancyDetailsPage() {
   const [verificationNote, setVerificationNote] = useState('');
   const [selectedVerificationType, setSelectedVerificationType] = useState<'email' | 'phone'>('email');
 
+  // Lock body scroll when modals are open
+  useEffect(() => {
+    if (showImageModal || showRejectModal || showVerificationModal) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, [showImageModal, showRejectModal, showVerificationModal]);
+
   useEffect(() => {
     // Check if user is authenticated
     const isAuth = localStorage.getItem('adminAuthenticated');
@@ -370,9 +383,15 @@ export default function ConsultancyDetailsPage() {
 
         {/* Image Modal */}
         {showImageModal && (
-          <>
-            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" onClick={() => setShowImageModal(false)} />
-            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-2xl shadow-2xl max-w-2xl w-[90vw] overflow-hidden">
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+            style={{ top: `${typeof window !== 'undefined' ? window.scrollY : 0}px`, height: '100vh' }}
+            onClick={() => setShowImageModal(false)}
+          >
+            <div 
+              className="bg-white rounded-2xl shadow-2xl max-w-2xl w-[90vw] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 text-white">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-bold">🖼️ {consultancy.name} - Image</h3>
@@ -408,14 +427,20 @@ export default function ConsultancyDetailsPage() {
                 </button>
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {/* Reject Modal */}
         {showRejectModal && (
-          <>
-            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" onClick={() => setShowRejectModal(false)} />
-            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-xl p-6 w-96 max-w-md shadow-2xl">
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+            style={{ top: `${typeof window !== 'undefined' ? window.scrollY : 0}px`, height: '100vh' }}
+            onClick={() => setShowRejectModal(false)}
+          >
+            <div 
+              className="bg-white rounded-xl p-6 w-96 max-w-md shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h3 className="text-lg font-semibold mb-4 text-red-600">❌ Reject Consultancy</h3>
               <p className="text-gray-600 mb-4">
                 Please provide a reason for rejection:
@@ -445,14 +470,20 @@ export default function ConsultancyDetailsPage() {
                 </button>
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {/* Verification Note Modal */}
         {showVerificationModal && (
-          <>
-            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" onClick={() => setShowVerificationModal(false)} />
-            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-xl p-6 w-96 max-w-md shadow-2xl">
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+            style={{ top: `${typeof window !== 'undefined' ? window.scrollY : 0}px`, height: '100vh' }}
+            onClick={() => setShowVerificationModal(false)}
+          >
+            <div 
+              className="bg-white rounded-xl p-6 w-96 max-w-md shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h3 className="text-lg font-semibold mb-4 text-blue-600">📧 Send Verification Note</h3>
               <p className="text-gray-600 mb-4">
                 Send a verification note for {selectedVerificationType} verification:
@@ -482,7 +513,7 @@ export default function ConsultancyDetailsPage() {
                 </button>
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

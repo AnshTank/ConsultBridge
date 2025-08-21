@@ -19,3 +19,8 @@
   overflow-y: auto;
   position: relative;
 }
+
+/* Disable body scroll when modal is open */
+body.modal-open {
+  overflow: hidden !important;
+}
