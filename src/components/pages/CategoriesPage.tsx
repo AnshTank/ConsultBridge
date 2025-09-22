@@ -4,6 +4,7 @@ import Navbar from "../Navbar";
 import Link from "next/link";
 import PageTransition from "../PageTransition";
 import Footer from "../Footer";
+import SmartPageWrapper from "../SmartPageWrapper";
 
 const categories = [
   {
@@ -71,7 +72,8 @@ function CategoriesPage() {
   const router = useRouter();
 
   return (
-    <PageTransition>
+    <SmartPageWrapper loadingMessage="🔍 Exploring all categories...">
+      <PageTransition>
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
@@ -126,7 +128,8 @@ function CategoriesPage() {
 
         <Footer />
       </div>
-    </PageTransition>
+      </PageTransition>
+    </SmartPageWrapper>
   );
 }
 

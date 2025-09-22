@@ -1,18 +1,28 @@
 {
   "name": "nextjs-consultancy-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=18.17.0",
+    "npm": ">=9"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "start:prod": "NODE_ENV=production next start",
     "lint": "next lint",
-    "export": "next build && next export"
+    "format": "prettier --write .",
+    "test": "echo \"No tests specified\" && exit 0",
+    "audit:fix": "npm audit fix --force",
+    "check-updates": "npm outdated",
+    "optimize-db": "node optimize-indexes.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^4.29.12",
     "@google/genai": "^1.15.0",
     "@google/generative-ai": "^0.24.1",
+    "@next/swc-win32-x64-msvc": "^15.5.2",
     "@vercel/speed-insights": "^1.2.0",
     "chrono-node": "^2.8.3",
     "framer-motion": "^11.11.17",
@@ -21,6 +31,7 @@
     "next": "^14.2.18",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
     "swiper": "^11.1.14"
   },
   "devDependencies": {
@@ -31,7 +42,17 @@
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.18",
     "postcss": "^8.5.6",
+    "prettier": "^3.6.2",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.6.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AnshTank/ConsultBridge.git"
+  },
+  "license": "SEE LICENSE IN LICENSE.md",
+  "bugs": {
+    "url": "https://github.com/AnshTank/ConsultBridge/issues"
+  },
+  "homepage": "https://github.com/AnshTank/ConsultBridge#readme"
 }

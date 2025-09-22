@@ -5,6 +5,7 @@ import ConsultancyReviews from "../ConsultancyReviews";
 import LoadingScreen from "../LoadingScreen";
 import Navbar from "../Navbar";
 import Footer from "../Footer";
+import SmartPageWrapper from "../SmartPageWrapper";
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -40,7 +41,7 @@ function ConsultancyProfilePage({ id }: { id: string }) {
   }, [id]);
 
   if (loading) {
-    return <LoadingScreen message="Loading consultancy profile..." />;
+    return null;
   }
 
   if (!consultancy) {
@@ -143,20 +144,24 @@ function ConsultancyProfilePage({ id }: { id: string }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
-        <Navbar />
-      </header>
+    <SmartPageWrapper loadingMessage="💼 Loading consultancy profile...">
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+          <Navbar />
+        </header>
 
-      <ConsultancyProfile
-        {...consultancy}
-        id={consultancy._id || consultancy.id}
-      />
+        <ConsultancyProfile
+          {...consultancy}
+          id={consultancy._id || consultancy.id}
+        />
 
-      <ConsultancyReviews consultancyId={consultancy._id || consultancy.id} />
+        <ConsultancyReviews consultancyId={consultancy._id || consultancy.id} />
+        
+        <div className="py-16"></div>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </SmartPageWrapper>
   );
 }
 

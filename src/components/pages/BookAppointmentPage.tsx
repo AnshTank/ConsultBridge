@@ -4,6 +4,8 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Calendar, Clock, User, Mail, Phone, MessageSquare, MapPin } from "lucide-react";
 import Navbar from "../Navbar";
+import PageTransition from "../PageTransition";
+import SmartPageWrapper from "../SmartPageWrapper";
 
 function BookAppointmentPage() {
   const { user } = useUser();
@@ -79,8 +81,10 @@ function BookAppointmentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <SmartPageWrapper loadingMessage="📅 Preparing your booking form...">
+      <PageTransition>
+        <div className="min-h-screen bg-gray-50">
+          <Navbar />
       <div className="container mx-auto px-6 py-12">
         <div className="max-w-4xl mx-auto">
           <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-t-xl p-8 relative overflow-hidden">
@@ -256,9 +260,11 @@ function BookAppointmentPage() {
               </div>
             </form>
           </div>
+          </div>
         </div>
       </div>
-    </div>
+      </PageTransition>
+    </SmartPageWrapper>
   );
 }
 

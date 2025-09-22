@@ -45,18 +45,7 @@ export default function ConsultancyDetailsPage() {
   const [verificationNote, setVerificationNote] = useState('');
   const [selectedVerificationType, setSelectedVerificationType] = useState<'email' | 'phone'>('email');
 
-  // Lock body scroll when modals are open
-  useEffect(() => {
-    if (showImageModal || showRejectModal || showVerificationModal) {
-      document.body.classList.add('modal-open');
-    } else {
-      document.body.classList.remove('modal-open');
-    }
-    
-    return () => {
-      document.body.classList.remove('modal-open');
-    };
-  }, [showImageModal, showRejectModal, showVerificationModal]);
+
 
   useEffect(() => {
     // Check if user is authenticated
@@ -385,7 +374,15 @@ export default function ConsultancyDetailsPage() {
         {showImageModal && (
           <div 
             className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-            style={{ top: `${typeof window !== 'undefined' ? window.scrollY : 0}px`, height: '100vh' }}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: '100vw',
+              height: '100vh'
+            }}
             onClick={() => setShowImageModal(false)}
           >
             <div 

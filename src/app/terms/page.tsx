@@ -1,5 +1,6 @@
 import Navbar from "../../components/Navbar";
 import PageTransition from "../../components/PageTransition";
+import SmartPageWrapper from "../../components/SmartPageWrapper";
 import {
   FileText,
   CheckCircle,
@@ -11,7 +12,8 @@ import {
 
 export default function TermsPage() {
   return (
-    <PageTransition>
+    <SmartPageWrapper loadingMessage="📄 Loading Terms of Service...">
+      <PageTransition>
       <div className="min-h-screen bg-gray-50 flex flex-col">
         <header className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white">
           <Navbar />
@@ -314,6 +316,7 @@ export default function TermsPage() {
           </div>
         </footer>
       </div>
-    </PageTransition>
+      </PageTransition>
+    </SmartPageWrapper>
   );
 }

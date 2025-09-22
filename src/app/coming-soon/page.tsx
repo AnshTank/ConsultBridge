@@ -1,43 +1,51 @@
 "use client";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Sparkles, Twitter, Linkedin, Facebook, Instagram, Rocket } from "lucide-react";
+import {
+  ArrowLeft,
+  Sparkles,
+  Twitter,
+  Linkedin,
+  Facebook,
+  Instagram,
+  Rocket,
+} from "lucide-react";
 import Link from "next/link";
-import Navbar from "../../components/Navbar";
+// import Navbar from "../../components/Navbar";
 
 export default function ComingSoonPage() {
   const searchParams = useSearchParams();
-  const platform = searchParams?.get('platform') || 'feature';
-  
+  const platform = searchParams?.get("platform") || "feature";
+
   const platformConfig = {
     twitter: {
       icon: Twitter,
       name: "Twitter",
       color: "from-blue-400 to-blue-600",
       emoji: "🐦",
-      description: "Follow us for the latest updates and insights"
+      description: "Follow us for the latest updates and insights",
     },
     linkedin: {
       icon: Linkedin,
       name: "LinkedIn",
       color: "from-blue-600 to-blue-800",
       emoji: "💼",
-      description: "Connect with us professionally"
+      description: "Connect with us professionally",
     },
     facebook: {
       icon: Facebook,
       name: "Facebook",
       color: "from-blue-500 to-blue-700",
       emoji: "👥",
-      description: "Join our community"
+      description: "Join our community",
     },
     instagram: {
       icon: Instagram,
       name: "Instagram",
       color: "from-pink-500 to-purple-600",
       emoji: "📸",
-      description: "See behind the scenes"
-    }
+      description: "See behind the scenes",
+    },
   };
 
   const config = platformConfig[platform as keyof typeof platformConfig] || {
@@ -45,13 +53,13 @@ export default function ComingSoonPage() {
     name: "Amazing Feature",
     color: "from-purple-500 to-pink-600",
     emoji: "✨",
-    description: "Something incredible is coming"
+    description: "Something incredible is coming",
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white overflow-hidden page-transition">
-      <Navbar />
-      
+      {/* <Navbar /> */}
+
       {/* Floating particles */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(25)].map((_, i) => (
@@ -61,7 +69,7 @@ export default function ComingSoonPage() {
             initial={{
               x: Math.random() * 1200,
               y: Math.random() * 800,
-              opacity: Math.random() * 0.5 + 0.2
+              opacity: Math.random() * 0.5 + 0.2,
             }}
             animate={{
               y: [null, -50],
@@ -86,21 +94,23 @@ export default function ComingSoonPage() {
           >
             <motion.div
               className="flex justify-center mb-8"
-              animate={{ 
+              animate={{
                 rotate: [0, 10, -10, 0],
-                scale: [1, 1.1, 1]
+                scale: [1, 1.1, 1],
               }}
-              transition={{ 
-                duration: 4, 
+              transition={{
+                duration: 4,
                 repeat: Infinity,
-                ease: "easeInOut"
+                ease: "easeInOut",
               }}
             >
-              <div className={`p-8 rounded-full bg-gradient-to-r ${config.color} shadow-2xl`}>
+              <div
+                className={`p-8 rounded-full bg-gradient-to-r ${config.color} shadow-2xl`}
+              >
                 <config.icon className="w-16 h-16 text-white" />
               </div>
             </motion.div>
-            
+
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
@@ -109,7 +119,9 @@ export default function ComingSoonPage() {
             >
               <div className="text-6xl mb-4">{config.emoji}</div>
               <h1 className="text-5xl md:text-7xl font-bold mb-4">
-                <span className={`bg-gradient-to-r ${config.color} bg-clip-text text-transparent`}>
+                <span
+                  className={`bg-gradient-to-r ${config.color} bg-clip-text text-transparent`}
+                >
                   {config.name}
                 </span>
               </h1>
@@ -117,7 +129,7 @@ export default function ComingSoonPage() {
                 Coming Soon
               </h2>
             </motion.div>
-            
+
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -139,14 +151,14 @@ export default function ComingSoonPage() {
             className="mb-12"
           >
             <motion.div
-              animate={{ 
+              animate={{
                 scale: [1, 1.05, 1],
-                rotate: [0, 1, -1, 0]
+                rotate: [0, 1, -1, 0],
               }}
-              transition={{ 
-                duration: 3, 
+              transition={{
+                duration: 3,
                 repeat: Infinity,
-                ease: "easeInOut"
+                ease: "easeInOut",
               }}
               className="text-6xl mb-4"
             >

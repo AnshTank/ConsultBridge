@@ -3,9 +3,11 @@ import { Users, Award, TrendingUp, Shield } from "lucide-react";
 import Navbar from "../Navbar";
 import PageTransition from "../PageTransition";
 import Footer from "../Footer";
+import SmartPageWrapper from "../SmartPageWrapper";
 function AboutPage() {
   return (
-    <PageTransition>
+    <SmartPageWrapper loadingMessage="📚 Learning about ConsultBridge...">
+      <PageTransition>
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white">
@@ -192,7 +194,8 @@ function AboutPage() {
 
         <Footer />
       </div>
-    </PageTransition>
+      </PageTransition>
+    </SmartPageWrapper>
   );
 }
 

@@ -70,6 +70,8 @@ const AdminPortalPage: React.FC = () => {
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [verificationNote, setVerificationNote] = useState('');
   const [selectedVerificationType, setSelectedVerificationType] = useState<'email' | 'phone'>('email');
+  const [currentPage, setCurrentPage] = useState(1);
+  const consultanciesPerPage = 20;
 
   useEffect(() => {
     // Check localStorage for authentication
@@ -85,19 +87,7 @@ const AdminPortalPage: React.FC = () => {
     }
   }, [isAuthenticated]);
 
-  // Lock body scroll when modals are open
-  useEffect(() => {
-    if (showDetailsModal || showRejectModal || showImageModal || showVerificationModal) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
 
-    // Cleanup on unmount
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [showDetailsModal, showRejectModal, showImageModal, showVerificationModal]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,11 +104,16 @@ const AdminPortalPage: React.FC = () => {
     try {
       const response = await fetch("/api/consultancies");
       const data = await response.json();
+      console.log('API Response:', data); // Debug log
       if (data.success) {
-        setConsultancies(data.consultancies || []);
+        setConsultancies(data.consultancies || data.data || []);
+      } else {
+        console.error('API Error:', data.error);
+        setConsultancies([]);
       }
     } catch (error) {
       console.error("Error fetching consultancies:", error);
+      setConsultancies([]);
     }
     setLoading(false);
   };
@@ -238,6 +233,13 @@ const AdminPortalPage: React.FC = () => {
       consultancy.category?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
+
+  const totalPages = Math.ceil(filteredConsultancies.length / consultanciesPerPage);
+  const startIndex = (currentPage - 1) * consultanciesPerPage;
+  const paginatedConsultancies = filteredConsultancies.slice(
+    startIndex,
+    startIndex + consultanciesPerPage
+  );
 
   const stats = {
     total: consultancies.length,
@@ -558,9 +560,30 @@ const AdminPortalPage: React.FC = () => {
         </>
       )}
       {showImageModal && (
-        <>
-          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" />
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-2xl shadow-2xl max-w-md w-[90vw] overflow-hidden">
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh'
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setShowImageModal(false)}
+        >
+          <motion.div
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-[90vw] mx-4 overflow-hidden"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
             <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 text-white">
               <div className="flex justify-between items-center">
@@ -599,8 +622,8 @@ const AdminPortalPage: React.FC = () => {
                 Close
               </button>
             </div>
-          </div>
-        </>
+          </motion.div>
+        </motion.div>
       )}
       {showRejectModal && (
         <>
@@ -809,7 +832,7 @@ const AdminPortalPage: React.FC = () => {
 
         {/* Consultancies List */}
         <div className="space-y-4">
-          {filteredConsultancies.map((consultancy) => (
+          {paginatedConsultancies.map((consultancy) => (
             <motion.div
               key={consultancy._id}
               className="bg-white rounded-xl shadow-lg p-6 border border-gray-200"
@@ -951,7 +974,7 @@ const AdminPortalPage: React.FC = () => {
             </motion.div>
           ))}
 
-          {filteredConsultancies.length === 0 && (
+          {paginatedConsultancies.length === 0 && (
             <div className="text-center py-12">
               <div className="text-gray-500 text-lg">
                 No consultancies found matching your criteria.
@@ -959,6 +982,43 @@ const AdminPortalPage: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center mt-8">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                Previous
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-2 rounded-lg transition-all ${
+                      currentPage === page
+                        ? "bg-indigo-500 text-white"
+                        : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
+              <button
+                onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

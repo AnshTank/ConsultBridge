@@ -2,7 +2,6 @@
 /node_modules
 /.pnp
 .pnp.js
-node_modules_backup/
 
 # Testing
 /coverage
@@ -13,115 +12,26 @@ node_modules_backup/
 
 # Production
 /build
-/dist
 
-# Environment files
-.env
-.env*.local
-.env.production
-.env.development
+# Misc
+.DS_Store
+*.pem
 
-# Logs
-logs
-*.log
+# Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.npm
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
+# Local env files
+.env*.local
 
-# Coverage directory used by tools like istanbul
-nyc_output
-
-# Dependency directories
-jspm_packages/
+# Vercel
+.vercel
 
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
 
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# parcel-bundler cache (https://parceljs.org/)
+# Cache
 .cache
 .parcel-cache
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# IDE and Editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-*.pem
-
-# AI/Development tools
-.qodo/
-.cursor/
-.copilot/
-.github-copilot/
-.ai-assistant/
-
-# Temporary files
-*.tmp
-*.temp
-.tmp/
-.temp/
-
-# Backup files
-*.backup
-*.bak
-*.orig
-package-lock.json.backup
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Vercel
-.vercel
-
-# Turbo
-.turbo
-
-# Sentry
-.sentryclirc
-
-# Local Netlify folder
-.netlify

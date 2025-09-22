@@ -2,7 +2,6 @@
 
 .page-transition {
   animation: pageEnter 0.2s ease-in-out forwards;
-  overflow-x: hidden;
 }
 
 .page-transition::before {

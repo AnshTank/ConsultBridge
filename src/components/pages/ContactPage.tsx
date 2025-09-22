@@ -4,6 +4,8 @@ import { MapPin, Phone, Mail, Clock, User, Building, Send } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import Navbar from "../Navbar";
 import PageTransition from "../PageTransition";
+import Footer from "../Footer";
+import SmartPageWrapper from "../SmartPageWrapper";
 
 function ContactPage() {
   const { user } = useUser();
@@ -83,7 +85,8 @@ function ContactPage() {
   };
 
   return (
-    <PageTransition>
+    <SmartPageWrapper loadingMessage="📞 Connecting you to our support team...">
+      <PageTransition>
       <div className="min-h-screen bg-gray-50">
         <header className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white">
           <Navbar />
@@ -430,8 +433,11 @@ function ContactPage() {
             </div>
           </div>
         </section>
+
+        <Footer />
       </div>
-    </PageTransition>
+      </PageTransition>
+    </SmartPageWrapper>
   );
 }
 

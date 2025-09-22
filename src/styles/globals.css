@@ -2,116 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global modal and popup fixes */
-html, body {
-  scroll-behavior: smooth;
-  overflow-x: hidden !important;
-  overflow-y: scroll !important;
-  max-width: 100vw !important;
-}
-
-/* Force vertical scrollbar to always show */
+/* Always reserve scrollbar space to prevent layout shift */
 html {
-  overflow-y: scroll !important;
+  overflow-y: scroll; /* Always keep scrollbar space */
+  overflow-x: hidden;
 }
 
 body {
-  overflow-y: scroll !important;
+  overflow-x: hidden;
+  background-color: #f9fafb; /* Prevent white flash */
 }
 
-/* Prevent any element from causing horizontal scroll */
-* {
-  max-width: 100% !important;
-}
-
-/* Container fixes */
-.container, .max-w-7xl, .max-w-6xl, .max-w-5xl {
-  overflow-x: hidden !important;
-}
-
-/* Prevent horizontal scroll when modals are open */
-body.modal-open {
+/* Prevent content shift when scroll is locked */
+body.scroll-locked {
   overflow: hidden !important;
-  padding-right: 15px !important;
+  position: fixed !important;
+  width: 100% !important;
+  top: var(--scroll-y, 0) !important;
+  touch-action: none !important;
 }
 
-/* Ensure all modals have proper z-index layering */
-.modal-backdrop {
-  z-index: 9998 !important;
+/* Loading state control */
+body.loading {
+  overflow: hidden; /* No scrollbar during loading */
 }
 
-.modal-content {
-  z-index: 9999 !important;
+body.loaded {
+  overflow-y: scroll; /* Restore scrollbar (always reserved) */
 }
 
-/* Fix for any sticky elements during modal open */
-.sticky-element {
-  z-index: 9997 !important;
+/* Clean scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
 }
 
-/* Smooth transitions for all modals */
-.modal-transition {
-  transition: all 0.3s ease-in-out;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-/* Prevent text selection on modal overlays */
-.modal-overlay {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
 }
 
-/* Ensure proper scrolling in modal content */
-.modal-scroll {
-  overflow-y: auto;
-  max-height: 90vh;
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
 }
 
-/* Fix for mobile viewport issues */
-@media (max-width: 768px) {
-  .modal-content {
-    max-height: 95vh;
-    margin: 2.5vh auto;
-  }
+/* Background particles CSS animations for better performance */
+.bg-particle {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  background: rgba(99, 102, 241, 0.5);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
 }
 
-/* Animation keyframes */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.bg-dhaba {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(16px);
+  pointer-events: none;
+  z-index: 0;
 }
 
-@keyframes slideUp {
-  from { 
-    opacity: 0; 
-    transform: translateY(20px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
+@keyframes particle-float {
+  0% { transform: translate(0, 0); opacity: 0.4; }
+  25% { transform: translate(calc(var(--x) * 0.5), calc(var(--y) * 0.3)); opacity: 0.7; }
+  50% { transform: translate(var(--x), var(--y)); opacity: 0.4; }
+  75% { transform: translate(calc(var(--x) * 0.3), calc(var(--y) * 0.8)); opacity: 0.7; }
+  100% { transform: translate(0, 0); opacity: 0.4; }
 }
 
-@keyframes scaleIn {
-  from { 
-    opacity: 0; 
-    transform: scale(0.9); 
-  }
-  to { 
-    opacity: 1; 
-    transform: scale(1); 
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
-
-.animate-slide-up {
-  animation: slideUp 0.3s ease-out;
-}
-
-.animate-scale-in {
-  animation: scaleIn 0.3s ease-out;
+@keyframes dhaba-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(var(--x), var(--y)) scale(1.1); }
 }

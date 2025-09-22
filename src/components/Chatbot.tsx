@@ -1,9 +1,48 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import { SendHorizonal, Bot, X, Loader2, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
+import { motion } from "framer-motion";
+import { useScrollLock } from "../hooks/useScrollLock";
 import "../styles/chatbot.css";
+
+// Payment Step Animation Component
+function PaymentStep({ step }: { step: { step: number; text: string; icon: string; delay: number } }) {
+  const [isActive, setIsActive] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
+
+  useEffect(() => {
+    const timer1 = setTimeout(() => setIsActive(true), step.delay);
+    const timer2 = setTimeout(() => setIsComplete(true), step.delay + 1000);
+    
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, [step.delay]);
+
+  return (
+    <div className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-500 ${
+      isActive ? 'bg-blue-100 border-l-4 border-blue-500' : 'bg-gray-50 opacity-50'
+    }`}>
+      <div className={`text-lg transition-all duration-300 ${
+        isActive ? 'scale-110' : 'scale-100 opacity-50'
+      }`}>
+        {isComplete ? '✅' : isActive ? step.icon : '⏳'}
+      </div>
+      <div className={`flex-1 transition-all duration-300 ${
+        isActive ? 'text-blue-700 font-medium' : 'text-gray-500'
+      }`}>
+        {step.text}
+      </div>
+      {isActive && !isComplete && (
+        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      )}
+    </div>
+  );
+}
 
 export default function Chatbot() {
   const router = useRouter();
@@ -13,6 +52,7 @@ export default function Chatbot() {
   const [entranceComplete, setEntranceComplete] = useState(false);
   const [entranceGreeting, setEntranceGreeting] = useState("Hello there!");
   const [sessionId, setSessionId] = useState<string>("");
+  const [pageLoaded, setPageLoaded] = useState(false);
   const [messages, setMessages] = useState<
     {
       sender: "user" | "bot";
@@ -22,6 +62,8 @@ export default function Chatbot() {
       paymentReceipt?: any;
       requiresAuth?: boolean;
       authMessage?: string;
+      processingPayment?: boolean;
+      paymentSteps?: Array<{step: number; text: string; icon: string; delay: number}>;
       categoryNavigation?: {
         category: string;
         categoryName: string;
@@ -43,7 +85,12 @@ export default function Chatbot() {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [currentTypingInterval, setCurrentTypingInterval] =
     useState<NodeJS.Timeout | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Enable scroll lock when chatbot is open
+  useScrollLock(isOpen || showEntrance);
 
   const waitingTips = [
     "💡 Did you know? We have 500+ verified consultants ready to help!",
@@ -77,68 +124,53 @@ export default function Chatbot() {
       window.removeEventListener("unhandledrejection", handleClerkError);
   }, []);
 
-  // Disable background scrolling when chatbot is open
+  // Check if page is fully loaded
   useEffect(() => {
-    if (isOpen || showEntrance) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
+    const timer = setTimeout(() => {
+      setPageLoaded(true);
+    }, 5000); // Wait 5 seconds for smooth appearance
 
-    // Cleanup on unmount
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen, showEntrance]);
+    return () => clearTimeout(timer);
+  }, []);
 
-  // Load chat history from localStorage on component mount
+  // Load chat history from database on component mount
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !pageLoaded) return;
 
-    const savedSessionId = localStorage.getItem("chatSessionId");
-    const savedMessages = localStorage.getItem("chatMessages");
+    const loadChatHistory = async () => {
+      let savedSessionId = sessionStorage.getItem("chatSessionId");
 
-    // Clear session if user signed out
-    if (!isSignedIn && savedMessages) {
-      localStorage.removeItem("chatMessages");
-      localStorage.removeItem("chatSessionId");
-      const newSessionId = `session_${Date.now()}_${Math.random()}`;
-      setSessionId(newSessionId);
-      localStorage.setItem("chatSessionId", newSessionId);
-      setMessages([]);
-      return;
-    }
-
-    if (savedSessionId) {
-      setSessionId(savedSessionId);
-      if (savedMessages && isSignedIn) {
-        try {
-          const parsedMessages = JSON.parse(savedMessages);
-          if (parsedMessages.length > 0) {
-            setMessages(parsedMessages);
-          }
-        } catch (error) {
-          console.error("Error parsing saved messages:", error);
-        }
+      // Create new session if none exists
+      if (!savedSessionId) {
+        savedSessionId = `session_${Date.now()}_${Math.random()}`;
+        sessionStorage.setItem("chatSessionId", savedSessionId);
       }
-    } else {
-      // Create new session
-      const newSessionId = `session_${Date.now()}_${Math.random()}`;
-      setSessionId(newSessionId);
-      localStorage.setItem("chatSessionId", newSessionId);
-    }
-  }, [isLoaded, isSignedIn]);
 
-  // Save messages to localStorage whenever they change
-  useEffect(() => {
-    if (messages.length > 0) {
-      localStorage.setItem("chatMessages", JSON.stringify(messages));
-    }
-  }, [messages]);
+      setSessionId(savedSessionId);
+
+      // Load chat history from database
+      try {
+        const response = await fetch(
+          `/api/chat-history?sessionId=${savedSessionId}&userId=${userId || ""}`
+        );
+        const data = await response.json();
+
+        if (data.success && data.chatHistory.length > 0) {
+          setMessages(data.chatHistory);
+        }
+      } catch (error) {
+        console.error("Error loading chat history:", error);
+      }
+    };
+
+    loadChatHistory();
+  }, [isLoaded, isSignedIn, userId, pageLoaded]);
+
+  // Messages are now saved automatically via API calls
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]);
+  }, [messages, isLoading, typingMessage, isTyping]);
 
   const typeMessage = (text: string, callback?: () => void) => {
     setIsTyping(true);
@@ -149,6 +181,9 @@ export default function Chatbot() {
       if (index < text.length) {
         setTypingMessage(text.slice(0, index + 1));
         index++;
+        setTimeout(() => {
+          chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 10);
       } else {
         clearInterval(typeInterval);
         setCurrentTypingInterval(null);
@@ -156,7 +191,7 @@ export default function Chatbot() {
         setTypingMessage("");
         callback?.();
       }
-    }, 30); // Adjust speed here (lower = faster)
+    }, 25);
 
     setCurrentTypingInterval(typeInterval);
   };
@@ -184,7 +219,7 @@ export default function Chatbot() {
   };
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading || isTyping) return;
 
     const userMessage = { sender: "user" as const, text: input };
     setMessages((prev) => [...prev, userMessage]);
@@ -235,16 +270,16 @@ export default function Chatbot() {
       // Update sessionId if provided by server
       if (data.sessionId && data.sessionId !== sessionId) {
         setSessionId(data.sessionId);
-        localStorage.setItem("chatSessionId", data.sessionId);
+        sessionStorage.setItem("chatSessionId", data.sessionId);
       }
 
       // Don't overwrite messages with server history during normal chat
 
-      // Ensure data.reply is always a string
-      if (typeof data.reply !== "string") {
-        console.error("Invalid reply format:", data.reply);
-        data.reply =
-          "Sorry, there was an issue processing your request. Please try again.";
+      // Handle new backend response format: { success, error, data }
+      let reply = data?.data?.reply ?? data.reply;
+      if (typeof reply !== "string") {
+        console.error("Invalid reply format:", reply);
+        reply = "Sorry, there was an issue processing your request. Please try again.";
       }
 
       // If search is processing, show search animation
@@ -284,78 +319,67 @@ export default function Chatbot() {
             ...prev.slice(0, -1),
             {
               sender: "bot",
-              text: data.reply,
-              consultancies: data.consultancies,
+              text: reply,
+              consultancies: data?.data?.consultancies || data.consultancies,
             },
           ]);
         }, 4000);
       } else if (data.processingPayment) {
+        // Show unique processing animation
         setMessages((prev) => [
           ...prev,
-          { sender: "bot", text: "🔄 Processing your payment..." },
+          { 
+            sender: "bot", 
+            text: "", 
+            processingPayment: true,
+            paymentSteps: [
+              { step: 1, text: "Initializing secure payment gateway", icon: "🔒", delay: 0 },
+              { step: 2, text: "Validating payment credentials", icon: "🔍", delay: 1500 },
+              { step: 3, text: "Processing transaction securely", icon: "💳", delay: 3000 },
+              { step: 4, text: "Confirming appointment slot", icon: "📅", delay: 4500 },
+              { step: 5, text: "Generating confirmation receipt", icon: "📧", delay: 6000 },
+              { step: 6, text: "Finalizing booking details", icon: "✅", delay: 7000 }
+            ]
+          },
         ]);
 
-        // Step 1: Validating payment method
-        setTimeout(() => {
-          setMessages((prev) => [
-            ...prev.slice(0, -1),
-            { sender: "bot", text: "🔍 Validating payment method..." },
-          ]);
-        }, 1500);
-
-        // Step 2: Processing transaction
-        setTimeout(() => {
-          setMessages((prev) => [
-            ...prev.slice(0, -1),
-            { sender: "bot", text: "💳 Processing transaction securely..." },
-          ]);
-        }, 3000);
-
-        // Step 3: Confirming booking
-        setTimeout(() => {
-          setMessages((prev) => [
-            ...prev.slice(0, -1),
-            { sender: "bot", text: "📅 Confirming your appointment..." },
-          ]);
-        }, 4500);
-
-        // Step 4: Sending confirmation
-        setTimeout(() => {
-          setMessages((prev) => [
-            ...prev.slice(0, -1),
-            { sender: "bot", text: "📧 Sending confirmation email..." },
-          ]);
-        }, 6000);
-
-        // Final: Show success message
+        // Final: Show success message with receipt only
         setTimeout(() => {
           setMessages((prev) => [
             ...prev.slice(0, -1),
             {
               sender: "bot",
-              text: data.reply,
-              booking: data.booking,
-              paymentReceipt: data.paymentReceipt,
+              text: reply,
+              paymentReceipt: data?.data?.bookingData?.receipt || data?.bookingData?.receipt,
             },
           ]);
-        }, 7500);
+        }, 8000);
       } else {
-        // Type the message letter by letter
-        const replyText =
-          typeof data.reply === "string" ? data.reply : String(data.reply);
-        typeMessage(replyText, () => {
+        // Format the reply first, then type it
+        const replyText = typeof reply === "string" ? reply : String(reply);
+        const formattedText = replyText
+          .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-800">$1</strong>')
+          .replace(/\*(.*?)\*/g, '<em class="italic text-gray-600">$1</em>')
+          .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono">$1</code>')
+          .replace(/#{1,6}\s*(.*)/g, '<strong class="font-semibold text-gray-800">$1</strong>');
+        
+        typeMessage(formattedText, () => {
           const botMessage = {
             sender: "bot" as const,
-            text: replyText,
-            booking: data.booking || null,
-            consultancies: data.consultancies || null,
-            paymentReceipt: data.paymentReceipt || null,
-            requiresAuth: data.requiresAuth || false,
-            authMessage: data.authMessage || null,
-            categoryNavigation: data.categoryNavigation || null,
-            allCategories: data.allCategories || null,
+            text: formattedText,
+            consultancies: data?.data?.consultancies || data.consultancies || null,
+            paymentReceipt: data?.data?.bookingData?.receipt || null,
+            requiresAuth: data?.data?.requiresAuth || data.requiresAuth || false,
+            authMessage: data?.data?.authMessage || data.authMessage || null,
+            categoryNavigation: data?.data?.categoryNavigation || data.categoryNavigation || null,
+            allCategories: data?.data?.allCategories || data.allCategories || null,
+            bookings: data?.data?.bookings || data.bookings || null,
+            processingPayment: false,
           };
           setMessages((prev) => [...prev, botMessage]);
+          setTimeout(() => {
+            chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+          }, 100);
         });
       }
     } catch (err) {
@@ -378,6 +402,7 @@ export default function Chatbot() {
   };
 
   const handleQuickAction = (action: string) => {
+    if (isLoading || isTyping) return;
     setInput(action);
     handleSend();
   };
@@ -425,20 +450,57 @@ export default function Chatbot() {
     }, 5000);
   };
 
-  const clearChatHistory = () => {
-    localStorage.removeItem("chatMessages");
-    localStorage.removeItem("chatSessionId");
-    const newSessionId = `session_${Date.now()}_${Math.random()}`;
-    setSessionId(newSessionId);
-    localStorage.setItem("chatSessionId", newSessionId);
-    setMessages([]);
+  const showConfirmation = (action: () => void) => {
+    setConfirmAction(() => action);
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirm = () => {
+    if (confirmAction) {
+      confirmAction();
+    }
+    setShowConfirmModal(false);
+    setConfirmAction(null);
+  };
+
+  const handleCancel = () => {
+    setShowConfirmModal(false);
+    setConfirmAction(null);
+  };
+
+  const clearChatHistory = async (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const performClear = async () => {
+        if (isLoading || isTyping) {
+          stopTyping();
+        }
+
+        // Clear from database
+        try {
+          await fetch(`/api/chat-history?sessionId=${sessionId}`, {
+            method: "DELETE",
+          });
+        } catch (error) {
+          console.error("Error clearing chat history:", error);
+        }
+
+        // Create new session
+        const newSessionId = `session_${Date.now()}_${Math.random()}`;
+        setSessionId(newSessionId);
+        sessionStorage.setItem("chatSessionId", newSessionId);
+        setMessages([]);
+
+        resolve(true);
+      };
+
+      showConfirmation(performClear);
+    });
   };
 
   const closeChatbot = () => {
     setShowChatbox(false);
     setTimeout(() => {
       setIsOpen(false);
-      // Don't clear messages - keep them for session persistence
       setShowQuickActions(true);
       setIsLoading(false);
       setWaitingTip("");
@@ -450,8 +512,19 @@ export default function Chatbot() {
     <>
       {/* Simple Unique Chatbot Button */}
       <div className="fixed bottom-6 right-6 z-[9999] pointer-events-none">
-        {!isOpen && !showEntrance && isLoaded && (
-          <div className="relative group pointer-events-auto">
+        {!isOpen && !showEntrance && isLoaded && pageLoaded && (
+          <motion.div
+            className="relative group pointer-events-auto"
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{
+              duration: 0.8,
+              ease: "easeOut",
+              type: "spring",
+              stiffness: 200,
+              damping: 20,
+            }}
+          >
             {/* Notification Badge */}
             <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center animate-bounce shadow-md border-2 border-white z-10">
               💬
@@ -478,10 +551,7 @@ export default function Chatbot() {
               Chat with Shaan AI 🤖
               <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
             </div>
-
-            {/* Online Status */}
-            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm"></div>
-          </div>
+          </motion.div>
         )}
 
         {/* Simple Loading State */}
@@ -539,8 +609,132 @@ export default function Chatbot() {
             showChatbox ? "scale-100 opacity-100" : "scale-75 opacity-0"
           }`}
         >
+          {/* SHAAN AI - Same Bot, Better Eyes */}
+          <div className="absolute top-2 left-2 z-[60] pointer-events-none">
+            <div className={`transform transition-all duration-800 ease-out ${
+              input.trim() ? 'translate-x-1 -translate-y-1 rotate-2 scale-105' : 
+              isLoading ? 'translate-y-0.5 rotate-1 scale-102' : 
+              isTyping ? 'translate-x-0.5 translate-y-0.5 rotate-1 scale-108' :
+              'translate-x-0 translate-y-0 rotate-0 scale-100'
+            }`}>
+              <div className="relative w-20 h-20">
+                
+                {/* Subtle Aura */}
+                <div className={`absolute inset-3 rounded-full transition-all duration-600 blur-sm ${
+                  input.trim() ? 'bg-emerald-200/25' : 
+                  isLoading ? 'bg-blue-200/25 animate-pulse' : 
+                  isTyping ? 'bg-orange-200/25' :
+                  'bg-purple-200/20'
+                }`}></div>
+                
+                {/* Main Robot Head */}
+                <div className="relative w-16 h-14 bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 rounded-2xl border-2 border-slate-400 shadow-xl mx-auto overflow-hidden">
+                  
+                  {/* Digital Face Display */}
+                  <div className="absolute inset-1.5 bg-gradient-to-br from-slate-900 via-black to-slate-800 rounded-xl overflow-hidden">
+                    
+                    {/* Smooth Living Eyes */}
+                    <div className="absolute inset-0 flex items-center justify-center space-x-2.5">
+                      {/* Left Eye */}
+                      <div className={`relative w-3 h-3 transition-all duration-600 ${
+                        input.trim() ? 'bg-emerald-400 scale-125 shadow-emerald-400/60 shadow-lg' :
+                        isLoading ? 'bg-blue-400 scale-110 shadow-blue-400/60 shadow-lg' :
+                        isTyping ? 'bg-orange-400 scale-115 shadow-orange-400/60 shadow-lg' :
+                        'bg-slate-400 scale-100'
+                      } rounded-full`}>
+                        {/* Eye Iris */}
+                        <div className={`absolute inset-0.5 bg-white rounded-full transition-all duration-400 ${
+                          input.trim() ? 'scale-80' : isLoading ? 'scale-60' : isTyping ? 'scale-70' : 'scale-90'
+                        }`}></div>
+                        {/* Smooth Eye Ball */}
+                        <div className={`absolute w-1.5 h-1.5 bg-black rounded-full top-1 left-1 ${
+                          input.trim() ? 'transition-all duration-1000 ease-out transform translate-x-0.5 -translate-y-0.5' : ''
+                        }`} style={{
+                          animation: isLoading ? 'thinking 3s ease-in-out infinite' : 
+                                   isTyping ? 'writing 2s ease-in-out infinite' : 
+                                   (!input.trim() && !isLoading) ? 'randomLook 8s ease-in-out infinite' : undefined
+                        }}></div>
+                        {/* Eye Shine */}
+                        <div className="absolute top-0.5 left-0.5 w-1 h-1 bg-white rounded-full opacity-90"></div>
+                      </div>
+                      
+                      {/* Right Eye */}
+                      <div className={`relative w-3 h-3 transition-all duration-600 ${
+                        input.trim() ? 'bg-emerald-400 scale-125 shadow-emerald-400/60 shadow-lg' :
+                        isLoading ? 'bg-blue-400 scale-110 shadow-blue-400/60 shadow-lg' :
+                        isTyping ? 'bg-orange-400 scale-115 shadow-orange-400/60 shadow-lg' :
+                        'bg-slate-400 scale-100'
+                      } rounded-full`}>
+                        {/* Eye Iris */}
+                        <div className={`absolute inset-0.5 bg-white rounded-full transition-all duration-400 ${
+                          input.trim() ? 'scale-80' : isLoading ? 'scale-60' : isTyping ? 'scale-70' : 'scale-90'
+                        }`}></div>
+                        {/* Smooth Eye Ball */}
+                        <div className={`absolute w-1.5 h-1.5 bg-black rounded-full top-1 left-1 ${
+                          input.trim() ? 'transition-all duration-1000 ease-out transform translate-x-0.5 -translate-y-0.5' : ''
+                        }`} style={{
+                          animation: isLoading ? 'thinking 3s ease-in-out infinite' : 
+                                   isTyping ? 'writing 2s ease-in-out infinite' : 
+                                   (!input.trim() && !isLoading) ? 'randomLook 8s ease-in-out infinite' : undefined
+                        }}></div>
+                        {/* Eye Shine */}
+                        <div className="absolute top-0.5 left-0.5 w-1 h-1 bg-white rounded-full opacity-90"></div>
+                      </div>
+                    </div>
+                    
+                    {/* Dynamic Mouth Expression */}
+                    <div className={`absolute bottom-1.5 left-1/2 transform -translate-x-1/2 transition-all duration-500 ${
+                      input.trim() ? 'w-4 h-0.5 bg-emerald-400 rounded-full shadow-emerald-400/50 shadow-md' :
+                      isLoading ? 'w-3 h-3 border-2 border-blue-400 rounded-full animate-spin' :
+                      isTyping ? 'w-5 h-1 bg-orange-400 rounded-full animate-pulse shadow-orange-400/50 shadow-md' :
+                      'w-3 h-0.5 bg-slate-400 rounded-full'
+                    }`}></div>
+                    
+                    {/* Status LED Strip */}
+                    <div className={`absolute top-0.5 left-1 right-1 h-0.5 rounded-full transition-all duration-800 ${
+                      input.trim() ? 'bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-80' :
+                      isLoading ? 'bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-90 animate-pulse' :
+                      isTyping ? 'bg-gradient-to-r from-transparent via-orange-400 to-transparent opacity-85' :
+                      'bg-gradient-to-r from-transparent via-slate-400 to-transparent opacity-40'
+                    }`}></div>
+                    
+                    {/* Breathing Effect */}
+                    <div className="absolute inset-0 rounded-xl animate-pulse opacity-10 bg-gradient-to-br from-white to-transparent" style={{animationDuration: '3s'}}></div>
+                  </div>
+                  
+                  {/* Side Audio Panels */}
+                  <div className={`absolute -left-1 top-2 w-1.5 h-8 rounded-l-full transition-all duration-500 ${
+                    input.trim() ? 'bg-gradient-to-b from-emerald-300 to-emerald-500 shadow-emerald-400/40 shadow-md' :
+                    isLoading ? 'bg-gradient-to-b from-blue-300 to-blue-500 shadow-blue-400/40 shadow-md' :
+                    isTyping ? 'bg-gradient-to-b from-orange-300 to-orange-500 shadow-orange-400/40 shadow-md' :
+                    'bg-gradient-to-b from-slate-300 to-slate-500'
+                  }`}></div>
+                  <div className={`absolute -right-1 top-2 w-1.5 h-8 rounded-l-full transition-all duration-500 ${
+                    input.trim() ? 'bg-gradient-to-b from-emerald-300 to-emerald-500 shadow-emerald-400/40 shadow-md' :
+                    isLoading ? 'bg-gradient-to-b from-blue-300 to-blue-500 shadow-blue-400/40 shadow-md' :
+                    isTyping ? 'bg-gradient-to-b from-orange-300 to-orange-500 shadow-orange-400/40 shadow-md' :
+                    'bg-gradient-to-b from-slate-300 to-slate-500'
+                  }`}></div>
+                </div>
+                
+                {/* Communication Antenna */}
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <div className="w-0.5 h-4 bg-slate-600 rounded-full"></div>
+                  <div className={`w-2.5 h-2.5 rounded-full -mt-1 mx-auto transition-all duration-600 ${
+                    input.trim() ? 'bg-emerald-400 animate-pulse shadow-emerald-400/70 shadow-lg scale-110' :
+                    isLoading ? 'bg-blue-400 animate-ping shadow-blue-400/70 shadow-lg scale-105' :
+                    isTyping ? 'bg-orange-400 animate-bounce shadow-orange-400/70 shadow-lg scale-108' :
+                    'bg-slate-400 scale-100'
+                  }`}>
+                    <div className="absolute inset-0.5 bg-white rounded-full opacity-70"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Header */}
-          <div className="p-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-t-2xl flex justify-between items-center relative overflow-hidden">
+          <div className="p-3 pl-24 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-t-2xl flex justify-between items-center relative overflow-hidden">
             {/* Animated background pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 left-0 w-20 h-20 bg-white rounded-full -translate-x-10 -translate-y-10 animate-float-slow"></div>
@@ -562,21 +756,23 @@ export default function Chatbot() {
             </div>
             <div className="flex items-center gap-1 relative z-10">
               <button
-                onClick={() => {
-                  clearChatHistory();
-                  // Add new greeting after clearing
-                  const selectedGreeting =
-                    greetings[Math.floor(Math.random() * greetings.length)];
-                  const welcomeMessage = `${selectedGreeting} I'm Shaan, your personal consultant assistant! Tell me what you're looking for and I'll help you find the perfect consultancy.`;
-                  setTimeout(() => {
-                    setMessages([
-                      {
-                        sender: "bot",
-                        text: welcomeMessage,
-                      },
-                    ]);
-                    setShowQuickActions(true);
-                  }, 100);
+                onClick={async () => {
+                  const cleared = await clearChatHistory();
+                  if (cleared) {
+                    // Add new greeting only if chat was actually cleared
+                    const selectedGreeting =
+                      greetings[Math.floor(Math.random() * greetings.length)];
+                    const welcomeMessage = `${selectedGreeting} I'm Shaan, your personal consultant assistant! Tell me what you're looking for and I'll help you find the perfect consultancy.`;
+                    setTimeout(() => {
+                      setMessages([
+                        {
+                          sender: "bot",
+                          text: welcomeMessage,
+                        },
+                      ]);
+                      setShowQuickActions(true);
+                    }, 100);
+                  }
                 }}
                 className="hover:bg-white/20 px-2 py-1 rounded transition opacity-60 hover:opacity-100 text-xs"
                 title="Start New Chat"
@@ -593,41 +789,41 @@ export default function Chatbot() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-50">
-            {messages.map((msg, idx) => (
+          <div className="flex-1 overflow-y-auto bg-gray-50" data-chat-container>
+            <div className="p-4 space-y-3">
+              {messages.map((msg, idx) => (
               <div key={idx} className="flex flex-col">
                 <div
-                  className={`p-2 px-3 max-w-[85%] rounded-xl text-sm whitespace-pre-wrap ${
+                  className={`p-3 px-4 max-w-[85%] rounded-xl text-sm whitespace-pre-wrap leading-relaxed ${
                     msg.sender === "user"
                       ? "ml-auto bg-indigo-100"
                       : "mr-auto bg-white border"
                   }`}
                 >
-                  {typeof msg.text === "string"
-                    ? msg.text
-                    : JSON.stringify(msg.text)}
+                  {msg.sender === "bot" ? (
+                    <div className="whitespace-pre-line leading-relaxed" dangerouslySetInnerHTML={{
+                      __html: typeof msg.text === "string" ? msg.text : JSON.stringify(msg.text)
+                    }}></div>
+                  ) : (
+                    typeof msg.text === "string" ? msg.text : JSON.stringify(msg.text)
+                  )}
                 </div>
 
-                {/* Booking confirmation card */}
-                {msg.booking && (
-                  <div className="mt-3 mr-auto bg-green-50 border border-green-200 rounded-xl p-3 w-[85%] text-sm shadow">
-                    <div className="font-semibold text-green-700">
-                      Appointment Confirmed!
+
+
+
+                {/* Payment Processing Animation */}
+                {msg.processingPayment && msg.paymentSteps && (
+                  <div className="mt-3 mr-auto bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 w-[90%] text-sm shadow">
+                    <div className="font-semibold text-blue-700 mb-3 flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      Processing Payment
                     </div>
-                    <p>
-                      <strong>Consultancy:</strong>{" "}
-                      {msg.booking.consultancyName || "Not specified"}
-                    </p>
-                    <p>
-                      <strong>Date:</strong>{" "}
-                      {new Date(msg.booking.appointmentDate).toDateString()}
-                    </p>
-                    <p>
-                      <strong>Time:</strong> {msg.booking.appointmentTime}
-                    </p>
-                    <p>
-                      <strong>Status:</strong> {msg.booking.status}
-                    </p>
+                    <div className="space-y-2">
+                      {msg.paymentSteps.map((step, i) => (
+                        <PaymentStep key={i} step={step} />
+                      ))}
+                    </div>
                   </div>
                 )}
 
@@ -751,6 +947,37 @@ export default function Chatbot() {
                   </div>
                 )}
 
+                {/* Bookings Display Card */}
+                {msg.bookings && msg.bookings.length > 0 && (
+                  <div className="mt-3 mr-auto bg-blue-50 border border-blue-200 rounded-xl p-3 w-[90%] text-sm shadow">
+                    <div className="font-semibold text-blue-700 mb-3 flex items-center gap-2">
+                      📅 Your Bookings ({msg.bookings.length})
+                    </div>
+                    <div className="space-y-3">
+                      {msg.bookings.map((booking: any, i: number) => (
+                        <div key={i} className="bg-white p-3 rounded-lg border border-blue-100">
+                          <div className="font-medium text-gray-800">{booking.consultancyName}</div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            📅 {booking.date} at {booking.time}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            📍 {booking.type} consultation
+                          </div>
+                          <div className="text-xs mt-1 flex items-center gap-1">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              booking.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
+                              booking.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {booking.status === 'Confirmed' ? '✅' : '⏳'} {booking.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Authentication Required Card */}
                 {msg.requiresAuth && (
                   <div className="mt-3 mr-auto bg-yellow-50 border border-yellow-200 rounded-xl p-3 w-[85%] text-sm shadow">
@@ -770,17 +997,27 @@ export default function Chatbot() {
                   </div>
                 )}
 
-                {/* Consultancy Action Buttons */}
-                {msg.consultancies && msg.consultancies.length > 0 && (
-                  <div className="mt-3 space-y-2">
+                {/* Consultancy Action Buttons - Hide during booking flow */}
+                {msg.consultancies && msg.consultancies.length > 0 && msg.actionType !== 'book' && 
+                 !msg.text.includes('Please provide your preferred date') && 
+                 !msg.text.includes('what time would you prefer') && 
+                 !msg.text.includes('How would you prefer to meet') && 
+                 !msg.text.includes('How would you like to pay') && 
+                 !msg.text.includes('Available Days: Monday to Friday') && (
+                  <div className="mt-3 space-y-1">
                     {msg.consultancies.map((consultancy: any) => (
                       <div
                         key={consultancy._id}
-                        className="flex gap-2 items-center p-2 bg-gray-50 rounded-lg"
+                        className="flex gap-2 items-center p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
                       >
-                        <span className="text-sm font-medium text-gray-700 flex-1">
-                          {consultancy.name}
-                        </span>
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold text-gray-800">
+                            {consultancy.name}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            ⭐ {consultancy.rating || 4.5}/5 • {consultancy.category} • {consultancy.price || '₹1,500/hr'}
+                          </div>
+                        </div>
                         <button
                           onClick={() => {
                             console.log(
@@ -806,33 +1043,17 @@ export default function Chatbot() {
                         </button>
                         <button
                           onClick={() => {
+                            if (isLoading || isTyping) return;
                             if (!isSignedIn) {
-                              const funnyMessages = [
-                                "Whoa there, speed racer! 🏎️ I'd love to book that appointment for you, but first we need to know who you are! Think of signing in as getting your VIP pass to the ConsultBridge experience. Ready to join the party?",
-                                "Hold your horses, booking champion! 🐎 You're eager to get started (I love that energy!), but I need you to sign in first. It's like showing your ID at an exclusive club - totally worth it for the premium experience!",
-                                "Easy there, appointment ninja! 🥷 Your booking skills are impressive, but even ninjas need to reveal their identity sometimes. Sign in and let's make this booking happen like the pro you are!",
-                                "Pump the brakes, booking boss! 🚗 I can see you're ready to dive in, but signing in first is like putting on your seatbelt - it's for your own safety and a much smoother ride ahead!",
-                                "Slow down there, consultation conqueror! ⚡ Your enthusiasm is contagious, but let's get you signed in first. Think of it as your golden ticket to the ConsultBridge chocolate factory of expertise!",
-                              ];
-                              const randomMessage =
-                                funnyMessages[
-                                  Math.floor(
-                                    Math.random() * funnyMessages.length
-                                  )
-                                ];
-
                               const authMessage = {
                                 sender: "bot" as const,
-                                text: randomMessage,
+                                text: "To book appointments, please sign in first. It's quick and secure! 🔒",
                                 requiresAuth: true,
-                                authMessage:
-                                  "Sign in required to book appointments",
+                                authMessage: "Sign in required to book appointments",
                               };
                               setMessages((prev) => [...prev, authMessage]);
                             } else {
-                              handleQuickAction(
-                                `book appointment with ${consultancy.name}`
-                              );
+                              handleQuickAction(`book ${consultancy.name}`);
                             }
                           }}
                           className="text-xs bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition flex items-center gap-1"
@@ -842,6 +1063,28 @@ export default function Chatbot() {
                         </button>
                       </div>
                     ))}
+                    {/* More button */}
+                    <div className="flex justify-center mt-3">
+                      <button
+                        onClick={() => {
+                          const category = msg.consultancies?.[0]?.category;
+                          if (category) {
+                            const categorySlug = category
+                              .toLowerCase()
+                              .replace(/\s+/g, "-")
+                              .replace(/&/g, "%26");
+                            closeChatbot();
+                            // Use window.location for reliable navigation
+                            setTimeout(() => {
+                              window.location.href = `/category/${categorySlug}`;
+                            }, 300);
+                          }
+                        }}
+                        className="text-xs bg-purple-500 text-white px-4 py-2 rounded-full hover:bg-purple-600 transition flex items-center gap-1"
+                      >
+                        🔍 More in this category
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -889,9 +1132,11 @@ export default function Chatbot() {
 
             {/* Real-time Typing Message */}
             {isTyping && (
-              <div className="mr-auto max-w-[85%] rounded-xl text-sm bg-white border p-2 px-3 whitespace-pre-wrap">
-                {typeof typingMessage === "string" ? typingMessage : ""}
-                <span className="inline-block w-2 h-4 bg-indigo-500 ml-1 animate-pulse"></span>
+              <div className="mr-auto max-w-[85%] rounded-xl text-sm bg-white border p-3 px-4">
+                <div className="whitespace-pre-line leading-relaxed" dangerouslySetInnerHTML={{
+                  __html: (typeof typingMessage === "string" ? typingMessage : "") + 
+                    '<span class="inline-block w-3 h-5 bg-gradient-to-r from-blue-500 to-purple-500 ml-1 rounded animate-pulse shadow-lg" style="animation-duration: 0.8s;"></span>'
+                }}></div>
               </div>
             )}
 
@@ -930,11 +1175,12 @@ export default function Chatbot() {
               </div>
             )}
 
-            <div ref={chatEndRef} />
+              <div ref={chatEndRef} />
+            </div>
           </div>
 
           {/* Input */}
-          <div className="p-3 border-t bg-gradient-to-r from-gray-50 to-white flex items-center gap-2">
+          <div className="p-3 bg-gradient-to-r from-gray-50 to-white flex items-center gap-2">
             <input
               type="text"
               className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all hover:border-indigo-300"
@@ -955,8 +1201,9 @@ export default function Chatbot() {
                   handleSend();
                 }
               }}
-              disabled={isLoading}
+              disabled={isLoading || isTyping}
             />
+
             <button
               onClick={() => {
                 if (isLoading || isTyping) {
@@ -970,8 +1217,8 @@ export default function Chatbot() {
                 !input.trim() && !isLoading && !isTyping
                   ? "text-gray-400 cursor-not-allowed"
                   : isLoading || isTyping
-                  ? "bg-red-500 text-white hover:bg-red-600 shadow-lg"
-                  : "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 hover:scale-105 shadow-lg"
+                    ? "bg-red-500 text-white hover:bg-red-600 shadow-lg"
+                    : "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 hover:scale-105 shadow-lg"
               }`}
               title={isLoading || isTyping ? "Stop response" : "Send message"}
             >
@@ -982,6 +1229,45 @@ export default function Chatbot() {
               )}
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Custom Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[10000] flex items-center justify-center">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 border border-gray-200"
+          >
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center">
+                <span className="text-2xl">🤔</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">
+                Start Fresh Chat?
+              </h3>
+              <p className="text-gray-600 mb-6">
+                {isLoading || isTyping
+                  ? "Shaan is currently responding. Starting a new chat will stop the current response and clear all messages."
+                  : "This will clear all your current messages and conversation history. Are you sure you want to continue?"}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCancel}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Keep Chat
+                </button>
+                <button
+                  onClick={handleConfirm}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg hover:from-red-600 hover:to-orange-600 transition-all font-medium shadow-lg"
+                >
+                  Start Fresh
+                </button>
+              </div>
+            </div>
+          </motion.div>
         </div>
       )}
     </>

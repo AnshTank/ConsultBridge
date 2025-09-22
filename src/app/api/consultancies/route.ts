@@ -16,19 +16,15 @@ export async function GET(request: NextRequest) {
     }
     const consultanciesCollection = db.collection('consultancies');
     
-    const consultancies = await consultanciesCollection.find({
-      $and: [
-        { _id: { $exists: true } },
-        { name: { $exists: true, $ne: null } }
-      ]
-    }).toArray();
+    // Get all consultancies with all fields for admin portal
+    const consultancies = await consultanciesCollection.find(
+      {
+        _id: { $exists: true },
+        name: { $exists: true, $nin: [null, ""] }
+      }
+    ).toArray();
     
-    // Filter out any invalid consultancies
-    const validConsultancies = consultancies.filter(c => 
-      c._id && c.name && typeof c.name === 'string' && c.name.trim() !== ''
-    );
-    
-    const consultanciesWithId = validConsultancies.map(consultancy => ({
+    const consultanciesWithId = consultancies.map(consultancy => ({
       ...consultancy,
       id: consultancy._id.toString()
     }));

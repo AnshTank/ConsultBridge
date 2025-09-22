@@ -84,6 +84,10 @@ export async function GET(request: NextRequest) {
     
     await connectDB();
     
+    // Update expired appointments first
+    const { AppointmentStatusUpdater } = await import('../../../services/appointmentStatusUpdater');
+    await AppointmentStatusUpdater.updateExpiredAppointments();
+    
     const db = mongoose.connection.db;
     if (!db) {
       throw new Error('Database connection not established');

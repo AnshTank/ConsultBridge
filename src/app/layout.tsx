@@ -1,18 +1,13 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+// import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
-import "../index.css";
+import "../styles/globals.css";
 import Chatbot from "@/components/Chatbot";
-import UniqueTransitions from "../components/UniqueTransitions";
-import "../styles/page-transitions.css";
-import "../styles/scroll-modal.css";
-import "../styles/page-loading.css";
+import FloatingParticles from "../components/FloatingParticles";
+import FloatingDhaba from "../components/FloatingDhaba";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
-const inter = Inter({ subsets: ["latin"] });
-
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "ConsultBridge - Connect with Expert Consultants",
@@ -30,14 +25,12 @@ export default function RootLayout({
       publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
     >
       <html lang="en">
-        <body
-          className={`${inter.className} page-transition`}
-          style={{ overflowX: "hidden" }}
-          id="app-body"
-        >
-          <SpeedInsights />
-          <UniqueTransitions>{children}</UniqueTransitions>
+        <body suppressHydrationWarning={true}>
+          {children}
+          <FloatingDhaba />
+          <FloatingParticles />
           <Chatbot />
+          <SpeedInsights />
         </body>
       </html>
     </ClerkProvider>

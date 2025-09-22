@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../Navbar";
 import LoadingScreen from "../LoadingScreen";
 import ConsultancyCard from "../ConsultancyCard";
+import PageTransition from "../PageTransition";
+import SmartPageWrapper from "../SmartPageWrapper";
 
 interface ConsultancyProfile {
   id: string;
@@ -103,8 +105,9 @@ const ConsultancyBrowsePage: React.FC = () => {
   };
 
   return (
-    <div className="page-transition">
-      <Navbar />
+    <SmartPageWrapper loadingMessage="🔍 Loading consultancies...">
+      <PageTransition>
+        <Navbar />
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white py-16 section-stagger">
@@ -155,7 +158,9 @@ const ConsultancyBrowsePage: React.FC = () => {
           </div>
 
           {loading ? (
-            <LoadingScreen message="Loading consultancies..." />
+            <div className="text-center py-16">
+              <div className="text-xl text-gray-600">Loading consultancies...</div>
+            </div>
           ) : filteredConsultancies.length > 0 ? (
             <>
               <AnimatePresence mode="wait">
@@ -284,7 +289,8 @@ const ConsultancyBrowsePage: React.FC = () => {
           )}
         </div>
       </div>
-    </div>
+      </PageTransition>
+    </SmartPageWrapper>
   );
 };
 

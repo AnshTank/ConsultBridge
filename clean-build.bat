@@ -1,0 +1,9 @@
+@echo off
+echo Cleaning Next.js build cache...
+rmdir /s /q .next 2>nul
+rmdir /s /q node_modules\.cache 2>nul
+del /q package-lock.json 2>nul
+echo Installing dependencies...
+npm install
+echo Starting development server...
+npm run dev

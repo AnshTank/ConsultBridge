@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '../../../../lib/mongodb';
 import mongoose from 'mongoose';
@@ -7,50 +10,83 @@ export async function GET(
   { params }: { params: { category: string } }
 ) {
   try {
-    const category = decodeURIComponent(params.category);
-    
     await connectDB();
+    
     const db = mongoose.connection.db;
     if (!db) {
       throw new Error('Database connection not established');
     }
+
+    // Decode and format category name
+    const categoryName = decodeURIComponent(params.category)
+      .replace(/-/g, " ")
+      .replace(/%26/g, "&")
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+
     const consultanciesCollection = db.collection('consultancies');
+    const reviewsCollection = db.collection('reviews');
     
-    // Search for consultancies by category (case-insensitive) with validation
+    // Fetch consultancies for specific category with database filtering
     const consultancies = await consultanciesCollection.find({
       $and: [
-        { category: { $regex: new RegExp(category, 'i') } },
         { _id: { $exists: true } },
-        { name: { $exists: true, $ne: null, $nin: ['', null] } }
+        { name: { $exists: true, $nin: [null, ""] } },
+        { category: categoryName }
       ]
     }).toArray();
-    
-    // Filter out any invalid consultancies
-    const validConsultancies = consultancies.filter(c => 
-      c._id && c.name && typeof c.name === 'string' && c.name.trim() !== ''
-    );
-    
-    const consultanciesWithId = validConsultancies.map(consultancy => ({
+
+    // Get review stats for all consultancies in one aggregation query
+    const consultancyIds = consultancies.map(c => c._id);
+    const reviewStats = await reviewsCollection.aggregate([
+      { $match: { consultancyId: { $in: consultancyIds.map(id => id.toString()) } } },
+      {
+        $group: {
+          _id: "$consultancyId",
+          totalReviews: { $sum: 1 },
+          averageRating: { $avg: "$rating" }
+        }
+      }
+    ]).toArray();
+
+    // Create stats lookup map
+    const statsMap = reviewStats.reduce((acc, stat) => {
+      acc[stat._id] = {
+        totalReviews: stat.totalReviews,
+        averageRating: Math.round((stat.averageRating || 5.0) * 10) / 10
+      };
+      return acc;
+    }, {} as Record<string, any>);
+
+    // Combine consultancies with their stats
+    const consultanciesWithStats = consultancies.map(consultancy => ({
       ...consultancy,
-      id: consultancy._id.toString()
+      id: consultancy._id.toString(),
+      reviewStats: statsMap[consultancy._id.toString()] || {
+        totalReviews: 0,
+        averageRating: 5.0
+      }
     }));
-    
-    const response = NextResponse.json({ 
-      success: true, 
-      data: consultanciesWithId
+
+    const response = NextResponse.json({
+      success: true,
+      data: consultanciesWithStats,
+      category: categoryName,
+      count: consultanciesWithStats.length
     });
-    
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+
+    // Set cache headers
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     response.headers.set('Pragma', 'no-cache');
-    response.headers.set('Expires', '0');
-    response.headers.set('Surrogate-Control', 'no-store');
     
     return response;
+
   } catch (error) {
-    console.error('Error fetching consultancies by category:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Failed to fetch consultancies by category'
+    console.error('Error in category API:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to fetch consultancies for category'
     }, { status: 500 });
   }
 }

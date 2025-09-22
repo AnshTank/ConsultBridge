@@ -2,80 +2,72 @@
 import { useParams } from "next/navigation";
 import Navbar from "../Navbar";
 import LoadingScreen from "../LoadingScreen";
+import ConsultancySkeleton from "../ConsultancySkeleton";
 import Footer from "../Footer";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createSlug } from "../../utils/urlUtils";
+import PerformanceMonitor from "../PerformanceMonitor";
+import PageTransition from "../PageTransition";
+import SmartPageWrapper from "../SmartPageWrapper";
 
 function CategoryPage() {
   const params = useParams();
   const category = params?.category as string;
   const [consultancies, setConsultancies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [reviewStats, setReviewStats] = useState<{ [key: string]: any }>({});
+  const [categoryName, setCategoryName] = useState("");
+  const startTimeRef = useRef<number>(Date.now());
+  const [endTime, setEndTime] = useState<number>();
 
   useEffect(() => {
     const fetchConsultancies = async () => {
       try {
-        // Get consultancies filtered by category from API (MongoDB)
-        const response = await fetch(`/api/consultancies?t=${Date.now()}`, {
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache'
-          }
-        });
+        setLoading(true);
+        
+        // Add 2-second delay for smooth user experience
+        const [response] = await Promise.all([
+          fetch(`/api/category/${category}`, {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache'
+            }
+          }),
+          new Promise(resolve => setTimeout(resolve, 2000))
+        ]);
+        
         const result = await response.json();
 
         if (result.success && result.data) {
-          // Filter consultancies by category
-          let categoryName = category
+          setConsultancies(result.data);
+          setCategoryName(result.category);
+        } else {
+          setConsultancies([]);
+          setCategoryName(category
             .replace(/-/g, " ")
             .replace(/%26/g, "&")
             .split(" ")
             .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ");
-
-          const filteredConsultancies = result.data.filter(
-            (consultancy: any) => 
-              consultancy.category === categoryName &&
-              consultancy.name && 
-              typeof consultancy.name === 'string' && 
-              consultancy.name.trim() !== ''
-          );
-
-          setConsultancies(filteredConsultancies);
-          // Fetch review stats for each consultancy
-          const stats: { [key: string]: any } = {};
-          for (const consultancy of result.data) {
-            try {
-              const statsResponse = await fetch(
-                `/api/reviews/stats/${consultancy._id || consultancy.id}`
-              );
-              const statsResult = await statsResponse.json();
-              if (statsResult.success) {
-                const key = consultancy._id || consultancy.id;
-                if (key) {
-                  stats[key] = statsResult.data;
-                }
-              }
-            } catch (error) {
-              console.error("Error fetching stats for consultancy:", error);
-            }
-          }
-          setReviewStats(stats);
-        } else {
-          setConsultancies([]);
+            .join(" "));
         }
-
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching consultancies:", error);
         setConsultancies([]);
+        setCategoryName(category
+          .replace(/-/g, " ")
+          .replace(/%26/g, "&")
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" "));
+      } finally {
         setLoading(false);
+        setEndTime(Date.now());
       }
     };
 
-    fetchConsultancies();
+    if (category) {
+      fetchConsultancies();
+    }
   }, [category]);
 
   const handleViewProfile = (consultancy: any) => {
@@ -86,7 +78,14 @@ function CategoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col page-transition">
+    <SmartPageWrapper loadingMessage="🎯 Loading category...">
+      <PageTransition>
+        <div className="min-h-screen bg-gray-50 flex flex-col">
+      <PerformanceMonitor 
+        pageName={`Category: ${categoryName}`}
+        startTime={startTimeRef.current}
+        endTime={endTime}
+      />
       {/* Header */}
       <header className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white section-stagger">
         <Navbar />
@@ -95,17 +94,16 @@ function CategoryPage() {
       {/* Main Content */}
       <div className="container mx-auto px-6 py-16 flex-grow section-stagger">
         <h2 className="text-3xl font-bold mb-8 text-center">
-          {category
-            ?.replace(/-/g, " ")
-            .replace(/%26/g, "&")
-            .split(" ")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ")}{" "}
-          Consultancies
+          {categoryName} Consultancies
         </h2>
 
         {loading ? (
-          <LoadingScreen variant="pulse" message="Loading consultancies..." />
+          <div className="space-y-6">
+            <div className="text-center">
+              <p className="text-gray-600 text-lg mb-4">🎯 Finding the best consultancies for you...</p>
+            </div>
+            <ConsultancySkeleton />
+          </div>
         ) : consultancies.length > 0 ? (
           <motion.div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 stagger-container"
@@ -134,14 +132,10 @@ function CategoryPage() {
                     <div className="flex items-center">
                       <span className="text-yellow-400">★</span>
                       <span className="ml-1 text-sm font-medium">
-                        {reviewStats[consultancy._id || consultancy.id]
-                          ?.averageRating || 5.0}
+                        {consultancy.reviewStats?.averageRating || 5.0}
                       </span>
                       <span className="ml-1 text-sm text-gray-500">
-                        (
-                        {reviewStats[consultancy._id || consultancy.id]
-                          ?.totalReviews || 0}
-                        )
+                        ({consultancy.reviewStats?.totalReviews || 0})
                       </span>
                     </div>
                   </div>
@@ -162,22 +156,43 @@ function CategoryPage() {
             ))}
           </motion.div>
         ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">
-              No consultancies found for this category.
-            </p>
-            <button
-              onClick={() => (window.location.href = "/")}
-              className="mt-4 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
-            >
-              Return to Home
-            </button>
-          </div>
+          <motion.div 
+            className="text-center py-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="max-w-md mx-auto">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                No consultancies found
+              </h3>
+              <p className="text-gray-500 text-lg mb-6">
+                We couldn't find any consultancies in the {categoryName} category at the moment.
+              </p>
+              <div className="space-y-3">
+                <button
+                  onClick={() => (window.location.href = "/categories")}
+                  className="w-full px-6 py-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
+                >
+                  Browse All Categories
+                </button>
+                <button
+                  onClick={() => (window.location.href = "/")}
+                  className="w-full px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Return to Home
+                </button>
+              </div>
+            </div>
+          </motion.div>
         )}
       </div>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+      </PageTransition>
+    </SmartPageWrapper>
   );
 }
 

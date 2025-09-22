@@ -21,7 +21,7 @@ export default function FeaturedConsultancies() {
   useEffect(() => {
     const fetchFeaturedConsultancies = async () => {
       try {
-        const response = await fetch(`/api/consultancies?t=${Date.now()}`, {
+        const response = await fetch(`/api/consultancies/top-rated?t=${Date.now()}`, {
           cache: "no-store",
           headers: {
             "Cache-Control": "no-cache",
@@ -29,29 +29,15 @@ export default function FeaturedConsultancies() {
         });
         const result = await response.json();
 
-        if (result.success && result.data && result.data.length > 0) {
-          // Filter out invalid consultancies and get top 3 highest rated
-          const validConsultancies = result.data.filter(
-            (c: ConsultancyData) =>
-              c &&
-              (c.id || c._id) &&
-              c.name &&
-              typeof c.name === "string" &&
-              c.name.trim() !== ""
-          );
-          const featured = validConsultancies
-            .sort(
-              (a: ConsultancyData, b: ConsultancyData) => b.rating - a.rating
-            )
-            .slice(0, 3);
-          setConsultancies(featured);
+        if (result.success && result.data) {
+          setConsultancies(result.data);
         } else {
           setConsultancies([]);
         }
-        setLoading(false);
       } catch (error) {
-        console.error("Error fetching consultancies:", error);
+        console.error("Error fetching top-rated consultancies:", error);
         setConsultancies([]);
+      } finally {
         setLoading(false);
       }
     };
