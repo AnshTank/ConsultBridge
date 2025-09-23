@@ -134,7 +134,7 @@ export class BookingValidator {
       const userBookingsData = await userBookingsResponse.json();
       const userBookings = userBookingsData.bookings || [];
 
-      const userConflicts = userBookings.filter(booking => 
+      const userConflicts = userBookings.filter((booking: any) => 
         booking.date === bookingData.date && 
         booking.time === bookingData.time && 
         booking.status !== 'cancelled'

@@ -70,7 +70,10 @@ export class ContextManager {
     
     // Update categories set
     if (updates.categories) {
-      context.categories = new Set([...context.categories, ...updates.categories]);
+      const existingCategories = Array.from(context.categories);
+      const updatesArray = Array.from(updates.categories);
+      const newCategories = existingCategories.concat(updatesArray);
+      context.categories = new Set(newCategories);
     }
     
     this.contexts.set(sessionId, context);
@@ -122,11 +125,11 @@ export class ContextManager {
   // Clean up expired contexts
   cleanupExpiredContexts(): void {
     const now = Date.now();
-    for (const [sessionId, context] of this.contexts.entries()) {
+    this.contexts.forEach((context, sessionId) => {
       if (now - context.lastActivity.getTime() > this.CONTEXT_TIMEOUT) {
         this.contexts.delete(sessionId);
       }
-    }
+    });
   }
 
   // Get conversation insights for better responses

@@ -139,7 +139,7 @@ export class RecommendationEngine {
       return this.rankAndScoreResults(consultancies, params);
     } catch (error) {
       console.error("Search consultancies error:", error);
-      console.error('Search filter used:', JSON.stringify(filter, null, 2));
+      console.error('Search error occurred');
       return [];
     }
   }

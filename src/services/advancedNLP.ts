@@ -230,7 +230,7 @@ export class AdvancedNLP {
     });
     
     // Remove duplicates and filter out common words
-    const filteredNeeds = [...new Set(needs)]
+    const filteredNeeds = Array.from(new Set(needs))
       .filter(need => need.length > 2 && !['with', 'for', 'on', 'in', 'the', 'and', 'or'].includes(need.toLowerCase()))
       .slice(0, 3); // Limit to top 3 needs
     

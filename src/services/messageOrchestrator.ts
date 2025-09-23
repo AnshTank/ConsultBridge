@@ -72,8 +72,8 @@ export class MessageOrchestrator {
       const bookingResult = await this.bookingFlowManager.processBookingFlow(
         userMessage,
         context.currentIntent || 'initial',
-        context.bookingData || {},
-        context.consultancies || []
+        (context as any).bookingData || {},
+        context.lastConsultancies || []
       );
 
       result = {
@@ -125,8 +125,7 @@ export class MessageOrchestrator {
       currentIntent: result.actionType,
       categories: new Set(result.suggestedCategory ? [result.suggestedCategory] : []),
       conversationState: this.determineConversationState(result.actionType, result.needsBooking),
-      bookingData: result.bookingData || context.bookingData,
-      consultancies: result.consultancies.length > 0 ? result.consultancies : context.consultancies
+      lastConsultancies: result.consultancies.length > 0 ? result.consultancies : context.lastConsultancies
     });
 
     // Add consultancies to context if found

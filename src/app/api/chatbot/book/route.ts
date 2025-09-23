@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       date: sanitizeInput(appointmentDetails.date),
       time: sanitizeInput(appointmentDetails.time),
       duration: appointmentDetails.duration || 60,
-      type: sanitizeInput(appointmentDetails.type || 'online'),
+      type: (sanitizeInput(appointmentDetails.type || 'online') === 'offline' ? 'offline' : 'online') as 'online' | 'offline',
       notes: sanitizeInput(appointmentDetails.notes || '')
     };
 

@@ -64,6 +64,8 @@ export default function Chatbot() {
       authMessage?: string;
       processingPayment?: boolean;
       paymentSteps?: Array<{step: number; text: string; icon: string; delay: number}>;
+      bookings?: any[];
+      actionType?: string;
       categoryNavigation?: {
         category: string;
         categoryName: string;
@@ -998,7 +1000,7 @@ export default function Chatbot() {
                 )}
 
                 {/* Consultancy Action Buttons - Hide during booking flow */}
-                {msg.consultancies && msg.consultancies.length > 0 && msg.actionType !== 'book' && 
+                {msg.consultancies && msg.consultancies.length > 0 && (!msg.actionType || msg.actionType !== 'book') && 
                  !msg.text.includes('Please provide your preferred date') && 
                  !msg.text.includes('what time would you prefer') && 
                  !msg.text.includes('How would you prefer to meet') && 

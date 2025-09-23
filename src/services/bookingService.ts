@@ -44,8 +44,8 @@ export class BookingService {
       const duration = request.duration || 60; // default 1 hour
 
       for (const booking of existingBookings) {
-        const bookingTime = this.parseTime(booking.time);
-        const bookingDuration = booking.duration || 60;
+        const bookingTime = this.parseTime(booking.appointmentTime || '');
+        const bookingDuration = (booking as any).duration || 60;
         
         if (this.hasTimeConflict(requestTime, duration, bookingTime, bookingDuration)) {
           conflicts.push(`Time slot ${request.time} is already booked`);
@@ -59,7 +59,7 @@ export class BookingService {
       // Check consultancy availability (if they have set working hours)
       if (consultancy.availability) {
         const dayOfWeek = new Date(request.date).getDay();
-        const workingHours = consultancy.availability[dayOfWeek];
+        const workingHours = (consultancy.availability as any)[dayOfWeek];
         
         if (!workingHours || !this.isWithinWorkingHours(requestTime, workingHours)) {
           conflicts.push('Requested time is outside consultancy working hours');
@@ -75,8 +75,8 @@ export class BookingService {
       });
 
       for (const booking of userBookings) {
-        const bookingTime = this.parseTime(booking.time);
-        const bookingDuration = booking.duration || 60;
+        const bookingTime = this.parseTime(booking.appointmentTime || '');
+        const bookingDuration = (booking as any).duration || 60;
         
         if (this.hasTimeConflict(requestTime, duration, bookingTime, bookingDuration)) {
           conflicts.push('You already have an appointment at this time');
@@ -161,8 +161,8 @@ export class BookingService {
     
     // Find free slots
     const busySlots = existingBookings.map(booking => ({
-      start: this.parseTime(booking.time),
-      end: this.parseTime(booking.time) + (booking.duration || 60)
+      start: this.parseTime(booking.appointmentTime || ''),
+      end: this.parseTime(booking.appointmentTime || '') + ((booking as any).duration || 60)
     })).sort((a, b) => a.start - b.start);
 
     let currentTime = workingHours.start;
@@ -190,8 +190,8 @@ export class BookingService {
     
     for (let time = workingHours.start; time < workingHours.end; time += 60) {
       const hasConflict = existingBookings.some(booking => {
-        const bookingTime = this.parseTime(booking.time);
-        const bookingDuration = booking.duration || 60;
+        const bookingTime = this.parseTime(booking.appointmentTime || '');
+        const bookingDuration = (booking as any).duration || 60;
         return this.hasTimeConflict(time, 60, bookingTime, bookingDuration);
       });
       

@@ -8,7 +8,7 @@ interface GlobalLoadingWrapperProps {
 
 export default function GlobalLoadingWrapper({ children }: GlobalLoadingWrapperProps) {
   return (
-    <UnifiedLoader message="Loading ConsultBridge..." isGlobal={true}>
+    <UnifiedLoader message="Loading ConsultBridge...">
       {children}
     </UnifiedLoader>
   );

@@ -289,7 +289,7 @@ export class BookingFlowManager {
       'wallet': 'Wallet'
     };
 
-    const selectedMethod = paymentMethods[message.toLowerCase()] || paymentMethods[message.trim()];
+    const selectedMethod = (paymentMethods as any)[message.toLowerCase()] || (paymentMethods as any)[message.trim()];
     
     if (!selectedMethod) {
       return {
@@ -363,7 +363,7 @@ export class BookingFlowManager {
       const response = await fetch('/api/consultancies');
       const data = await response.json();
       const consultancies = data.consultancies || [];
-      console.log('📊 Found consultancies:', consultancies.length, consultancies.map(c => c.name));
+      console.log('📊 Found consultancies:', consultancies.length, consultancies.map((c: any) => c.name));
 
       // First try exact match (case insensitive)
       for (const consultancy of consultancies) {

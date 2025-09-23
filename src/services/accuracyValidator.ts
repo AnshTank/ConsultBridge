@@ -196,7 +196,7 @@ export class AccuracyValidator {
           actualConfidence: 0,
           expectedConfidence: testCase.expectedConfidence,
           score: 0,
-          issues: [`Error: ${error.message}`]
+          issues: [`Error: ${error instanceof Error ? error.message : 'Unknown error'}`]
         });
       }
     }
@@ -262,7 +262,7 @@ export class AccuracyValidator {
     
     if (result.consultancies && result.consultancies.length > 0) {
       const categories = result.consultancies.map((c: any) => c.category?.toLowerCase()).filter(Boolean);
-      return [...new Set(categories)];
+      return Array.from(new Set(categories));
     }
     
     // Try to extract from response text
@@ -276,7 +276,7 @@ export class AccuracyValidator {
     if (expected.length === 0) return actual.length === 0 ? 1 : 0.5;
     
     const intersection = actual.filter(cat => expected.includes(cat));
-    const union = [...new Set([...actual, ...expected])];
+    const union = Array.from(new Set([...actual, ...expected]));
     
     return intersection.length / Math.max(expected.length, 1);
   }

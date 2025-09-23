@@ -86,6 +86,6 @@ export class ProcessingIndicator {
       'consultant_match': { message: 'Matching you with experts', duration: 2500 }
     };
 
-    return messages[actionType] || { message: 'Processing your request', duration: 1000 };
+    return (messages as any)[actionType] || { message: 'Processing your request', duration: 1000 };
   }
 }

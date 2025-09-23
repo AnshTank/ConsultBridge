@@ -45,7 +45,7 @@ export async function GET() {
     return new Response(JSON.stringify({
       success: false,
       status: "🔴 System Error",
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       checks: {
         mongodb: "❌ Connection failed",
         environment: {

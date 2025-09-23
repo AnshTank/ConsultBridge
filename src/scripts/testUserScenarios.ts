@@ -159,13 +159,13 @@ export class UserScenarioTester {
           console.log(`Issues: ${result.issues.join(', ')}`);
         }
       } catch (error) {
-        console.log(`❌ ERROR: ${error.message}`);
+        console.log(`❌ ERROR: ${error instanceof Error ? error.message : 'Unknown error'}`);
         results.push({
           scenario: scenario.name,
           passed: false,
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
           actualFlow: [],
-          issues: [`Error: ${error.message}`]
+          issues: [`Error: ${error instanceof Error ? error.message : 'Unknown error'}`]
         });
       }
     }
@@ -327,7 +327,7 @@ export class UserScenarioTester {
             'test_user'
           );
           return {
-            passed: result.nextSteps.length > 0 && result.nextSteps.some(step => 
+            passed: result.nextSteps.length > 0 && result.nextSteps.some((step: string) => 
               step.toLowerCase().includes('legal') || step.toLowerCase().includes('profile') || step.toLowerCase().includes('book')
             ),
             message: 'Should provide relevant contextual suggestions'
@@ -347,7 +347,7 @@ export class UserScenarioTester {
         }
         if (result.passed) passedUXTests++;
       } catch (error) {
-        console.log(`❌ ${uxTest.name}: Error - ${error.message}`);
+        console.log(`❌ ${uxTest.name}: Error - ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
 
@@ -363,4 +363,3 @@ if (require.main === module) {
     .catch(console.error);
 }
 
-export { UserScenarioTester };

@@ -113,9 +113,8 @@ export class AIAgent {
     let searchParams: any = { category: lastBooking.consultancyId?.category };
 
     // Apply memory entities (cheaper, better, etc.)
-    if (intent.entities.budget === "lower") {
-      searchParams.budget =
-        lastBooking.consultancyId?.pricing?.hourlyRate * 0.8;
+    if (intent.entities.budget && typeof lastBooking?.consultancyId?.pricing?.hourlyRate === 'number') {
+      searchParams.budget = lastBooking.consultancyId.pricing.hourlyRate * 0.8;
     }
 
     const consultancies = await this.tools.searchConsultancies(searchParams);
@@ -353,7 +352,7 @@ export class AIAgent {
     let needsBooking = false;
 
     // Extract ACTIONS from AI response
-    const actionMatch = response.match(/ACTIONS:\s*(\[.*?\])/s);
+    const actionMatch = response.match(/ACTIONS:\s*(\[.*?\])/);
     if (actionMatch) {
       try {
         const parsedActions = JSON.parse(actionMatch[1]);
@@ -375,7 +374,7 @@ export class AIAgent {
               // Update consultancies with recent bookings
               if (pastData.recentBookings?.length > 0) {
                 consultancies = pastData.recentBookings
-                  .map((booking) => booking.consultancyId)
+                  .map((booking: any) => booking.consultancyId)
                   .filter(Boolean);
               }
               break;
@@ -405,7 +404,7 @@ export class AIAgent {
   private cleanResponse(response: string): string {
     // Remove ACTIONS section from response
     return response
-      .replace(/ACTIONS:\s*\[.*?\]/s, "")
+      .replace(/ACTIONS:\s*\[.*?\]/, "")
       .replace(/RESPONSE:\s*/, "")
       .trim();
   }

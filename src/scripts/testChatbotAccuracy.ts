@@ -114,7 +114,7 @@ async function testSpecificScenarios(agent: IntelligentAgent) {
       console.log(`    Category Match: ${hasExpectedCategory ? '✅' : '❌'}`);
       
     } catch (error) {
-      console.log(`    ❌ Error: ${error.message}`);
+      console.log(`    ❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 }

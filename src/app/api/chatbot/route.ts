@@ -12,16 +12,16 @@ const bookingSessions = new Map<string, any>();
 // Cleanup old sessions every 30 minutes
 setInterval(() => {
   const now = Date.now();
-  for (const [sessionId, session] of bookingSessions.entries()) {
+  bookingSessions.forEach((session, sessionId) => {
     if (session.lastActivity && (now - session.lastActivity) > 30 * 60 * 1000) {
       bookingSessions.delete(sessionId);
     }
-  }
+  });
 }, 30 * 60 * 1000);
 
 // Periodic payment processing completion check
 setInterval(async () => {
-  for (const [sessionId, session] of bookingSessions.entries()) {
+  bookingSessions.forEach(async (session, sessionId) => {
     if (session.step === 'processing' && session.lastActivity && (Date.now() - session.lastActivity) > 8000) {
       try {
         await bookingManager.completePaymentProcessing(session);
@@ -31,12 +31,12 @@ setInterval(async () => {
         bookingSessions.delete(sessionId);
       }
     }
-  }
+  });
 }, 5000); // Check every 5 seconds
 
 // Auto-complete payment processing after delay
 setTimeout(async () => {
-  for (const [sessionId, session] of bookingSessions.entries()) {
+  bookingSessions.forEach(async (session, sessionId) => {
     if (session.step === 'processing') {
       try {
         await bookingManager.completePaymentProcessing(session);
@@ -46,7 +46,7 @@ setTimeout(async () => {
         bookingSessions.delete(sessionId);
       }
     }
-  }
+  });
 }, 8000); // Complete after 8 seconds
 
 function sanitizeInput(input: unknown): string {
