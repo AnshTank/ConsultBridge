@@ -140,6 +140,7 @@ const Navbar: React.FC = () => {
                           avatarBox: "w-8 h-8"
                         }
                       }}
+                      signInUrl="/sign-in"
                     />
                   </div>
                 </SignedIn>

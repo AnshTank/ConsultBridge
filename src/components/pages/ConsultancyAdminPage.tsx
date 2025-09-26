@@ -77,15 +77,32 @@ const ConsultancyAdminPage: React.FC = () => {
     }
     
     const body = document.body;
+    const html = document.documentElement;
+    
     if (showCalendar || showAnalytics || showProfileViews || showEditProfile || showDateModal) {
-      body.classList.add('modal-open');
+      // Store current scroll position
+      const scrollY = window.scrollY;
+      body.style.setProperty('--scroll-y', `-${scrollY}px`);
+      
+      // Lock scroll
+      body.classList.add('scroll-locked');
+      html.style.overflow = 'hidden';
     } else {
-      body.classList.remove('modal-open');
+      // Restore scroll
+      body.classList.remove('scroll-locked');
+      html.style.overflow = '';
+      
+      // Restore scroll position
+      const scrollY = body.style.getPropertyValue('--scroll-y');
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
     }
     
     // Cleanup on unmount
     return () => {
-      body?.classList.remove('modal-open');
+      body?.classList.remove('scroll-locked');
+      html.style.overflow = '';
     };
   }, [showCalendar, showAnalytics, showProfileViews, showEditProfile, showDateModal]);
 
@@ -758,8 +775,7 @@ const ConsultancyAdminPage: React.FC = () => {
       {/* Calendar Modal */}
       {showCalendar && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-          style={{ top: `${window.scrollY}px`, height: '100vh' }}
+          className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4"
           onClick={() => setShowCalendar(false)}
         >
           <div 
@@ -898,8 +914,7 @@ const ConsultancyAdminPage: React.FC = () => {
       {/* Analytics Modal */}
       {showAnalytics && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-          style={{ top: `${window.scrollY}px`, height: '100vh' }}
+          className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4"
           onClick={() => setShowAnalytics(false)}
         >
           <div 
@@ -1008,8 +1023,7 @@ const ConsultancyAdminPage: React.FC = () => {
       {/* Profile Views Modal */}
       {showProfileViews && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-          style={{ top: `${window.scrollY}px`, height: '100vh' }}
+          className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4"
           onClick={() => setShowProfileViews(false)}
         >
           <div 
@@ -1126,8 +1140,7 @@ const ConsultancyAdminPage: React.FC = () => {
       {/* Edit Profile Modal */}
       {showEditProfile && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-          style={{ top: `${window.scrollY}px`, height: '100vh' }}
+          className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4"
           onClick={() => setShowEditProfile(false)}
         >
           <div 
@@ -1421,8 +1434,7 @@ const ConsultancyAdminPage: React.FC = () => {
       {/* Date Appointments Modal */}
       {showDateModal && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-          style={{ top: `${window.scrollY}px`, height: '100vh' }}
+          className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4"
           onClick={() => setShowDateModal(false)}
         >
           <div 

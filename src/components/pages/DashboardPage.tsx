@@ -43,6 +43,14 @@ const DashboardPage: React.FC = () => {
   // Lock scroll when confirmation modal is open
   useScrollLock(!!confirmModal);
 
+  // Handle sign out redirect smoothly
+  useEffect(() => {
+    if (isLoaded && !user) {
+      // User signed out, redirect to home with smooth transition
+      router.push('/');
+    }
+  }, [isLoaded, user, router]);
+
 
 
   // Check if appointment is expired
@@ -496,18 +504,7 @@ const DashboardPage: React.FC = () => {
           {/* Confirmation Modal */}
           {confirmModal && (
             <motion.div
-              className="fixed bg-black bg-opacity-50 flex items-center justify-center z-50"
-              style={{
-                position: 'fixed',
-                top: `${typeof window !== "undefined" ? window.scrollY : 0}px`,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                width: '100vw',
-                height: '100vh',
-                minHeight: '100vh',
-                minWidth: '100vw'
-              }}
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
