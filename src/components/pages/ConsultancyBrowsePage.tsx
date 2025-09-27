@@ -276,7 +276,7 @@ const ConsultancyBrowsePage: React.FC = () => {
                               return (
                                 <motion.button
                                   key={page}
-                                  onClick={() => handlePageChange(page)}
+                                  onClick={() => handlePageChange(page as number)}
                                   className={`px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm font-bold rounded-lg md:rounded-xl transition-all shadow-lg min-w-[32px] md:min-w-[40px] ${
                                     currentPage === page
                                       ? 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-xl border-2 border-transparent'
