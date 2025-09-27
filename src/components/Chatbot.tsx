@@ -607,19 +607,19 @@ export default function Chatbot() {
       {/* Chat Panel */}
       {isOpen && (
         <div
-          className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[98vw] max-w-[800px] h-[90vh] max-h-[750px] bg-white rounded-2xl shadow-2xl border border-gray-300 flex flex-col transition-all duration-700 ease-out ${
+          className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[95vw] sm:w-[90vw] md:w-[85vw] max-w-[800px] h-[85vh] sm:h-[90vh] max-h-[750px] bg-white rounded-xl md:rounded-2xl shadow-2xl border border-gray-300 flex flex-col transition-all duration-700 ease-out ${
             showChatbox ? "scale-100 opacity-100" : "scale-75 opacity-0"
           }`}
         >
           {/* SHAAN AI - Same Bot, Better Eyes */}
-          <div className="absolute top-2 left-2 z-[60] pointer-events-none">
+          <div className="absolute top-2 left-2 z-[60] pointer-events-none hidden md:block">
             <div className={`transform transition-all duration-800 ease-out ${
               input.trim() ? 'translate-x-1 -translate-y-1 rotate-2 scale-105' : 
               isLoading ? 'translate-y-0.5 rotate-1 scale-102' : 
               isTyping ? 'translate-x-0.5 translate-y-0.5 rotate-1 scale-108' :
               'translate-x-0 translate-y-0 rotate-0 scale-100'
             }`}>
-              <div className="relative w-20 h-20">
+              <div className="relative w-10 h-10 md:w-16 md:h-16">
                 
                 {/* Subtle Aura */}
                 <div className={`absolute inset-3 rounded-full transition-all duration-600 blur-sm ${
@@ -630,7 +630,7 @@ export default function Chatbot() {
                 }`}></div>
                 
                 {/* Main Robot Head */}
-                <div className="relative w-16 h-14 bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 rounded-2xl border-2 border-slate-400 shadow-xl mx-auto overflow-hidden">
+                <div className="relative w-8 h-7 md:w-12 md:h-10 bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 rounded-lg md:rounded-xl border border-slate-400 shadow-lg mx-auto overflow-hidden">
                   
                   {/* Digital Face Display */}
                   <div className="absolute inset-1.5 bg-gradient-to-br from-slate-900 via-black to-slate-800 rounded-xl overflow-hidden">
@@ -736,7 +736,7 @@ export default function Chatbot() {
           </div>
 
           {/* Header */}
-          <div className="p-3 pl-24 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-t-2xl flex justify-between items-center relative overflow-hidden">
+          <div className="p-2 md:p-3 pl-3 md:pl-16 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-t-xl md:rounded-t-2xl flex justify-between items-center relative overflow-hidden">
             {/* Animated background pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 left-0 w-20 h-20 bg-white rounded-full -translate-x-10 -translate-y-10 animate-float-slow"></div>
@@ -747,11 +747,11 @@ export default function Chatbot() {
             </div>
             <div className="font-semibold flex items-center gap-2 relative z-10">
               <div className="animate-pulse">
-                <Bot size={20} />
+                <Bot size={16} className="md:w-5 md:h-5" />
               </div>
               <div>
-                <div>Shaan AI</div>
-                <div className="text-xs opacity-90">
+                <div className="text-sm md:text-base">Shaan AI</div>
+                <div className="text-xs opacity-90 hidden sm:block">
                   ConsultBridge Assistant 🌆
                 </div>
               </div>
@@ -779,24 +779,25 @@ export default function Chatbot() {
                 className="hover:bg-white/20 px-2 py-1 rounded transition opacity-60 hover:opacity-100 text-xs"
                 title="Start New Chat"
               >
-                New Chat
+                <span className="hidden sm:inline">New Chat</span>
+                <span className="sm:hidden">New</span>
               </button>
               <button
                 onClick={closeChatbot}
                 className="hover:bg-white/20 p-1 rounded transition hover:rotate-90"
               >
-                <X size={20} />
+                <X size={16} className="md:w-5 md:h-5" />
               </button>
             </div>
           </div>
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto bg-gray-50" data-chat-container>
-            <div className="p-4 space-y-3">
+            <div className="p-3 md:p-4 space-y-3">
               {messages.map((msg, idx) => (
               <div key={idx} className="flex flex-col">
                 <div
-                  className={`p-3 px-4 max-w-[85%] rounded-xl text-sm whitespace-pre-wrap leading-relaxed ${
+                  className={`p-2 md:p-3 px-3 md:px-4 max-w-[90%] md:max-w-[85%] rounded-lg md:rounded-xl text-xs md:text-sm whitespace-pre-wrap leading-relaxed ${
                     msg.sender === "user"
                       ? "ml-auto bg-indigo-100"
                       : "mr-auto bg-white border"
@@ -816,7 +817,7 @@ export default function Chatbot() {
 
                 {/* Payment Processing Animation */}
                 {msg.processingPayment && msg.paymentSteps && (
-                  <div className="mt-3 mr-auto bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 w-[90%] text-sm shadow">
+                  <div className="mt-3 mr-auto bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg md:rounded-xl p-3 md:p-4 w-[95%] md:w-[90%] text-xs md:text-sm shadow">
                     <div className="font-semibold text-blue-700 mb-3 flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                       Processing Payment
@@ -831,7 +832,7 @@ export default function Chatbot() {
 
                 {/* Enhanced Payment Receipt */}
                 {msg.paymentReceipt && (
-                  <div className="mt-3 mr-auto bg-green-50 border border-green-200 rounded-xl p-4 w-[90%] text-sm shadow">
+                  <div className="mt-3 mr-auto bg-green-50 border border-green-200 rounded-lg md:rounded-xl p-3 md:p-4 w-[95%] md:w-[90%] text-xs md:text-sm shadow">
                     <div className="font-semibold text-green-700 mb-2 flex items-center justify-between">
                       <span>💳 Payment Receipt</span>
                       <button
@@ -1182,14 +1183,14 @@ export default function Chatbot() {
           </div>
 
           {/* Input */}
-          <div className="p-3 bg-gradient-to-r from-gray-50 to-white flex items-center gap-2">
+          <div className="p-2 md:p-3 bg-gradient-to-r from-gray-50 to-white flex items-center gap-2">
             <input
               type="text"
-              className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all hover:border-indigo-300"
+              className="flex-1 border border-gray-300 rounded-full px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all hover:border-indigo-300"
               placeholder={
                 isLoading
                   ? "Please wait..."
-                  : "Ask me anything about consultants... 🚀"
+                  : "Ask me anything... 🚀"
               }
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -1225,9 +1226,9 @@ export default function Chatbot() {
               title={isLoading || isTyping ? "Stop response" : "Send message"}
             >
               {isLoading || isTyping ? (
-                <div className="w-4 h-4 border-2 border-white rounded-sm"></div>
+                <div className="w-3 h-3 md:w-4 md:h-4 border-2 border-white rounded-sm"></div>
               ) : (
-                <SendHorizonal size={18} />
+                <SendHorizonal size={16} className="md:w-[18px] md:h-[18px]" />
               )}
             </button>
           </div>

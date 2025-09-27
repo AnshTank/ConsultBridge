@@ -241,21 +241,21 @@ function Home() {
         <header className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white">
           <Navbar />
 
-            <div className="container mx-auto px-6 py-20">
-              <div className="max-w-2xl">
-                <h2 className="text-5xl font-bold mb-6">
+            <div className="container mx-auto px-4 md:px-6 py-12 md:py-20">
+              <div className="max-w-2xl text-center md:text-left">
+                <h2 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6">
                   Find the Perfect Consultancy Services
                 </h2>
-                <p className="text-xl mb-8 text-indigo-100">
+                <p className="text-lg md:text-xl mb-6 md:mb-8 text-indigo-100">
                   Connect with top-rated consultancy agencies based on
                   expertise, ratings, and quality of service.
                 </p>
-                <div className="flex justify-start">
+                <div className="flex justify-center md:justify-start">
                   <Link
                     href="/consultancies"
-                    className="bg-white text-indigo-600 px-8 py-3 rounded-lg hover:bg-indigo-50 font-semibold transition-all shadow-lg flex items-center gap-2"
+                    className="bg-white text-indigo-600 px-6 md:px-8 py-3 rounded-lg hover:bg-indigo-50 font-semibold transition-all shadow-lg flex items-center gap-2 text-sm md:text-base"
                   >
-                    <Search className="w-5 h-5" />
+                    <Search className="w-4 h-4 md:w-5 md:h-5" />
                     Browse All Consultancies
                   </Link>
                 </div>
@@ -263,20 +263,20 @@ function Home() {
             </div>
           </header>
 
-          <section className="py-20 bg-white overflow-hidden">
-            <div className="container mx-auto px-6 overflow-hidden">
-              <div className="text-center mb-16">
-                <h3 className="text-4xl font-bold mb-4 text-gray-900">
+          <section className="py-12 md:py-20 bg-white overflow-hidden">
+            <div className="container mx-auto px-4 md:px-6 overflow-hidden">
+              <div className="text-center mb-8 md:mb-16">
+                <h3 className="text-2xl md:text-4xl font-bold mb-4 text-gray-900">
                   Our Service Categories
                 </h3>
-                <p className="text-gray-600 text-lg max-w-3xl mx-auto leading-relaxed">
+                <p className="text-gray-600 text-base md:text-lg max-w-3xl mx-auto leading-relaxed px-4">
                   Comprehensive consultancy solutions across diverse industries,
                   delivered by certified experts with proven track records
                 </p>
               </div>
 
-              <div className="relative max-w-7xl mx-auto px-8 overflow-hidden">
-                <div className="h-[550px] flex items-center justify-center py-24 overflow-hidden">
+              <div className="relative max-w-7xl mx-auto px-2 md:px-8 overflow-hidden">
+                <div className="h-[400px] md:h-[550px] flex items-center justify-center py-12 md:py-24 overflow-hidden">
                   <Swiper
                     effect="coverflow"
                     grabCursor={true}
@@ -327,7 +327,7 @@ function Home() {
                                     }
                                   : undefined
                               }
-                              className={`w-[520px] h-[300px] p-8 bg-white rounded-3xl flex flex-col items-center text-center transition-all duration-700 ease-out transform ${
+                              className={`w-[280px] md:w-[520px] h-[200px] md:h-[300px] p-4 md:p-8 bg-white rounded-2xl md:rounded-3xl flex flex-col items-center text-center transition-all duration-700 ease-out transform ${
                                 isActive
                                   ? "shadow-2xl scale-105 opacity-100 blur-0 cursor-pointer hover:scale-110 hover:shadow-3xl hover:-translate-y-4 hover:rotate-1 z-20 group"
                                   : "shadow-lg scale-90 opacity-60 blur-[1px] cursor-default z-10 pointer-events-none"
@@ -345,8 +345,8 @@ function Home() {
                                 <span
                                   className={`relative z-10 transition-all duration-700 ease-out group-hover:scale-110 ${
                                     isActive
-                                      ? "text-8xl"
-                                      : "text-6xl opacity-70"
+                                      ? "text-4xl md:text-8xl"
+                                      : "text-3xl md:text-6xl opacity-70"
                                   }`}
                                 >
                                   {category.icon}
@@ -355,17 +355,17 @@ function Home() {
                               <h4
                                 className={`font-bold transition-all duration-700 ease-out group-hover:text-blue-600 group-hover:scale-105 ${
                                   isActive
-                                    ? "text-3xl text-gray-800"
-                                    : "text-2xl text-gray-500"
+                                    ? "text-lg md:text-3xl text-gray-800"
+                                    : "text-base md:text-2xl text-gray-500"
                                 }`}
                               >
                                 {category.title}
                               </h4>
                               <p
-                                className={`text-gray-600 mt-3 transition-all duration-700 ease-out group-hover:text-gray-800 ${
+                                className={`text-gray-600 mt-2 md:mt-3 transition-all duration-700 ease-out group-hover:text-gray-800 text-xs md:text-base leading-tight md:leading-relaxed ${
                                   isActive
-                                    ? "text-lg opacity-100"
-                                    : "text-base opacity-60"
+                                    ? "md:text-lg opacity-100"
+                                    : "opacity-60"
                                 }`}
                               >
                                 {category.description}
@@ -381,11 +381,11 @@ function Home() {
                   </Swiper>
                 </div>
 
-                <button className="swiper-button-prev-custom absolute left-2 top-1/2 -translate-y-1/2 z-30 w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:scale-110">
-                  <ArrowRight className="w-6 h-6 rotate-180" />
+                <button className="swiper-button-prev-custom absolute left-1 md:left-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 md:w-16 md:h-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:scale-110">
+                  <ArrowRight className="w-4 h-4 md:w-6 md:h-6 rotate-180" />
                 </button>
-                <button className="swiper-button-next-custom absolute right-2 top-1/2 -translate-y-1/2 z-30 w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:scale-110">
-                  <ArrowRight className="w-6 h-6" />
+                <button className="swiper-button-next-custom absolute right-1 md:right-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 md:w-16 md:h-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:scale-110">
+                  <ArrowRight className="w-4 h-4 md:w-6 md:h-6" />
                 </button>
               </div>
 
@@ -409,43 +409,43 @@ function Home() {
 
           <FeaturedConsultancies />
 
-          <section className="container mx-auto px-6 py-16">
-            <h3 className="text-3xl font-bold mb-12 text-center">
+          <section className="container mx-auto px-4 md:px-6 py-12 md:py-16">
+            <h3 className="text-2xl md:text-3xl font-bold mb-8 md:mb-12 text-center">
               Why Choose ConsultBridge?
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <Star className="w-12 h-12 text-indigo-500 mx-auto mb-4" />
-                <h4 className="text-xl font-semibold mb-2">Verified Reviews</h4>
-                <p className="text-gray-600">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+              <div className="text-center p-4">
+                <Star className="w-10 h-10 md:w-12 md:h-12 text-indigo-500 mx-auto mb-4" />
+                <h4 className="text-lg md:text-xl font-semibold mb-2">Verified Reviews</h4>
+                <p className="text-gray-600 text-sm md:text-base">
                   Authentic feedback from real clients
                 </p>
               </div>
-              <div className="text-center">
-                <MessageCircle className="w-12 h-12 text-purple-500 mx-auto mb-4" />
-                <h4 className="text-xl font-semibold mb-2">
+              <div className="text-center p-4">
+                <MessageCircle className="w-10 h-10 md:w-12 md:h-12 text-purple-500 mx-auto mb-4" />
+                <h4 className="text-lg md:text-xl font-semibold mb-2">
                   AI-Powered Chatbot
                 </h4>
-                <p className="text-gray-600">
+                <p className="text-gray-600 text-sm md:text-base">
                   Get personalized recommendations
                 </p>
               </div>
-              <div className="text-center">
-                <Calendar className="w-12 h-12 text-pink-500 mx-auto mb-4" />
-                <h4 className="text-xl font-semibold mb-2">Easy Booking</h4>
-                <p className="text-gray-600">
+              <div className="text-center p-4">
+                <Calendar className="w-10 h-10 md:w-12 md:h-12 text-pink-500 mx-auto mb-4" />
+                <h4 className="text-lg md:text-xl font-semibold mb-2">Easy Booking</h4>
+                <p className="text-gray-600 text-sm md:text-base">
                   Schedule consultations effortlessly
                 </p>
               </div>
             </div>
           </section>
 
-          <section className="bg-gray-100 py-16">
-            <div className="container mx-auto px-6">
-              <h3 className="text-3xl font-bold mb-12 text-center">
+          <section className="bg-gray-100 py-12 md:py-16">
+            <div className="container mx-auto px-4 md:px-6">
+              <h3 className="text-2xl md:text-3xl font-bold mb-8 md:mb-12 text-center">
                 What Our Users Say
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                 <TestimonialCard
                   name="Sarah Johnson"
                   role="CEO, TechStart"
@@ -468,18 +468,18 @@ function Home() {
             </div>
           </section>
 
-          <section className="container mx-auto px-6 py-16">
+          <section className="container mx-auto px-4 md:px-6 py-12 md:py-16">
             <div className="max-w-4xl mx-auto">
               <FeedbackForm />
             </div>
           </section>
 
-          <section className="container mx-auto px-6 py-16">
-            <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-2xl p-12 text-center shadow-xl">
-              <h3 className="text-3xl font-bold mb-4">
+          <section className="container mx-auto px-4 md:px-6 py-12 md:py-16">
+            <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-2xl p-6 md:p-12 text-center shadow-xl">
+              <h3 className="text-2xl md:text-3xl font-bold mb-4">
                 Ready to Find Your Perfect Consultant?
               </h3>
-              <p className="text-xl mb-8">
+              <p className="text-lg md:text-xl mb-6 md:mb-8">
                 Join thousands of satisfied clients who found the right
                 expertise
               </p>
@@ -490,19 +490,20 @@ function Home() {
                       localStorage.setItem("signup_mode", "user");
                       router.push("/sign-up?mode=user");
                     }}
-                    className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-medium hover:bg-indigo-50 inline-flex items-center shadow-sm transition-all"
+                    className="bg-white text-indigo-600 px-6 md:px-8 py-3 rounded-lg font-medium hover:bg-indigo-50 inline-flex items-center justify-center shadow-sm transition-all text-sm md:text-base"
                   >
                     Join as User
-                    <ArrowRight className="ml-2" />
+                    <ArrowRight className="ml-2 w-4 h-4" />
                   </button>
                   <button
                     onClick={() => {
                       router.push("/consultancy-setup");
                     }}
-                    className="bg-indigo-600 text-white border border-white px-8 py-3 rounded-lg font-medium hover:bg-indigo-700 inline-flex items-center shadow-sm transition-all"
+                    className="bg-indigo-600 text-white border border-white px-6 md:px-8 py-3 rounded-lg font-medium hover:bg-indigo-700 inline-flex items-center justify-center shadow-sm transition-all text-sm md:text-base"
                   >
-                    Start Service as Consultancy
-                    <ArrowRight className="ml-2" />
+                    <span className="hidden sm:inline">Start Service as Consultancy</span>
+                    <span className="sm:hidden">Join as Consultancy</span>
+                    <ArrowRight className="ml-2 w-4 h-4" />
                   </button>
                 </div>
               </SignedOut>
@@ -511,10 +512,10 @@ function Home() {
                   <div className="flex justify-center">
                     <Link
                       href="/categories"
-                      className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-medium hover:bg-indigo-50 inline-flex items-center shadow-sm transition-all"
+                      className="bg-white text-indigo-600 px-6 md:px-8 py-3 rounded-lg font-medium hover:bg-indigo-50 inline-flex items-center shadow-sm transition-all text-sm md:text-base"
                     >
                       Browse Categories
-                      <ArrowRight className="ml-2" />
+                      <ArrowRight className="ml-2 w-4 h-4" />
                     </Link>
                   </div>
                 </div>

@@ -66,8 +66,8 @@ const FeedbackForm: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-8">
-      <div className="relative bg-white shadow-2xl rounded-2xl p-10 border border-gray-200 transition-all duration-300 hover:shadow-3xl">
+    <div className="w-full max-w-5xl mx-auto p-4 md:p-8">
+      <div className="relative bg-white shadow-2xl rounded-2xl p-6 md:p-10 border border-gray-200 transition-all duration-300 hover:shadow-3xl">
         {submitted && (
           <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-6 shadow-md animate-fade-in">
             <p className="font-semibold">Thank you for your feedback! 🎉</p>
@@ -76,11 +76,11 @@ const FeedbackForm: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="text-center mb-8">
-            <h3 className="text-3xl font-bold text-gray-800 mb-2">
+          <div className="text-center mb-6 md:mb-8">
+            <h3 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
               Share Your Experience
             </h3>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-600 text-base md:text-lg">
               Your feedback helps us improve our platform and services
             </p>
           </div>
@@ -90,29 +90,29 @@ const FeedbackForm: React.FC = () => {
             <label className="text-gray-700 text-sm font-semibold mb-3 block">
               I am a:
             </label>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <button
                 type="button"
                 onClick={() => setUserType('user')}
-                className={`flex items-center px-6 py-3 rounded-lg border-2 transition-all ${
+                className={`flex items-center justify-center px-4 md:px-6 py-3 rounded-lg border-2 transition-all text-sm md:text-base ${
                   userType === 'user'
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                 }`}
               >
-                <User className="w-5 h-5 mr-2" />
+                <User className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                 Service User
               </button>
               <button
                 type="button"
                 onClick={() => setUserType('consultancy')}
-                className={`flex items-center px-6 py-3 rounded-lg border-2 transition-all ${
+                className={`flex items-center justify-center px-4 md:px-6 py-3 rounded-lg border-2 transition-all text-sm md:text-base ${
                   userType === 'consultancy'
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                 }`}
               >
-                <Building className="w-5 h-5 mr-2" />
+                <Building className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                 Consultancy Provider
               </button>
             </div>
@@ -162,7 +162,7 @@ const FeedbackForm: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
             <div>
               <label className="text-gray-700 text-sm font-semibold mb-2 block">
                 Category *
@@ -202,11 +202,11 @@ const FeedbackForm: React.FC = () => {
               <label className="text-gray-700 text-sm font-semibold mb-2 block">
                 Overall Rating *
               </label>
-              <div className="flex gap-1 items-center">
+              <div className="flex gap-1 items-center justify-center sm:justify-start">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
-                    className={`w-8 h-8 cursor-pointer transition-all hover:scale-110 ${
+                    className={`w-6 h-6 md:w-8 md:h-8 cursor-pointer transition-all hover:scale-110 ${
                       rating >= star 
                         ? "text-yellow-400 fill-current" 
                         : "text-gray-300 hover:text-yellow-300"
@@ -214,7 +214,7 @@ const FeedbackForm: React.FC = () => {
                     onClick={() => setRating(star)}
                   />
                 ))}
-                <span className="ml-2 text-sm text-gray-600">
+                <span className="ml-2 text-xs md:text-sm text-gray-600">
                   {rating > 0 && `${rating}/5`}
                 </span>
               </div>
@@ -238,7 +238,7 @@ const FeedbackForm: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <button
               type="button"
               onClick={() => {
@@ -250,16 +250,16 @@ const FeedbackForm: React.FC = () => {
                 setRating(0);
                 setFeedback("");
               }}
-              className="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all"
+              className="px-6 md:px-8 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all text-sm md:text-base"
             >
               Reset Form
             </button>
             <button
               type="submit"
-              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm md:text-base"
             >
               Submit Feedback
-              <Send className="ml-2 w-5 h-5" />
+              <Send className="ml-2 w-4 h-4 md:w-5 md:h-5" />
             </button>
           </div>
         </form>

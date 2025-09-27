@@ -81,16 +81,16 @@ function CategoriesPage() {
         </header>
 
         {/* Main Content */}
-        <section className="container mx-auto px-6 py-16">
-          <h2 className="text-4xl font-bold mb-4 text-center">
+        <section className="container mx-auto px-4 md:px-6 py-12 md:py-16">
+          <h2 className="text-2xl md:text-4xl font-bold mb-4 text-center">
             Explore All Categories
           </h2>
-          <p className="text-xl text-gray-600 mb-12 text-center max-w-3xl mx-auto">
+          <p className="text-base md:text-xl text-gray-600 mb-8 md:mb-12 text-center max-w-3xl mx-auto px-4">
             Browse through our comprehensive range of consultancy categories to
             find the perfect match for your specific needs.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
             {categories.map((category, index) => (
               <div
                 key={index}
@@ -101,16 +101,17 @@ function CategoriesPage() {
                     .replace(/&/g, "%26");
                   window.location.href = `/category/${categorySlug}`;
                 }}
-                className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow cursor-pointer transform hover:-translate-y-1 transition-transform"
+                className="bg-white rounded-lg md:rounded-xl shadow-lg p-4 md:p-8 hover:shadow-xl transition-shadow cursor-pointer transform hover:-translate-y-1 transition-transform"
               >
-                <div className="text-6xl mb-4">{category.icon}</div>
-                <h3 className="text-2xl font-bold mb-2">{category.title}</h3>
-                <p className="text-gray-600 mb-4">{category.description}</p>
-                <button className="text-blue-600 font-medium flex items-center">
-                  Explore {category.title}
+                <div className="text-4xl md:text-6xl mb-3 md:mb-4 text-center">{category.icon}</div>
+                <h3 className="text-lg md:text-2xl font-bold mb-2 text-center md:text-left">{category.title}</h3>
+                <p className="text-gray-600 mb-3 md:mb-4 text-sm md:text-base leading-relaxed">{category.description}</p>
+                <button className="text-blue-600 font-medium flex items-center justify-center md:justify-start w-full text-sm md:text-base">
+                  <span className="hidden md:inline">Explore {category.title}</span>
+                  <span className="md:hidden">Explore</span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 ml-1"
+                    className="h-4 w-4 md:h-5 md:w-5 ml-1"
                     viewBox="0 0 20 20"
                     fill="currentColor"
                   >

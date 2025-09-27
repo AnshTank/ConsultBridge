@@ -62,14 +62,14 @@ export default function FeaturedConsultancies() {
   }
 
   return (
-    <section className="bg-white py-16">
-      <div className="container mx-auto px-6">
-        <h3 className="text-3xl font-bold mb-12 text-center">
+    <section className="bg-white py-12 md:py-16">
+      <div className="container mx-auto px-4 md:px-6">
+        <h3 className="text-2xl md:text-3xl font-bold mb-8 md:mb-12 text-center">
           Top Rated Consultancies
         </h3>
         {consultancies.length > 0 ? (
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, staggerChildren: 0.1 }}
@@ -95,14 +95,14 @@ export default function FeaturedConsultancies() {
             ))}
           </motion.div>
         ) : (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <span className="text-6xl">🏆</span>
+          <div className="text-center py-8 md:py-12">
+            <div className="text-gray-400 mb-3 md:mb-4">
+              <span className="text-4xl md:text-6xl">🏆</span>
             </div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">
+            <h3 className="text-lg md:text-xl font-semibold text-gray-600 mb-2">
               No Top-Rated Consultancies Yet
             </h3>
-            <p className="text-gray-500">
+            <p className="text-sm md:text-base text-gray-500 px-4">
               We're working on bringing you the best consultancy services. Check
               back soon!
             </p>

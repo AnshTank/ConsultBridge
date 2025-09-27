@@ -205,11 +205,11 @@ function ContactPage() {
                     <label className="text-gray-700 text-sm font-semibold mb-3 block">
                       I am contacting as a:
                     </label>
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-2 md:gap-3">
                       <button
                         type="button"
                         onClick={() => setUserType("user")}
-                        className={`flex items-center px-4 py-2 rounded-lg border-2 transition-all text-sm ${
+                        className={`flex items-center px-3 md:px-4 py-2 rounded-lg border-2 transition-all text-xs md:text-sm ${
                           userType === "user"
                             ? "border-blue-500 bg-blue-50 text-blue-700"
                             : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
@@ -221,7 +221,7 @@ function ContactPage() {
                       <button
                         type="button"
                         onClick={() => setUserType("consultancy")}
-                        className={`flex items-center px-4 py-2 rounded-lg border-2 transition-all text-sm ${
+                        className={`flex items-center px-3 md:px-4 py-2 rounded-lg border-2 transition-all text-xs md:text-sm ${
                           userType === "consultancy"
                             ? "border-blue-500 bg-blue-50 text-blue-700"
                             : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
@@ -233,7 +233,7 @@ function ContactPage() {
                       <button
                         type="button"
                         onClick={() => setUserType("enterprise")}
-                        className={`flex items-center px-4 py-2 rounded-lg border-2 transition-all text-sm ${
+                        className={`flex items-center px-3 md:px-4 py-2 rounded-lg border-2 transition-all text-xs md:text-sm ${
                           userType === "enterprise"
                             ? "border-blue-500 bg-blue-50 text-blue-700"
                             : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
@@ -380,7 +380,7 @@ function ContactPage() {
                     <label className="text-gray-700 text-sm font-semibold mb-2 block">
                       Preferred Contact Method
                     </label>
-                    <div className="flex gap-4">
+                    <div className="flex flex-wrap gap-3 md:gap-4">
                       {["Email", "Phone", "Either"].map((method) => (
                         <label key={method} className="flex items-center">
                           <input
@@ -401,7 +401,7 @@ function ContactPage() {
                     </div>
                   </div>
 
-                  <div className="flex gap-4 pt-4">
+                  <div className="flex flex-col sm:flex-row gap-3 md:gap-4 pt-4">
                     <button
                       type="button"
                       onClick={() => {
@@ -415,14 +415,14 @@ function ContactPage() {
                         setPriority("Medium");
                         setPreferredContactMethod("Email");
                       }}
-                      className="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all"
+                      className="w-full sm:w-auto px-6 md:px-8 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all text-center"
                     >
                       Reset Form
                     </button>
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full sm:flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmitting ? "Sending..." : "Send Message"}
                       <Send className="ml-2 w-5 h-5" />

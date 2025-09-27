@@ -193,48 +193,50 @@ const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
   }
 
   return (
-    <div className="bg-white shadow-lg rounded-xl p-10 mt-6 w-full max-w-[1248px] mx-auto border border-gray-200">
-      <h2 className="text-3xl font-semibold mb-6 text-gray-800 text-center">
+    <div className="bg-white shadow-lg rounded-xl p-4 md:p-10 mt-6 w-full max-w-[1248px] mx-auto border border-gray-200">
+      <h2 className="text-2xl md:text-3xl font-semibold mb-4 md:mb-6 text-gray-800 text-center">
         User Reviews
       </h2>
 
       {/* Review Input */}
-      <div className="border-2 border-dashed border-gray-200 p-8 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50">
+      <div className="border-2 border-dashed border-gray-200 p-4 md:p-8 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50">
         {isSignedIn ? (
           <>
-            <div className="flex items-center mb-6">
-              <User className="text-indigo-600 mr-3" />
-              <span className="text-lg font-semibold text-gray-800">
+            <div className="flex items-center mb-4 md:mb-6">
+              <User className="w-4 h-4 md:w-5 md:h-5 text-indigo-600 mr-2 md:mr-3" />
+              <span className="text-base md:text-lg font-semibold text-gray-800">
                 Writing as {user?.firstName || user?.username || 'User'}
               </span>
             </div>
-            <div className="flex items-center mb-4 space-x-2">
-              <span className="text-gray-700 font-medium mr-3">Your Rating:</span>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  className={`w-6 h-6 cursor-pointer transition-all hover:scale-110 ${
-                    star <= newRating ? "text-yellow-500 fill-yellow-500" : "text-gray-300 hover:text-yellow-400"
-                  }`}
-                  onClick={() => setNewRating(star)}
-                />
-              ))}
-              <span className="ml-3 text-sm text-gray-600">({newRating} star{newRating !== 1 ? 's' : ''})</span>
+            <div className="flex flex-col sm:flex-row sm:items-center mb-4 gap-2">
+              <span className="text-gray-700 font-medium text-sm md:text-base">Your Rating:</span>
+              <div className="flex items-center space-x-1 md:space-x-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`w-5 h-5 md:w-6 md:h-6 cursor-pointer transition-all hover:scale-110 ${
+                      star <= newRating ? "text-yellow-500 fill-yellow-500" : "text-gray-300 hover:text-yellow-400"
+                    }`}
+                    onClick={() => setNewRating(star)}
+                  />
+                ))}
+                <span className="ml-2 md:ml-3 text-xs md:text-sm text-gray-600">({newRating} star{newRating !== 1 ? 's' : ''})</span>
+              </div>
             </div>
             <textarea
-              className="w-full border-2 border-gray-200 rounded-lg p-4 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-lg resize-none"
+              className="w-full border-2 border-gray-200 rounded-lg p-3 md:p-4 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm md:text-lg resize-none"
               rows={4}
               placeholder="Share your experience with this consultancy..."
               value={newReview}
               onChange={(e) => setNewReview(e.target.value)}
               disabled={submitting}
             ></textarea>
-            <div className="flex justify-between items-center mt-4">
-              <span className="text-sm text-gray-500">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-4 gap-3">
+              <span className="text-xs md:text-sm text-gray-500">
                 {newReview.length}/500 characters
               </span>
               <button
-                className={`px-8 py-3 rounded-lg font-semibold text-lg transition-all ${
+                className={`px-4 md:px-8 py-2 md:py-3 rounded-lg font-semibold text-sm md:text-lg transition-all ${
                   newReview.trim() && !submitting
                     ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -254,16 +256,16 @@ const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
             </div>
           </>
         ) : (
-          <div className="text-center py-8">
-            <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-3">
+          <div className="text-center py-6 md:py-8">
+            <User className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mx-auto mb-3 md:mb-4" />
+            <h3 className="text-lg md:text-xl font-semibold text-gray-700 mb-2 md:mb-3">
               Sign in to leave a review
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6 px-4">
               Share your experience and help others make informed decisions
             </p>
             <SignInButton mode="modal">
-              <button className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105">
+              <button className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 md:px-8 py-2 md:py-3 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 text-sm md:text-base">
                 Sign In to Review
               </button>
             </SignInButton>
@@ -289,17 +291,17 @@ const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="border p-6 rounded-lg shadow-md bg-white hover:shadow-lg transition-all"
+                  className="border p-4 md:p-6 rounded-lg shadow-md bg-white hover:shadow-lg transition-all"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-xl text-gray-800">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <span className="font-semibold text-lg md:text-xl text-gray-800">
                       {review.user || 'Anonymous'}
                     </span>
                     <div className="flex space-x-1">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <Star
                           key={star}
-                          className={`w-5 h-5 ${
+                          className={`w-4 h-4 md:w-5 md:h-5 ${
                             star <= (review.rating || 5)
                               ? "text-yellow-500 fill-yellow-500"
                               : "text-gray-300"
@@ -308,8 +310,8 @@ const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
                       ))}
                     </div>
                   </div>
-                  <p className="text-gray-700 mt-3 text-lg">{review.text}</p>
-                  <div className="flex items-center mt-3 space-x-8 text-gray-500 text-lg">
+                  <p className="text-gray-700 mt-2 md:mt-3 text-sm md:text-lg leading-relaxed">{review.text}</p>
+                  <div className="flex flex-col sm:flex-row sm:items-center mt-3 gap-3 sm:gap-8 text-gray-500 text-sm md:text-lg">
                     <motion.button 
                       onClick={() => handleLike(review.id || review._id)}
                       whileTap={{ scale: 0.9 }}
@@ -335,7 +337,7 @@ const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
                         }}
                         key={`${review.id || review._id}-${userLikes.has(review.id || review._id)}`}
                       >
-                        <ThumbsUp className={`w-4 h-4 mr-2 transition-all duration-300 ${
+                        <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2 transition-all duration-300 ${
                           userLikes.has(review.id || review._id) 
                             ? 'text-blue-600 fill-blue-600 drop-shadow-sm' 
                             : 'hover:scale-110'
@@ -353,11 +355,11 @@ const ReviewSection = ({ consultancyId }: ReviewSectionProps) => {
                         onClick={() => setReplyingTo(replyingTo === (review.id || review._id) ? null : (review.id || review._id))}
                         className="flex items-center hover:text-blue-600 transition-all min-w-[70px]"
                       >
-                        <Reply className="w-4 h-4 mr-2" /> Reply
+                        <Reply className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" /> Reply
                       </button>
                     ) : (
-                      <span className="flex items-center text-gray-400 min-w-[120px]">
-                        <Reply className="w-4 h-4 mr-2" /> Sign in to reply
+                      <span className="flex items-center text-gray-400 min-w-[120px] text-xs md:text-sm">
+                        <Reply className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" /> Sign in to reply
                       </span>
                     )}
                   </div>

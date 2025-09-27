@@ -85,33 +85,33 @@ function BookAppointmentPage() {
       <PageTransition>
         <div className="min-h-screen bg-gray-50">
           <Navbar />
-      <div className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-t-xl p-8 relative overflow-hidden">
+          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-t-xl p-4 md:p-8 relative overflow-hidden">
             <div className="absolute inset-0 bg-black opacity-10"></div>
             <div className="relative z-10">
-              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-white to-indigo-100 bg-clip-text text-transparent">Book Your Appointment</h1>
-              <p className="text-indigo-100 text-lg">✨ Fill in your details to schedule a consultation</p>
+              <h1 className="text-2xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-white to-indigo-100 bg-clip-text text-transparent">Book Your Appointment</h1>
+              <p className="text-indigo-100 text-sm md:text-lg">✨ Fill in your details to schedule a consultation</p>
             </div>
-            <div className="absolute -top-4 -right-4 w-24 h-24 bg-white opacity-10 rounded-full"></div>
-            <div className="absolute -bottom-2 -left-2 w-16 h-16 bg-white opacity-10 rounded-full"></div>
+            <div className="absolute -top-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-white opacity-10 rounded-full"></div>
+            <div className="absolute -bottom-2 -left-2 w-12 md:w-16 h-12 md:h-16 bg-white opacity-10 rounded-full"></div>
           </div>
           
-          <div className="bg-white rounded-b-xl shadow-2xl p-8 border-t-4 border-gradient-to-r from-indigo-500 to-purple-500">
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white rounded-b-xl shadow-2xl p-4 md:p-8 border-t-4 border-gradient-to-r from-indigo-500 to-purple-500">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {/* Personal Information */}
               <div className="md:col-span-2">
-                <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b-2 border-indigo-200 pb-2 flex items-center">
-                  <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mr-3">
-                    <User className="w-4 h-4 text-white" />
+                <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-800 border-b-2 border-indigo-200 pb-2 flex items-center">
+                  <div className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mr-2 md:mr-3">
+                    <User className="w-3 h-3 md:w-4 md:h-4 text-white" />
                   </div>
                   Personal Information
                 </h2>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <User className="w-4 h-4 inline mr-2" />
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                  <User className="w-3 h-3 md:w-4 md:h-4 inline mr-1 md:mr-2" />
                   Full Name
                 </label>
                 <input
@@ -119,7 +119,7 @@ function BookAppointmentPage() {
                   required
                   value={formData.clientName}
                   onChange={(e) => setFormData({...formData, clientName: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-50"
+                  className="w-full p-2 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-50 text-sm md:text-base"
                   placeholder="Enter your full name"
                   readOnly
                 />
@@ -158,9 +158,9 @@ function BookAppointmentPage() {
 
               {/* Appointment Details */}
               <div className="md:col-span-2">
-                <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b-2 border-indigo-200 pb-2 mt-6 flex items-center">
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mr-3">
-                    <Calendar className="w-4 h-4 text-white" />
+                <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-800 border-b-2 border-indigo-200 pb-2 mt-4 md:mt-6 flex items-center">
+                  <div className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mr-2 md:mr-3">
+                    <Calendar className="w-3 h-3 md:w-4 md:h-4 text-white" />
                   </div>
                   Appointment Details
                 </h2>

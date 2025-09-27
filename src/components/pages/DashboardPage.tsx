@@ -43,10 +43,6 @@ const DashboardPage: React.FC = () => {
   // Lock scroll when confirmation modal is open
   useScrollLock(!!confirmModal);
 
-
-
-
-
   // Check if appointment is expired
   const isAppointmentExpired = (appointment: AppointmentData) => {
     const now = new Date();
@@ -93,8 +89,6 @@ const DashboardPage: React.FC = () => {
 
     fetchAppointments();
   }, [user?.id]);
-
-
 
   if (!isLoaded) {
     return null;
@@ -184,21 +178,28 @@ const DashboardPage: React.FC = () => {
       <PageTransition>
         <Navbar />
         <div className="min-h-screen bg-gray-50">
-          <div className="container mx-auto px-6 py-12">
+          <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
             {/* Dashboard Header */}
             <motion.div
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 flex items-center justify-between mb-8"
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-8 flex flex-col md:flex-row items-center justify-between mb-6 md:mb-8"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <div>
-                <h2 className="text-3xl font-bold text-gray-800">
+              <div className="text-center md:text-left mb-4 md:mb-0">
+                <h2 className="text-xl md:text-3xl font-bold text-gray-800">
                   Welcome back, {userName}!
                 </h2>
-                <p className="text-lg text-gray-600 mt-1">
+                <p className="text-sm md:text-lg text-gray-600 mt-1">
                   View your booked appointments.
                 </p>
+              </div>
+              <div className="md:hidden">
+                <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-lg font-bold">
+                    {userName.charAt(0).toUpperCase()}
+                  </span>
+                </div>
               </div>
               <div className="hidden md:block">
                 <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
@@ -210,72 +211,72 @@ const DashboardPage: React.FC = () => {
             </motion.div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mt-8 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-6 mt-6 md:mt-8 mb-6 md:mb-8">
               <motion.div
-                className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-indigo-500"
+                className="bg-white rounded-xl shadow-lg p-3 md:p-6 border-l-4 border-indigo-500"
                 whileHover={{ scale: 1.02 }}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-600 text-sm">Total</p>
-                    <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
+                    <p className="text-gray-600 text-xs md:text-sm">Total</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-800">{stats.total}</p>
                   </div>
-                  <CalendarDays className="w-8 h-8 text-indigo-500" />
+                  <CalendarDays className="w-6 h-6 md:w-8 md:h-8 text-indigo-500" />
                 </div>
               </motion.div>
               <motion.div
-                className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500"
+                className="bg-white rounded-xl shadow-lg p-3 md:p-6 border-l-4 border-green-500"
                 whileHover={{ scale: 1.02 }}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-600 text-sm">Confirmed</p>
-                    <p className="text-2xl font-bold text-gray-800">{stats.confirmed}</p>
+                    <p className="text-gray-600 text-xs md:text-sm">Confirmed</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-800">{stats.confirmed}</p>
                   </div>
-                  <CheckCircle className="w-8 h-8 text-green-500" />
+                  <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-green-500" />
                 </div>
               </motion.div>
               <motion.div
-                className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-500"
+                className="bg-white rounded-xl shadow-lg p-3 md:p-6 border-l-4 border-yellow-500"
                 whileHover={{ scale: 1.02 }}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-600 text-sm">Pending</p>
-                    <p className="text-2xl font-bold text-gray-800">{stats.pending}</p>
+                    <p className="text-gray-600 text-xs md:text-sm">Pending</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-800">{stats.pending}</p>
                   </div>
-                  <Clock className="w-8 h-8 text-yellow-500" />
+                  <Clock className="w-6 h-6 md:w-8 md:h-8 text-yellow-500" />
                 </div>
               </motion.div>
               <motion.div
-                className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500"
+                className="bg-white rounded-xl shadow-lg p-3 md:p-6 border-l-4 border-blue-500"
                 whileHover={{ scale: 1.02 }}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-600 text-sm">Completed</p>
-                    <p className="text-2xl font-bold text-gray-800">{stats.completed}</p>
+                    <p className="text-gray-600 text-xs md:text-sm">Completed</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-800">{stats.completed}</p>
                   </div>
-                  <CheckCircle className="w-8 h-8 text-blue-500" />
+                  <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-blue-500" />
                 </div>
               </motion.div>
               <motion.div
-                className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500"
+                className="bg-white rounded-xl shadow-lg p-3 md:p-6 border-l-4 border-red-500"
                 whileHover={{ scale: 1.02 }}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-600 text-sm">Cancelled</p>
-                    <p className="text-2xl font-bold text-gray-800">{stats.cancelled}</p>
+                    <p className="text-gray-600 text-xs md:text-sm">Cancelled</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-800">{stats.cancelled}</p>
                   </div>
-                  <XCircle className="w-8 h-8 text-red-500" />
+                  <XCircle className="w-6 h-6 md:w-8 md:h-8 text-red-500" />
                 </div>
               </motion.div>
             </div>
 
             {/* Search and Filter */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-              <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6 md:mb-8">
+              <div className="flex flex-col md:flex-row gap-3 md:gap-4 items-stretch md:items-center justify-between">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
@@ -286,9 +287,9 @@ const DashboardPage: React.FC = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
                   <select
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm md:text-base"
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
                   >
@@ -297,12 +298,11 @@ const DashboardPage: React.FC = () => {
                     <option value="pending">Pending</option>
                     <option value="completed">Completed</option>
                     <option value="cancelled">Cancelled</option>
-
                     <option value="expired">Expired</option>
                   </select>
                   <button
                     onClick={() => router.push("/categories")}
-                    className="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors flex items-center gap-2"
+                    className="bg-indigo-500 text-white px-3 md:px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
                   >
                     <Plus className="w-4 h-4" /> New
                   </button>
@@ -312,12 +312,12 @@ const DashboardPage: React.FC = () => {
 
             {/* Appointments Section */}
             <div>
-              <h3 className="text-2xl font-semibold text-gray-800 mb-6">
+              <h3 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6">
                 Your Appointments ({filteredAppointments.length})
               </h3>
 
               {paginatedAppointments.length > 0 ? (
-                <div className={`grid md:grid-cols-2 lg:grid-cols-3 gap-6 transition-opacity duration-150 ${
+                <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 transition-opacity duration-150 ${
                   pageTransition ? "opacity-50" : "opacity-100"
                 }`}>
                   {paginatedAppointments.map((appointment, index) => {
@@ -326,30 +326,30 @@ const DashboardPage: React.FC = () => {
                     return (
                       <motion.div
                         key={appointment._id}
-                        className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 hover:scale-105 transition-all"
+                        className="bg-white p-4 md:p-6 rounded-2xl shadow-lg border border-gray-200 hover:scale-105 transition-all"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.4, delay: index * 0.1 }}
                       >
-                        <h4 className="text-xl font-semibold text-gray-900">
+                        <h4 className="text-lg md:text-xl font-semibold text-gray-900">
                           {(appointment as any).consultancyName || "Appointment"}
                         </h4>
-                        <p className="text-sm text-gray-500 mb-4">
+                        <p className="text-xs md:text-sm text-gray-500 mb-3 md:mb-4">
                           {appointment.message || "Consultation"}
                         </p>
 
-                        <div className="flex items-center gap-2 text-gray-600 mb-2">
-                          <CalendarDays className="w-5 h-5 text-blue-500" />
+                        <div className="flex items-center gap-2 text-gray-600 mb-2 text-sm md:text-base">
+                          <CalendarDays className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
                           <p>{new Date(appointment.appointmentDate).toLocaleDateString()}</p>
                         </div>
                         
-                        <div className="flex items-center gap-2 text-gray-600 mb-2">
-                          <Clock className="w-5 h-5 text-purple-500" />
+                        <div className="flex items-center gap-2 text-gray-600 mb-2 text-sm md:text-base">
+                          <Clock className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
                           <p>{appointment.appointmentTime}</p>
                         </div>
 
-                        <div className="flex items-center gap-2 text-gray-600 mb-4">
-                          <Video className="w-5 h-5 text-indigo-500" />
+                        <div className="flex items-center gap-2 text-gray-600 mb-4 text-sm md:text-base">
+                          <Video className="w-4 h-4 md:w-5 md:h-5 text-indigo-500" />
                           <p>{(appointment as any).appointmentType === "online" ? "Online Meeting" : "Office Visit"}</p>
                         </div>
 
@@ -357,15 +357,13 @@ const DashboardPage: React.FC = () => {
                           {displayStatus === "confirmed" && <CheckCircle className="w-6 h-6 text-green-500" />}
                           {displayStatus === "pending" && <Clock className="w-6 h-6 text-yellow-500" />}
                           {displayStatus === "completed" && <CheckCircle className="w-6 h-6 text-green-500" />}
-
                           {displayStatus === "expired" && <XCircle className="w-6 h-6 text-gray-500" />}
                           {displayStatus === "cancelled" && <XCircle className="w-6 h-6 text-red-500" />}
                           
-                          <p className={`text-lg font-semibold capitalize ${
+                          <p className={`text-sm md:text-lg font-semibold capitalize ${
                             displayStatus === "confirmed" ? "text-green-600" :
                             displayStatus === "pending" ? "text-yellow-600" :
                             displayStatus === "completed" ? "text-green-600" :
-
                             displayStatus === "expired" ? "text-gray-600" : "text-red-600"
                           }`}>
                             {displayStatus}
@@ -389,7 +387,7 @@ const DashboardPage: React.FC = () => {
                                 })
                               }
                               disabled={actionLoading === appointment._id}
-                              className="w-full bg-gray-50 text-gray-600 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                              className="w-full bg-gray-50 text-gray-600 px-2 md:px-3 py-2 rounded-lg text-xs md:text-sm font-medium hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                             >
                               <Trash2 className="w-4 h-4" />
                               Remove
@@ -398,7 +396,7 @@ const DashboardPage: React.FC = () => {
                         )}
 
                         {displayStatus !== "completed" && displayStatus !== "expired" && (
-                          <div className="flex gap-2">
+                          <div className="flex flex-col sm:flex-row gap-2">
                             {displayStatus !== "cancelled" && (
                               <button
                                 onClick={() =>
@@ -409,7 +407,7 @@ const DashboardPage: React.FC = () => {
                                   })
                                 }
                                 disabled={actionLoading === appointment._id}
-                                className="flex-1 bg-orange-50 text-orange-600 px-3 py-2 rounded-lg text-sm font-medium hover:bg-orange-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                className="flex-1 bg-orange-50 text-orange-600 px-2 md:px-3 py-2 rounded-lg text-xs md:text-sm font-medium hover:bg-orange-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                               >
                                 <X className="w-4 h-4" />
                                 Withdraw
@@ -425,7 +423,7 @@ const DashboardPage: React.FC = () => {
                                 })
                               }
                               disabled={actionLoading === appointment._id}
-                              className="flex-1 bg-gray-50 text-gray-600 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                              className="flex-1 bg-gray-50 text-gray-600 px-2 md:px-3 py-2 rounded-lg text-xs md:text-sm font-medium hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                             >
                               <Trash2 className="w-4 h-4" />
                               Remove
@@ -498,14 +496,14 @@ const DashboardPage: React.FC = () => {
           {/* Confirmation Modal */}
           {confirmModal && (
             <motion.div
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setConfirmModal(null)}
             >
               <motion.div
-                className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+                className="bg-white rounded-lg p-4 md:p-6 max-w-md w-full mx-4"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}

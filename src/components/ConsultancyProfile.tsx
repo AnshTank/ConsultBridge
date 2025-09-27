@@ -197,47 +197,49 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
     >
       {/* Header Section */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
-        <div className="h-64 w-full relative">
+        <div className="h-48 md:h-64 w-full relative">
           <img src={image} alt={name} className="w-full h-full object-cover" />
         </div>
-        <div className="p-8">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{name}</h1>
-              <div className="flex items-center gap-2 mb-2">
-                <Star className="w-5 h-5 text-yellow-400 fill-current" />
-                <span className="font-semibold">{realRating}</span>
-                <span className="text-gray-500">
-                  ({realReviewCount} reviews)
-                </span>
-                <span className="text-blue-600 ml-2">{category}</span>
+        <div className="p-4 md:p-8">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+            <div className="flex-1">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{name}</h1>
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <div className="flex items-center gap-1">
+                  <Star className="w-4 h-4 md:w-5 md:h-5 text-yellow-400 fill-current" />
+                  <span className="font-semibold text-sm md:text-base">{realRating}</span>
+                  <span className="text-gray-500 text-sm md:text-base">
+                    ({realReviewCount} reviews)
+                  </span>
+                </div>
+                <span className="text-blue-600 text-sm md:text-base">{category}</span>
               </div>
               <div className="flex items-center text-gray-600 mb-4">
-                <MapPin className="w-5 h-5 mr-2" />
-                {location}
+                <MapPin className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+                <span className="text-sm md:text-base">{location}</span>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-blue-600">
+            <div className="text-center md:text-right flex-shrink-0">
+              <p className="text-xl md:text-2xl font-bold text-blue-600">
                 {price.startsWith("$") ? price : `$${price}`}
               </p>
-              <p className="text-gray-500">per session</p>
+              <p className="text-gray-500 text-sm md:text-base">per session</p>
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-3">About Us</h3>
-              <p className="text-gray-700">{description}</p>
+              <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3">About Us</h3>
+              <p className="text-gray-700 text-sm md:text-base leading-relaxed">{description}</p>
             </div>
 
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold mb-4">Areas of Expertise</h3>
+            <div className="border-t pt-4 md:pt-6">
+              <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Areas of Expertise</h3>
               <div className="flex flex-wrap gap-2">
                 {(expertise || []).map((skill, index) => (
                   <span
                     key={index}
-                    className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm"
+                    className="bg-blue-50 text-blue-700 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm"
                   >
                     {skill}
                   </span>
@@ -249,15 +251,15 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
       </div>
 
       {/* Appointment Booking Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <h2 className="text-2xl font-bold mb-6">Schedule an Appointment</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+        <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Schedule an Appointment</h2>
 
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3">Appointment Type</h3>
-            <div className="flex gap-4">
+          <div className="mb-4 md:mb-6">
+            <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3">Appointment Type</h3>
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
               <button
-                className={`flex-1 py-3 px-4 rounded-lg border ${
+                className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg border text-sm md:text-base ${
                   appointmentType === "online"
                     ? "bg-blue-600 text-white border-blue-600"
                     : "bg-white text-gray-700 border-gray-300 hover:border-blue-500"
@@ -267,7 +269,7 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
                 Online Meeting
               </button>
               <button
-                className={`flex-1 py-3 px-4 rounded-lg border ${
+                className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg border text-sm md:text-base ${
                   appointmentType === "offline"
                     ? "bg-blue-600 text-white border-blue-600"
                     : "bg-white text-gray-700 border-gray-300 hover:border-blue-500"
@@ -279,8 +281,8 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
             </div>
           </div>
 
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3">Select Date</h3>
+          <div className="mb-4 md:mb-6">
+            <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3">Select Date</h3>
             <div className="relative">
               <div
                 className={`relative cursor-pointer transition-all duration-300 select-none ${
@@ -393,9 +395,9 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
             </div>
           </div>
 
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3">Select Time</h3>
-            <div className="grid grid-cols-3 gap-2">
+          <div className="mb-4 md:mb-6">
+            <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3">Select Time</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {timeSlots.map((time) => {
                 const isAvailable =
                   selectedDate && availableSlots.includes(time);
@@ -404,7 +406,7 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
                 return (
                   <button
                     key={time}
-                    className={`p-2 text-sm border rounded-lg ${
+                    className={`p-2 text-xs md:text-sm border rounded-lg ${
                       selectedTime === time
                         ? "bg-blue-600 text-white border-blue-600"
                         : isAvailable
@@ -515,42 +517,42 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
           )}
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <h2 className="text-2xl font-bold mb-6">Contact Information</h2>
+        <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Contact Information</h2>
 
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             <div className="flex items-center">
-              <Phone className="w-5 h-5 text-gray-500 mr-3" />
-              <span>{contact?.phone || "Not provided"}</span>
+              <Phone className="w-4 h-4 md:w-5 md:h-5 text-gray-500 mr-2 md:mr-3 flex-shrink-0" />
+              <span className="text-sm md:text-base break-all">{contact?.phone || "Not provided"}</span>
             </div>
             <div className="flex items-center">
-              <Mail className="w-5 h-5 text-gray-500 mr-3" />
-              <span>{contact?.email || "Not provided"}</span>
+              <Mail className="w-4 h-4 md:w-5 md:h-5 text-gray-500 mr-2 md:mr-3 flex-shrink-0" />
+              <span className="text-sm md:text-base break-all">{contact?.email || "Not provided"}</span>
             </div>
             <div className="flex items-center">
-              <Globe className="w-5 h-5 text-gray-500 mr-3" />
+              <Globe className="w-4 h-4 md:w-5 md:h-5 text-gray-500 mr-2 md:mr-3 flex-shrink-0" />
               <a
                 href={contact?.website || "#"}
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 hover:underline text-sm md:text-base break-all"
               >
                 {contact?.website || "Not provided"}
               </a>
             </div>
           </div>
 
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-4">Availability</h3>
-            <div className="flex items-center mb-3">
-              <Calendar className="w-5 h-5 text-gray-500 mr-3" />
-              <span>{(availability?.days || []).join(", ")}</span>
+          <div className="mt-6 md:mt-8">
+            <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Availability</h3>
+            <div className="flex items-center mb-2 md:mb-3">
+              <Calendar className="w-4 h-4 md:w-5 md:h-5 text-gray-500 mr-2 md:mr-3 flex-shrink-0" />
+              <span className="text-sm md:text-base">{(availability?.days || []).join(", ")}</span>
             </div>
             <div className="flex items-center">
-              <Clock className="w-5 h-5 text-gray-500 mr-3" />
-              <span>{availability?.hours || "Not specified"}</span>
+              <Clock className="w-4 h-4 md:w-5 md:h-5 text-gray-500 mr-2 md:mr-3 flex-shrink-0" />
+              <span className="text-sm md:text-base">{availability?.hours || "Not specified"}</span>
             </div>
           </div>
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-4">Why Choose Us</h3>
+          <div className="mt-6 md:mt-8">
+            <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Why Choose Us</h3>
             {(() => {
               const items = Array.isArray(whyChooseUs)
                 ? whyChooseUs

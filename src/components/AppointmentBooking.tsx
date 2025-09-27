@@ -120,37 +120,37 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
-      <h2 className="text-2xl font-bold mb-6">Schedule an Appointment</h2>
+    <div className="bg-white rounded-xl shadow-lg p-4 md:p-8 border border-gray-100">
+      <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Schedule an Appointment</h2>
 
       {/* Progress Steps */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6 md:mb-8 px-2">
         <div className="flex items-center">
           <div
-            className={`w-10 h-10 rounded-full flex items-center justify-center ${
+            className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-sm md:text-base ${
               step >= 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
             }`}
           >
             1
           </div>
           <div
-            className={`h-1 w-12 ${step >= 2 ? "bg-blue-600" : "bg-gray-200"}`}
+            className={`h-1 w-8 md:w-12 ${step >= 2 ? "bg-blue-600" : "bg-gray-200"}`}
           ></div>
         </div>
         <div className="flex items-center">
           <div
-            className={`w-10 h-10 rounded-full flex items-center justify-center ${
+            className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-sm md:text-base ${
               step >= 2 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
             }`}
           >
             2
           </div>
           <div
-            className={`h-1 w-12 ${step >= 3 ? "bg-blue-600" : "bg-gray-200"}`}
+            className={`h-1 w-8 md:w-12 ${step >= 3 ? "bg-blue-600" : "bg-gray-200"}`}
           ></div>
         </div>
         <div
-          className={`w-10 h-10 rounded-full flex items-center justify-center ${
+          className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-sm md:text-base ${
             step >= 3 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
           }`}
         >
@@ -161,11 +161,11 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
       {/* Step 1: Select Date & Time */}
       {step === 1 && (
         <div className="transition-opacity duration-300">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3">Appointment Type</h3>
-            <div className="flex gap-4">
+          <div className="mb-4 md:mb-6">
+            <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3">Appointment Type</h3>
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
               <button
-                className={`flex-1 py-3 px-4 rounded-lg border ${
+                className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg border text-sm md:text-base ${
                   appointmentType === "online"
                     ? "bg-blue-600 text-white border-blue-600"
                     : "bg-white text-gray-700 border-gray-300 hover:border-blue-500"
@@ -175,7 +175,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
                 Online Meeting
               </button>
               <button
-                className={`flex-1 py-3 px-4 rounded-lg border ${
+                className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg border text-sm md:text-base ${
                   appointmentType === "offline"
                     ? "bg-blue-600 text-white border-blue-600"
                     : "bg-white text-gray-700 border-gray-300 hover:border-blue-500"
@@ -214,11 +214,11 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
               <p className="text-sm text-gray-600 mb-2">Working hours:</p>
               <p className="font-medium">{availability.hours}</p>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {timeSlots.map((time) => (
                 <button
                   key={time}
-                  className={`p-2 text-sm border rounded-lg ${
+                  className={`p-2 text-xs md:text-sm border rounded-lg ${
                     selectedTime === time
                       ? "bg-blue-600 text-white border-blue-600"
                       : "bg-white text-gray-700 border-gray-300 hover:border-blue-500"
