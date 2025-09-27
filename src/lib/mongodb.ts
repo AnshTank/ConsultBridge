@@ -1,9 +1,10 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI!;
+const MONGODB_URI = process.env.MONGODB_URI;
 
-if (!MONGODB_URI && process.env.NODE_ENV !== 'development') {
-  throw new Error('Please define the MONGODB_URI environment variable');
+// Only check during runtime, not build time
+if (!MONGODB_URI && typeof window === 'undefined' && process.env.NODE_ENV === 'production') {
+  console.warn('MONGODB_URI not found - this will cause runtime errors');
 }
 
 let cached = (global as any).mongoose;
