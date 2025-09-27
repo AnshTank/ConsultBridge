@@ -43,15 +43,7 @@ const DashboardPage: React.FC = () => {
   // Lock scroll when confirmation modal is open
   useScrollLock(!!confirmModal);
 
-  // Handle sign out redirect smoothly
-  useEffect(() => {
-    // Only redirect if user was previously loaded and is now null (signed out)
-    // Don't redirect during initial loading
-    if (isLoaded && !user && loading === false) {
-      // User signed out, redirect to home with smooth transition
-      router.push('/');
-    }
-  }, [isLoaded, user, router, loading]);
+
 
 
 
