@@ -34,20 +34,7 @@ setInterval(async () => {
   });
 }, 5000); // Check every 5 seconds
 
-// Auto-complete payment processing after delay
-setTimeout(async () => {
-  bookingSessions.forEach(async (session, sessionId) => {
-    if (session.step === 'processing') {
-      try {
-        await bookingManager.completePaymentProcessing(session);
-        bookingSessions.delete(sessionId);
-      } catch (error) {
-        console.error('Auto-completion error:', error);
-        bookingSessions.delete(sessionId);
-      }
-    }
-  });
-}, 8000); // Complete after 8 seconds
+// Remove the global setTimeout as we now handle it per session
 
 function sanitizeInput(input: unknown): string {
   if (typeof input !== 'string') return '';
@@ -81,21 +68,41 @@ export async function POST(req: NextRequest) {
       try {
         // Handle payment processing completion
         if (bookingSession.step === 'processing') {
-          const completionResult = await bookingManager.completePaymentProcessing(bookingSession);
-          bookingSessions.delete(sessionId);
+          // Check if enough time has passed (5 seconds)
+          const timeSinceStart = Date.now() - (bookingSession.lastActivity || Date.now());
           
-          return NextResponse.json({
-            success: true,
-            error: null,
-            data: {
-              reply: completionResult.reply,
-              consultancies: [],
-              actionType: 'book',
-              needsBooking: false,
-              bookingData: completionResult.bookingData,
-              sessionId
-            }
-          });
+          if (timeSinceStart > 5000) {
+            const completionResult = await bookingManager.completePaymentProcessing(bookingSession);
+            bookingSessions.delete(sessionId);
+            
+            return NextResponse.json({
+              success: true,
+              error: null,
+              data: {
+                reply: completionResult.reply,
+                consultancies: [],
+                actionType: 'book',
+                needsBooking: false,
+                bookingData: completionResult.bookingData,
+                sessionId
+              }
+            });
+          } else {
+            // Still processing, return processing status
+            return NextResponse.json({
+              success: true,
+              error: null,
+              data: {
+                reply: "Processing payment...",
+                consultancies: [],
+                actionType: 'book',
+                needsBooking: true,
+                bookingData: bookingSession,
+                processingPayment: true,
+                sessionId
+              }
+            });
+          }
         }
         
         // Handle booking step  
@@ -106,7 +113,29 @@ export async function POST(req: NextRequest) {
         
         // Check if payment processing should start
         if (bookingResult.processingPayment) {
-          bookingSessions.set(sessionId, bookingResult.bookingData);
+          const sessionData = {
+            ...bookingResult.bookingData,
+            lastActivity: Date.now()
+          };
+          bookingSessions.set(sessionId, sessionData);
+          
+          // Auto-complete payment processing after 5 seconds
+          setTimeout(async () => {
+            try {
+              const currentSession = bookingSessions.get(sessionId);
+              if (currentSession && currentSession.step === 'processing') {
+                console.log('Auto-completing payment for session:', sessionId);
+                const completionResult = await bookingManager.completePaymentProcessing(currentSession);
+                bookingSessions.delete(sessionId);
+                
+                // Send completion message via WebSocket or polling mechanism
+                // For now, we'll rely on the client to poll for completion
+              }
+            } catch (error) {
+              console.error('Auto-completion error for session', sessionId, ':', error);
+              bookingSessions.delete(sessionId);
+            }
+          }, 5000);
           
           return NextResponse.json({
             success: true,

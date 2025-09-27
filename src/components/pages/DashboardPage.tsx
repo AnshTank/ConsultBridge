@@ -45,11 +45,13 @@ const DashboardPage: React.FC = () => {
 
   // Handle sign out redirect smoothly
   useEffect(() => {
-    if (isLoaded && !user) {
+    // Only redirect if user was previously loaded and is now null (signed out)
+    // Don't redirect during initial loading
+    if (isLoaded && !user && loading === false) {
       // User signed out, redirect to home with smooth transition
       router.push('/');
     }
-  }, [isLoaded, user, router]);
+  }, [isLoaded, user, router, loading]);
 
 
 

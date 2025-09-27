@@ -8,7 +8,14 @@ export class BookingManager {
     isComplete: boolean;
     processingPayment?: boolean;
   }> {
-    const session = this.bookingSessions.get(sessionId) || currentData || {};
+    const session = currentData || this.bookingSessions.get(sessionId) || {};
+    
+    console.log('Processing booking step:', {
+      sessionId,
+      step: session.step,
+      message,
+      availableDays: session.availableDays
+    });
     
     // Save session data
     this.bookingSessions.set(sessionId, session);
@@ -54,19 +61,29 @@ export class BookingManager {
       };
     }
     
-    // Check if it's a weekday (Monday-Friday)
+    // Check if the selected day is available
     const dayOfWeek = inputDate.getDay();
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
-      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const selectedDay = dayNames[dayOfWeek];
+    const availableDays = session.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    
+    console.log('Date validation:', {
+      selectedDay,
+      availableDays,
+      includes: availableDays.includes(selectedDay),
+      sessionStep: session.step
+    });
+    
+    if (!availableDays.includes(selectedDay)) {
+      const availableDaysText = this.formatAvailableDays(availableDays);
       return {
-        reply: `${message} is a ${dayNames[dayOfWeek]}. We're only available Monday to Friday. Please choose a weekday:`,
+        reply: `${message} is a ${selectedDay}. This consultant is only available on ${availableDaysText}. Please choose an available day:`,
         nextStep: 'date',
-        bookingData: session,
+        bookingData: { ...session, step: 'date' },
         isComplete: false
       };
     }
     
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const updatedSession = {
       ...session,
       date: message,
@@ -74,8 +91,10 @@ export class BookingManager {
       step: 'time'
     };
     
+    console.log('Date accepted, moving to time step:', updatedSession);
+    
     return {
-      reply: `Perfect! ${message} (${dayNames[dayOfWeek]}) is available.\n\nWhat time would you prefer? Available hours: 9:00 AM - 6:00 PM:`,
+      reply: `Perfect! ${message} (${selectedDay}) is available.\n\nWhat time would you prefer? Available hours: 9:00 AM - 6:00 PM:`,
       nextStep: 'time',
       bookingData: updatedSession,
       isComplete: false
@@ -88,22 +107,25 @@ export class BookingManager {
     
     if (!match) {
       return {
-        reply: "Please provide a valid time (e.g., 10:00 AM, 2:30 PM):",
+        reply: "Please provide a valid time (e.g., 10:00 AM, 2:30 PM, 14:30):",
         nextStep: 'time',
         bookingData: session,
         isComplete: false
       };
     }
     
-    // Validate business hours (9 AM - 6 PM)
     let hour = parseInt(match[1]);
     const minute = match[2] ? parseInt(match[2]) : 0;
     const period = match[3]?.toUpperCase();
     
-    if (period === 'PM' && hour !== 12) hour += 12;
-    if (period === 'AM' && hour === 12) hour = 0;
+    // Handle 12-hour format
+    if (period) {
+      if (period === 'PM' && hour !== 12) hour += 12;
+      if (period === 'AM' && hour === 12) hour = 0;
+    }
     
-    if (hour < 9 || hour >= 18) {
+    // Validate time range (9 AM - 6 PM)
+    if (hour < 9 || hour >= 18 || minute < 0 || minute >= 60) {
       return {
         reply: "Please choose a time between 9:00 AM and 6:00 PM:",
         nextStep: 'time',
@@ -112,25 +134,36 @@ export class BookingManager {
       };
     }
     
+    // Format time consistently
+    const formattedTime = this.formatTime(hour, minute);
+    
+    console.log('Time validation passed:', {
+      originalTime: message,
+      formattedTime,
+      sessionStep: session.step
+    });
+    
     // Check for conflicts with existing appointments
-    const conflict = await this.checkTimeConflict(session.userId, session.appointmentDate, message);
+    const conflict = await this.checkTimeConflict(session.userId, session.appointmentDate, formattedTime);
     if (conflict) {
       return {
-        reply: `You already have an appointment at ${message} on ${session.date}. Please choose a different time:`,
+        reply: `You already have an appointment at ${formattedTime} on ${session.date}. Please choose a different time:`,
         nextStep: 'time',
-        bookingData: session,
+        bookingData: { ...session, step: 'time' },
         isComplete: false
       };
     }
     
     const updatedSession = {
       ...session,
-      time: message,
+      time: formattedTime,
       step: 'type'
     };
     
+    console.log('Time accepted, moving to type step:', updatedSession);
+    
     return {
-      reply: `Perfect! ${message} on ${session.date}.\n\nHow would you prefer to meet?\n• Online (Video call)\n• Offline (In-person at office)`,
+      reply: `Perfect! ${formattedTime} on ${session.date}.\n\nHow would you prefer to meet?\n• Online (Video call)\n• Offline (In-person at office)`,
       nextStep: 'type',
       bookingData: updatedSession,
       isComplete: false
@@ -311,6 +344,21 @@ export class BookingManager {
       bookingData: { ...session, step: 'date' },
       isComplete: false
     };
+  }
+
+  private formatTime(hour: number, minute: number): string {
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+    const displayMinute = minute.toString().padStart(2, '0');
+    return `${displayHour}:${displayMinute} ${period}`;
+  }
+
+  private formatAvailableDays(days: string[]): string {
+    if (days.length <= 2) {
+      return days.join(' and ');
+    } else {
+      return days.slice(0, -1).join(', ') + ' and ' + days[days.length - 1];
+    }
   }
 
   saveBookingSession(sessionId: string, data: any) {

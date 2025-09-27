@@ -204,7 +204,8 @@ Rules:
     const consultancies = await this.searchConsultancies('career');
     
     if (consultancies.length > 0) {
-      reply += `\n\nI found ${consultancies.length} career experts who can help:`;
+      const displayCount = Math.min(consultancies.length, 3);
+      reply += `\n\nI found ${displayCount} career experts who can help:`;
       return {
         reply,
         consultancies: consultancies.slice(0, 3),
@@ -228,8 +229,9 @@ Rules:
       // If no specific category, search all consultancies
       const consultancies = await this.searchConsultancies('');
       if (consultancies.length > 0) {
+        const displayCount = Math.min(consultancies.length, 3);
         return {
-          reply: `I found ${consultancies.length} verified consultants for you:`,
+          reply: `I found ${displayCount} verified consultants for you:`,
           consultancies: consultancies.slice(0, 3),
           actionType: 'search',
           needsBooking: false
@@ -247,7 +249,8 @@ Rules:
     
     if (consultancies.length > 0) {
       const categoryName = category || 'expert';
-      const reply = `Great! I found ${consultancies.length} ${categoryName} consultants for you:`;
+      const displayCount = Math.min(consultancies.length, 3);
+      const reply = `Great! I found ${displayCount} ${categoryName} consultants for you:`;
       return {
         reply,
         consultancies: consultancies.slice(0, 3),
@@ -288,8 +291,12 @@ Rules:
       };
     }
     
+    // Get actual availability from consultant data
+    const availableDays = this.getAvailableDays(consultant);
+    const availableHours = consultant.availability?.hours || '9:00 AM - 6:00 PM';
+    
     return {
-      reply: `Perfect! I'll help you book with ${consultant.name}.\n\n📅 **Available Days:** Monday to Friday\n🕐 **Available Hours:** 9:00 AM - 6:00 PM\n💰 **Rate:** ₹${consultant.price || consultant.pricing?.hourlyRate || 'Contact for pricing'}/hour\n\nPlease provide your preferred date (format: DD/MM/YYYY):`,
+      reply: `Perfect! I'll help you book with ${consultant.name}.\n\n📅 **Available Days:** ${availableDays}\n🕐 **Available Hours:** ${availableHours}\n💰 **Rate:** ₹${consultant.price || consultant.pricing?.hourlyRate || 'Contact for pricing'}/hour\n\nPlease provide your preferred date (format: DD/MM/YYYY):`,
       consultancies: [],
       actionType: 'book',
       needsBooking: true,
@@ -298,7 +305,8 @@ Rules:
         consultantName: consultant.name, 
         consultantPrice: consultant.price || consultant.pricing?.hourlyRate || '100',
         userId: userId,
-        step: 'date'
+        step: 'date',
+        availableDays: consultant.availability?.days || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
       }
     };
   }
@@ -474,6 +482,28 @@ Rules:
     } catch (error) {
       console.error('Get user bookings error:', error);
       return [];
+    }
+  }
+
+  private getAvailableDays(consultant: any): string {
+    if (!consultant.availability?.days || consultant.availability.days.length === 0) {
+      return 'Monday to Friday';
+    }
+    
+    const days = consultant.availability.days;
+    const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    
+    // Sort days according to week order
+    const sortedDays = days.sort((a: string, b: string) => {
+      return dayOrder.indexOf(a) - dayOrder.indexOf(b);
+    });
+    
+    if (sortedDays.length <= 2) {
+      return sortedDays.join(' and ');
+    } else if (sortedDays.length === dayOrder.length) {
+      return 'All days';
+    } else {
+      return sortedDays.slice(0, -1).join(', ') + ' and ' + sortedDays[sortedDays.length - 1];
     }
   }
 
