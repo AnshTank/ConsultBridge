@@ -31,7 +31,7 @@ export async function GET() {
         chatSessions: "✅ Chat memory working",
         geminiApi: process.env.GEMINI_API_KEY ? "✅ Configured" : "⚠️ Not configured",
         environment: {
-          mongoUrl: process.env.MONGO_URL ? "✅ Set" : "❌ Missing",
+          mongoUrl: process.env.MONGODB_URI ? "✅ Set" : "❌ Missing",
           geminiKey: process.env.GEMINI_API_KEY ? "✅ Set" : "❌ Missing"
         }
       },
@@ -49,7 +49,7 @@ export async function GET() {
       checks: {
         mongodb: "❌ Connection failed",
         environment: {
-          mongoUrl: process.env.MONGO_URL ? "✅ Set" : "❌ Missing",
+          mongoUrl: process.env.MONGODB_URI ? "✅ Set" : "❌ Missing",
           geminiKey: process.env.GEMINI_API_KEY ? "✅ Set" : "❌ Missing"
         }
       },
