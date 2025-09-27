@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import Consultancy from '@/models/Consultancy';
+import connectDB from '../../../../../lib/mongodb';
+import Consultancy from '../../../../../models/Consultancy';
 
 export async function PUT(request: NextRequest) {
   try {
-    await dbConnect();
+    await connectDB();
     
     const { consultancyId, status, rejectionReason } = await request.json();
     
