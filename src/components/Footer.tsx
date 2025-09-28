@@ -3,6 +3,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useState } from "react";
+import Modal from "./Modal";
 
 const Footer = () => {
   const [showSocialLinks, setShowSocialLinks] = useState(false);
@@ -52,61 +53,66 @@ const Footer = () => {
             </div>
           </motion.div>
 
-          {/* Categories */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <h5 className="font-bold mb-3 md:mb-4 text-indigo-300 text-center md:text-left">Categories</h5>
-            <ul className="space-y-2">
-              {[
-                { name: "Browse All", href: "/categories" },
-                { name: "Business", href: "/category/business-strategy" },
-                { name: "Technology", href: "/category/technology" },
-                { name: "Legal", href: "/category/legal-advisory" }
-              ].map((item, index) => (
-                <li key={index}>
-                  <Link 
-                    href={item.href} 
-                    className="group inline-flex items-center justify-center md:justify-start text-gray-400 hover:text-white transition-colors duration-300 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-50 rounded px-1 py-1"
-                  >
-                    <span className="w-1 h-1 bg-gray-500 rounded-full mr-3 group-hover:bg-indigo-400 transition-colors"></span>
-                    <span>{item.name}</span>
-                    <ArrowRight className="w-3 h-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
+          {/* Categories & Company - Side by side on mobile */}
+          <div className="grid grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:contents">
+            {/* Categories */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-center md:text-left"
+            >
+              <h5 className="font-bold mb-2 md:mb-4 text-indigo-300 text-sm md:text-base">Categories</h5>
+              <ul className="space-y-1 md:space-y-2">
+                {[
+                  { name: "Browse All", href: "/categories" },
+                  { name: "Business", href: "/category/business-strategy" },
+                  { name: "Technology", href: "/category/technology" },
+                  { name: "Legal", href: "/category/legal-advisory" }
+                ].map((item, index) => (
+                  <li key={index}>
+                    <Link 
+                      href={item.href} 
+                      className="group inline-flex items-center text-gray-400 hover:text-white transition-colors duration-300 text-xs md:text-base focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-50 rounded px-1 py-1"
+                    >
+                      <span className="w-1 h-1 bg-gray-500 rounded-full mr-2 md:mr-3 group-hover:bg-indigo-400 transition-colors"></span>
+                      <span>{item.name}</span>
+                      <ArrowRight className="w-2 h-2 md:w-3 md:h-3 ml-1 md:ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
 
-          {/* Company */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            <h5 className="font-bold mb-3 md:mb-4 text-purple-300 text-center md:text-left">Company</h5>
-            <ul className="space-y-2">
-              {[
-                { name: "About", href: "/about" },
-                { name: "Contact", href: "/contact" },
-                { name: "Privacy", href: "/privacy" },
-                { name: "Terms", href: "/terms" }
-              ].map((item, index) => (
-                <li key={index}>
-                  <Link 
-                    href={item.href} 
-                    className="group inline-flex items-center justify-center md:justify-start text-gray-400 hover:text-white transition-colors duration-300 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-50 rounded px-1 py-1"
-                  >
-                    <span className="w-1 h-1 bg-gray-500 rounded-full mr-3 group-hover:bg-purple-400 transition-colors"></span>
-                    <span>{item.name}</span>
-                    <ArrowRight className="w-3 h-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
+            {/* Company */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="text-center md:text-left"
+            >
+              <h5 className="font-bold mb-2 md:mb-4 text-purple-300 text-sm md:text-base">Company</h5>
+              <ul className="space-y-1 md:space-y-2">
+                {[
+                  { name: "About", href: "/about" },
+                  { name: "Contact", href: "/contact" },
+                  { name: "Privacy", href: "/privacy" },
+                  { name: "Terms", href: "/terms" }
+                ].map((item, index) => (
+                  <li key={index}>
+                    <Link 
+                      href={item.href} 
+                      className="group inline-flex items-center text-gray-400 hover:text-white transition-colors duration-300 text-xs md:text-base focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-50 rounded px-1 py-1"
+                    >
+                      <span className="w-1 h-1 bg-gray-500 rounded-full mr-2 md:mr-3 group-hover:bg-purple-400 transition-colors"></span>
+                      <span>{item.name}</span>
+                      <ArrowRight className="w-2 h-2 md:w-3 md:h-3 ml-1 md:ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          </div>
 
           {/* Connect */}
           <motion.div
@@ -177,47 +183,33 @@ const Footer = () => {
         </motion.div>
       </div>
       
-      {/* Social Media Popup Modal */}
-      {showSocialLinks && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
-          onClick={() => setShowSocialLinks(false)}
-        >
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-gray-700"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-xl font-bold text-white mb-4 text-center">Follow Us</h3>
-            <div className="space-y-3">
-              {[
-                { name: "Twitter", href: "/coming-soon?platform=twitter", emoji: "🐦" },
-                { name: "LinkedIn", href: "/coming-soon?platform=linkedin", emoji: "💼" },
-                { name: "Facebook", href: "/coming-soon?platform=facebook", emoji: "👥" },
-                { name: "Instagram", href: "/coming-soon?platform=instagram", emoji: "📸" }
-              ].map((item, index) => (
-                <Link 
-                  key={index}
-                  href={item.href} 
-                  className="flex items-center gap-3 text-gray-300 hover:text-white bg-gray-700/50 hover:bg-gray-600/50 py-3 px-4 rounded-lg transition-all"
-                  onClick={() => setShowSocialLinks(false)}
-                >
-                  <span className="text-lg">{item.emoji}</span>
-                  <span className="font-medium">{item.name}</span>
-                  <ArrowRight className="w-4 h-4 ml-auto" />
-                </Link>
-              ))}
-            </div>
-            <button
+      {/* Social Media Modal */}
+      <Modal
+        isOpen={showSocialLinks}
+        onClose={() => setShowSocialLinks(false)}
+        title="Follow Us"
+        size="sm"
+      >
+        <div className="space-y-3">
+          {[
+            { name: "Twitter", href: "/coming-soon?platform=twitter", emoji: "🐦" },
+            { name: "LinkedIn", href: "/coming-soon?platform=linkedin", emoji: "💼" },
+            { name: "Facebook", href: "/coming-soon?platform=facebook", emoji: "👥" },
+            { name: "Instagram", href: "/coming-soon?platform=instagram", emoji: "📸" }
+          ].map((item, index) => (
+            <Link 
+              key={index}
+              href={item.href} 
+              className="flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-600/50 py-3 px-4 rounded-lg transition-all"
               onClick={() => setShowSocialLinks(false)}
-              className="w-full mt-4 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded-lg transition-colors"
             >
-              Close
-            </button>
-          </motion.div>
+              <span className="text-lg">{item.emoji}</span>
+              <span className="font-medium">{item.name}</span>
+              <ArrowRight className="w-4 h-4 ml-auto" />
+            </Link>
+          ))}
         </div>
-      )}
+      </Modal>
     </footer>
   );
 };
