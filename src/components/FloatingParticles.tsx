@@ -3,8 +3,7 @@
 const FloatingParticles = () => {
   const particlePositions = [
     { left: 10, top: 15 }, { left: 90, top: 20 }, { left: 20, top: 80 },
-    { left: 80, top: 85 }, { left: 50, top: 10 }, { left: 15, top: 50 },
-    { left: 85, top: 60 }, { left: 40, top: 90 }
+    { left: 80, top: 85 }
   ];
 
   return (

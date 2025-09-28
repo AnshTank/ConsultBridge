@@ -17,7 +17,7 @@ const Footer = () => {
 
       <div className="relative z-10 container mx-auto px-4 md:px-6 py-6 md:py-8">
         {/* Top Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-6 md:mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8 mb-6 md:mb-8">
           {/* Brand Section */}
           <motion.div
             className="text-center md:text-left"
@@ -52,60 +52,60 @@ const Footer = () => {
             </div>
           </motion.div>
 
-          {/* Categories & Company Side by Side */}
+          {/* Categories */}
           <motion.div
-            className="grid grid-cols-2 gap-4 md:gap-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            {/* Categories */}
-            <div>
-              <h5 className="font-bold mb-3 md:mb-4 text-indigo-300 text-center md:text-left">Categories</h5>
-              <ul className="space-y-2">
-                {[
-                  { name: "Browse All", href: "/categories" },
-                  { name: "Business", href: "/category/business-strategy" },
-                  { name: "Technology", href: "/category/technology" },
-                  { name: "Legal", href: "/category/legal-advisory" }
-                ].map((item, index) => (
-                  <li key={index}>
-                    <Link 
-                      href={item.href} 
-                      className="group flex items-center justify-center md:justify-start text-gray-400 hover:text-white transition-colors duration-300 text-xs md:text-sm"
-                    >
-                      <span className="w-1 h-1 bg-gray-500 rounded-full mr-2 group-hover:bg-indigo-400 transition-colors"></span>
-                      <span>{item.name}</span>
-                      <ArrowRight className="w-2 h-2 md:w-3 md:h-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <h5 className="font-bold mb-3 md:mb-4 text-indigo-300 text-center md:text-left">Categories</h5>
+            <ul className="space-y-2">
+              {[
+                { name: "Browse All", href: "/categories" },
+                { name: "Business", href: "/category/business-strategy" },
+                { name: "Technology", href: "/category/technology" },
+                { name: "Legal", href: "/category/legal-advisory" }
+              ].map((item, index) => (
+                <li key={index}>
+                  <Link 
+                    href={item.href} 
+                    className="group inline-flex items-center justify-center md:justify-start text-gray-400 hover:text-white transition-colors duration-300 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-50 rounded px-1 py-1"
+                  >
+                    <span className="w-1 h-1 bg-gray-500 rounded-full mr-3 group-hover:bg-indigo-400 transition-colors"></span>
+                    <span>{item.name}</span>
+                    <ArrowRight className="w-3 h-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
 
-            {/* Company */}
-            <div>
-              <h5 className="font-bold mb-3 md:mb-4 text-purple-300 text-center md:text-left">Company</h5>
-              <ul className="space-y-2">
-                {[
-                  { name: "About", href: "/about" },
-                  { name: "Contact", href: "/contact" },
-                  { name: "Privacy", href: "/privacy" },
-                  { name: "Terms", href: "/terms" }
-                ].map((item, index) => (
-                  <li key={index}>
-                    <Link 
-                      href={item.href} 
-                      className="group flex items-center justify-center md:justify-start text-gray-400 hover:text-white transition-colors duration-300 text-xs md:text-sm"
-                    >
-                      <span className="w-1 h-1 bg-gray-500 rounded-full mr-2 group-hover:bg-purple-400 transition-colors"></span>
-                      <span>{item.name}</span>
-                      <ArrowRight className="w-2 h-2 md:w-3 md:h-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {/* Company */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            <h5 className="font-bold mb-3 md:mb-4 text-purple-300 text-center md:text-left">Company</h5>
+            <ul className="space-y-2">
+              {[
+                { name: "About", href: "/about" },
+                { name: "Contact", href: "/contact" },
+                { name: "Privacy", href: "/privacy" },
+                { name: "Terms", href: "/terms" }
+              ].map((item, index) => (
+                <li key={index}>
+                  <Link 
+                    href={item.href} 
+                    className="group inline-flex items-center justify-center md:justify-start text-gray-400 hover:text-white transition-colors duration-300 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-50 rounded px-1 py-1"
+                  >
+                    <span className="w-1 h-1 bg-gray-500 rounded-full mr-3 group-hover:bg-purple-400 transition-colors"></span>
+                    <span>{item.name}</span>
+                    <ArrowRight className="w-3 h-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </motion.div>
 
           {/* Connect */}
@@ -138,7 +138,7 @@ const Footer = () => {
                 <li key={index}>
                   <Link 
                     href={item.href} 
-                    className="group flex items-center justify-center md:justify-start text-gray-400 hover:text-white transition-colors duration-300 text-sm md:text-base"
+                    className="group inline-flex items-center justify-center md:justify-start text-gray-400 hover:text-white transition-colors duration-300 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-opacity-50 rounded px-1 py-1"
                   >
                     <span className="w-1 h-1 bg-gray-500 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
                     <span>{item.name}</span>

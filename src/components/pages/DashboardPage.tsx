@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
-import { useScrollLock } from "../../hooks/useScrollLock";
+
 import {
   CalendarDays,
   Clock,
@@ -18,6 +18,7 @@ import {
 import Navbar from "../Navbar";
 import PageTransition from "../PageTransition";
 import SmartPageWrapper from "../SmartPageWrapper";
+import Modal from "../Modal";
 import {
   appointmentManager,
   AppointmentData,
@@ -40,8 +41,7 @@ const DashboardPage: React.FC = () => {
   const [pageTransition, setPageTransition] = useState(false);
   const appointmentsPerPage = 9;
 
-  // Lock scroll when confirmation modal is open
-  useScrollLock(!!confirmModal);
+
 
   // Check if appointment is expired
   const isAppointmentExpired = (appointment: AppointmentData) => {
@@ -61,7 +61,10 @@ const DashboardPage: React.FC = () => {
   const getDisplayStatus = (appointment: AppointmentData) => {
     if (appointment.status === "completed") return "completed";
     if (appointment.status === "cancelled") return "cancelled";
-    if (isAppointmentExpired(appointment) && (appointment.status === "confirmed" || appointment.status === "pending")) {
+    if (
+      isAppointmentExpired(appointment) &&
+      (appointment.status === "confirmed" || appointment.status === "pending")
+    ) {
       return "expired";
     }
     return appointment.status;
@@ -110,11 +113,14 @@ const DashboardPage: React.FC = () => {
         .includes(searchTerm.toLowerCase()) ||
       false;
     const displayStatus = getDisplayStatus(appointment);
-    const matchesFilter = filterStatus === "all" || displayStatus === filterStatus;
+    const matchesFilter =
+      filterStatus === "all" || displayStatus === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
-  const totalPages = Math.ceil(filteredAppointments.length / appointmentsPerPage);
+  const totalPages = Math.ceil(
+    filteredAppointments.length / appointmentsPerPage
+  );
   const startIndex = (currentPage - 1) * appointmentsPerPage;
   const paginatedAppointments = filteredAppointments.slice(
     startIndex,
@@ -124,13 +130,19 @@ const DashboardPage: React.FC = () => {
   // Stats with expiration logic
   const stats = {
     total: (appointments || []).length,
-    confirmed: (appointments || []).filter((a) => getDisplayStatus(a) === "confirmed").length,
-    pending: (appointments || []).filter((a) => getDisplayStatus(a) === "pending").length,
+    confirmed: (appointments || []).filter(
+      (a) => getDisplayStatus(a) === "confirmed"
+    ).length,
+    pending: (appointments || []).filter(
+      (a) => getDisplayStatus(a) === "pending"
+    ).length,
     cancelled: (appointments || []).filter((a) => {
       const status = getDisplayStatus(a);
       return status === "cancelled" || status === "expired";
     }).length,
-    completed: (appointments || []).filter((a) => getDisplayStatus(a) === "completed").length,
+    completed: (appointments || []).filter(
+      (a) => getDisplayStatus(a) === "completed"
+    ).length,
   };
 
   // Smooth page change
@@ -177,20 +189,20 @@ const DashboardPage: React.FC = () => {
     <SmartPageWrapper loadingMessage="📊 Loading your dashboard...">
       <PageTransition>
         <Navbar />
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-all duration-300">
           <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
-            {/* Dashboard Header */}
+            {/* Dashboard Header - Welcome Box with Glow */}
             <motion.div
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-8 flex flex-col md:flex-row items-center justify-between mb-6 md:mb-8"
+              className="bg-white dark:bg-dark-card rounded-xl shadow-lg dark:shadow-neon-lg border border-gray-200 dark:border-neon-blue/30 p-4 md:p-8 flex flex-col md:flex-row items-center justify-between mb-6 md:mb-8 transition-all duration-300 dark:ring-1 dark:ring-neon-blue/20"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
               <div className="text-center md:text-left mb-4 md:mb-0">
-                <h2 className="text-xl md:text-3xl font-bold text-gray-800">
+                <h2 className="text-xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 transition-all duration-300">
                   Welcome back, {userName}!
                 </h2>
-                <p className="text-sm md:text-lg text-gray-600 mt-1">
+                <p className="text-sm md:text-lg text-gray-600 dark:text-gray-400 mt-1 transition-all duration-300">
                   View your booked appointments.
                 </p>
               </div>
@@ -210,86 +222,102 @@ const DashboardPage: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* Stats Cards */}
+            {/* Stats Cards - No Glow */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-6 mt-6 md:mt-8 mb-6 md:mb-8">
               <motion.div
-                className="bg-white rounded-xl shadow-lg p-3 md:p-6 border-l-4 border-indigo-500"
+                className="bg-white dark:bg-dark-card rounded-xl shadow-md border border-gray-200 dark:border-dark-border p-3 md:p-6 border-l-4 border-indigo-500 dark:border-l-neon-blue transition-all duration-300"
                 whileHover={{ scale: 1.02 }}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-600 text-xs md:text-sm">Total</p>
-                    <p className="text-lg md:text-2xl font-bold text-gray-800">{stats.total}</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm transition-all duration-300">Total</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-800 dark:text-gray-100 transition-all duration-300">
+                      {stats.total}
+                    </p>
                   </div>
-                  <CalendarDays className="w-6 h-6 md:w-8 md:h-8 text-indigo-500" />
+                  <CalendarDays className="w-6 h-6 md:w-8 md:h-8 text-indigo-500 dark:text-neon-blue transition-all duration-300" />
                 </div>
               </motion.div>
               <motion.div
-                className="bg-white rounded-xl shadow-lg p-3 md:p-6 border-l-4 border-green-500"
+                className="bg-white dark:bg-dark-card rounded-xl shadow-md border border-gray-200 dark:border-dark-border p-3 md:p-6 border-l-4 border-green-500 dark:border-l-green-400 transition-all duration-300"
                 whileHover={{ scale: 1.02 }}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-600 text-xs md:text-sm">Confirmed</p>
-                    <p className="text-lg md:text-2xl font-bold text-gray-800">{stats.confirmed}</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm transition-all duration-300">
+                      Confirmed
+                    </p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-800 dark:text-gray-100 transition-all duration-300">
+                      {stats.confirmed}
+                    </p>
                   </div>
-                  <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-green-500" />
+                  <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-green-500 dark:text-green-400" />
                 </div>
               </motion.div>
               <motion.div
-                className="bg-white rounded-xl shadow-lg p-3 md:p-6 border-l-4 border-yellow-500"
+                className="bg-white dark:bg-dark-card rounded-xl shadow-md border border-gray-200 dark:border-dark-border p-3 md:p-6 border-l-4 border-yellow-500 dark:border-l-yellow-400 transition-all duration-300"
                 whileHover={{ scale: 1.02 }}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-600 text-xs md:text-sm">Pending</p>
-                    <p className="text-lg md:text-2xl font-bold text-gray-800">{stats.pending}</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm transition-all duration-300">Pending</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-800 dark:text-gray-100 transition-all duration-300">
+                      {stats.pending}
+                    </p>
                   </div>
-                  <Clock className="w-6 h-6 md:w-8 md:h-8 text-yellow-500" />
+                  <Clock className="w-6 h-6 md:w-8 md:h-8 text-yellow-500 dark:text-yellow-400" />
                 </div>
               </motion.div>
               <motion.div
-                className="bg-white rounded-xl shadow-lg p-3 md:p-6 border-l-4 border-blue-500"
+                className="bg-white dark:bg-dark-card rounded-xl shadow-md border border-gray-200 dark:border-dark-border p-3 md:p-6 border-l-4 border-blue-500 dark:border-l-blue-400 transition-all duration-300"
                 whileHover={{ scale: 1.02 }}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-600 text-xs md:text-sm">Completed</p>
-                    <p className="text-lg md:text-2xl font-bold text-gray-800">{stats.completed}</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm transition-all duration-300">
+                      Completed
+                    </p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-800 dark:text-gray-100 transition-all duration-300">
+                      {stats.completed}
+                    </p>
                   </div>
-                  <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-blue-500" />
+                  <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-blue-500 dark:text-blue-400" />
                 </div>
               </motion.div>
               <motion.div
-                className="bg-white rounded-xl shadow-lg p-3 md:p-6 border-l-4 border-red-500"
+                className="bg-white dark:bg-dark-card rounded-xl shadow-md border border-gray-200 dark:border-dark-border p-3 md:p-6 border-l-4 border-red-500 dark:border-l-red-400 transition-all duration-300"
                 whileHover={{ scale: 1.02 }}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-600 text-xs md:text-sm">Cancelled</p>
-                    <p className="text-lg md:text-2xl font-bold text-gray-800">{stats.cancelled}</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm transition-all duration-300">
+                      Cancelled
+                    </p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-800 dark:text-gray-100 transition-all duration-300">
+                      {stats.cancelled}
+                    </p>
                   </div>
-                  <XCircle className="w-6 h-6 md:w-8 md:h-8 text-red-500" />
+                  <XCircle className="w-6 h-6 md:w-8 md:h-8 text-red-500 dark:text-red-400" />
                 </div>
               </motion.div>
             </div>
 
             {/* Search and Filter */}
-            <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6 md:mb-8">
+            <div className="bg-white dark:bg-dark-card rounded-xl shadow-md border border-gray-200 dark:border-dark-border p-4 md:p-6 mb-6 md:mb-8 transition-all duration-300">
               <div className="flex flex-col md:flex-row gap-3 md:gap-4 items-stretch md:items-center justify-between">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     type="text"
                     placeholder="Search appointments..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-dark-surface text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-300"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
                   <select
-                    className="px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm md:text-base"
+                    className="px-3 md:px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm md:text-base bg-white dark:bg-dark-surface text-gray-900 dark:text-gray-100 transition-all duration-300"
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
                   >
@@ -312,67 +340,97 @@ const DashboardPage: React.FC = () => {
 
             {/* Appointments Section */}
             <div>
-              <h3 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6">
+              <h3 className="text-xl md:text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4 md:mb-6 transition-all duration-300">
                 Your Appointments ({filteredAppointments.length})
               </h3>
 
               {paginatedAppointments.length > 0 ? (
-                <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 transition-opacity duration-150 ${
-                  pageTransition ? "opacity-50" : "opacity-100"
-                }`}>
+                <div
+                  className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 transition-opacity duration-150 ${
+                    pageTransition ? "opacity-50" : "opacity-100"
+                  }`}
+                >
                   {paginatedAppointments.map((appointment, index) => {
                     const displayStatus = getDisplayStatus(appointment);
-                    
+
                     return (
                       <motion.div
                         key={appointment._id}
-                        className="bg-white p-4 md:p-6 rounded-2xl shadow-lg border border-gray-200 hover:scale-105 transition-all"
+                        className="bg-white dark:bg-dark-card p-4 md:p-6 rounded-2xl shadow-md border border-gray-200 dark:border-dark-border hover:scale-105 transition-all duration-300"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.4, delay: index * 0.1 }}
                       >
-                        <h4 className="text-lg md:text-xl font-semibold text-gray-900">
-                          {(appointment as any).consultancyName || "Appointment"}
+                        <h4 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100 transition-all duration-300">
+                          {(appointment as any).consultancyName ||
+                            "Appointment"}
                         </h4>
-                        <p className="text-xs md:text-sm text-gray-500 mb-3 md:mb-4">
+                        <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-3 md:mb-4 transition-all duration-300">
                           {appointment.message || "Consultation"}
                         </p>
 
-                        <div className="flex items-center gap-2 text-gray-600 mb-2 text-sm md:text-base">
-                          <CalendarDays className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
-                          <p>{new Date(appointment.appointmentDate).toLocaleDateString()}</p>
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-2 text-sm md:text-base transition-all duration-300">
+                          <CalendarDays className="w-4 h-4 md:w-5 md:h-5 text-blue-500 dark:text-blue-400" />
+                          <p>
+                            {new Date(
+                              appointment.appointmentDate
+                            ).toLocaleDateString()}
+                          </p>
                         </div>
-                        
-                        <div className="flex items-center gap-2 text-gray-600 mb-2 text-sm md:text-base">
-                          <Clock className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
+
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-2 text-sm md:text-base transition-all duration-300">
+                          <Clock className="w-4 h-4 md:w-5 md:h-5 text-purple-500 dark:text-purple-400" />
                           <p>{appointment.appointmentTime}</p>
                         </div>
 
-                        <div className="flex items-center gap-2 text-gray-600 mb-4 text-sm md:text-base">
-                          <Video className="w-4 h-4 md:w-5 md:h-5 text-indigo-500" />
-                          <p>{(appointment as any).appointmentType === "online" ? "Online Meeting" : "Office Visit"}</p>
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-4 text-sm md:text-base transition-all duration-300">
+                          <Video className="w-4 h-4 md:w-5 md:h-5 text-indigo-500 dark:text-indigo-400" />
+                          <p>
+                            {(appointment as any).appointmentType === "online"
+                              ? "Online Meeting"
+                              : "Office Visit"}
+                          </p>
                         </div>
 
                         <div className="flex items-center gap-2 mb-4">
-                          {displayStatus === "confirmed" && <CheckCircle className="w-6 h-6 text-green-500" />}
-                          {displayStatus === "pending" && <Clock className="w-6 h-6 text-yellow-500" />}
-                          {displayStatus === "completed" && <CheckCircle className="w-6 h-6 text-green-500" />}
-                          {displayStatus === "expired" && <XCircle className="w-6 h-6 text-gray-500" />}
-                          {displayStatus === "cancelled" && <XCircle className="w-6 h-6 text-red-500" />}
-                          
-                          <p className={`text-sm md:text-lg font-semibold capitalize ${
-                            displayStatus === "confirmed" ? "text-green-600" :
-                            displayStatus === "pending" ? "text-yellow-600" :
-                            displayStatus === "completed" ? "text-green-600" :
-                            displayStatus === "expired" ? "text-gray-600" : "text-red-600"
-                          }`}>
+                          {displayStatus === "confirmed" && (
+                            <CheckCircle className="w-6 h-6 text-green-500" />
+                          )}
+                          {displayStatus === "pending" && (
+                            <Clock className="w-6 h-6 text-yellow-500" />
+                          )}
+                          {displayStatus === "completed" && (
+                            <CheckCircle className="w-6 h-6 text-green-500" />
+                          )}
+                          {displayStatus === "expired" && (
+                            <XCircle className="w-6 h-6 text-gray-500" />
+                          )}
+                          {displayStatus === "cancelled" && (
+                            <XCircle className="w-6 h-6 text-red-500" />
+                          )}
+
+                          <p
+                            className={`text-sm md:text-lg font-semibold capitalize transition-all duration-300 ${
+                              displayStatus === "confirmed"
+                                ? "text-green-600 dark:text-green-400"
+                                : displayStatus === "pending"
+                                  ? "text-yellow-600 dark:text-yellow-400"
+                                  : displayStatus === "completed"
+                                    ? "text-green-600 dark:text-green-400"
+                                    : displayStatus === "expired"
+                                      ? "text-gray-600 dark:text-gray-400"
+                                      : "text-red-600 dark:text-red-400"
+                            }`}
+                          >
                             {displayStatus}
                           </p>
                         </div>
 
                         {displayStatus === "completed" && (
                           <div className="text-center py-2">
-                            <p className="text-green-600 font-medium">✅ Consultation Completed</p>
+                            <p className="text-green-600 dark:text-green-400 font-medium transition-all duration-300">
+                              ✅ Consultation Completed
+                            </p>
                           </div>
                         )}
 
@@ -383,11 +441,13 @@ const DashboardPage: React.FC = () => {
                                 setConfirmModal({
                                   id: appointment._id,
                                   action: "remove",
-                                  name: (appointment as any).consultancyName || "Appointment",
+                                  name:
+                                    (appointment as any).consultancyName ||
+                                    "Appointment",
                                 })
                               }
                               disabled={actionLoading === appointment._id}
-                              className="w-full bg-gray-50 text-gray-600 px-2 md:px-3 py-2 rounded-lg text-xs md:text-sm font-medium hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                              className="w-full bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 md:px-3 py-2 rounded-lg text-xs md:text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50"
                             >
                               <Trash2 className="w-4 h-4" />
                               Remove
@@ -395,49 +455,54 @@ const DashboardPage: React.FC = () => {
                           </div>
                         )}
 
-                        {displayStatus !== "completed" && displayStatus !== "expired" && (
-                          <div className="flex flex-col sm:flex-row gap-2">
-                            {displayStatus !== "cancelled" && (
+                        {displayStatus !== "completed" &&
+                          displayStatus !== "expired" && (
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              {displayStatus !== "cancelled" && (
+                                <button
+                                  onClick={() =>
+                                    setConfirmModal({
+                                      id: appointment._id,
+                                      action: "cancel",
+                                      name:
+                                        (appointment as any).consultancyName ||
+                                        "Appointment",
+                                    })
+                                  }
+                                  disabled={actionLoading === appointment._id}
+                                  className="flex-1 bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2 md:px-3 py-2 rounded-lg text-xs md:text-sm font-medium hover:bg-orange-100 dark:hover:bg-orange-800/40 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                  <X className="w-4 h-4" />
+                                  Withdraw
+                                </button>
+                              )}
+
                               <button
                                 onClick={() =>
                                   setConfirmModal({
                                     id: appointment._id,
-                                    action: "cancel",
-                                    name: (appointment as any).consultancyName || "Appointment",
+                                    action: "remove",
+                                    name:
+                                      (appointment as any).consultancyName ||
+                                      "Appointment",
                                   })
                                 }
                                 disabled={actionLoading === appointment._id}
-                                className="flex-1 bg-orange-50 text-orange-600 px-2 md:px-3 py-2 rounded-lg text-xs md:text-sm font-medium hover:bg-orange-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                className="flex-1 bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 md:px-3 py-2 rounded-lg text-xs md:text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50"
                               >
-                                <X className="w-4 h-4" />
-                                Withdraw
+                                <Trash2 className="w-4 h-4" />
+                                Remove
                               </button>
-                            )}
-
-                            <button
-                              onClick={() =>
-                                setConfirmModal({
-                                  id: appointment._id,
-                                  action: "remove",
-                                  name: (appointment as any).consultancyName || "Appointment",
-                                })
-                              }
-                              disabled={actionLoading === appointment._id}
-                              className="flex-1 bg-gray-50 text-gray-600 px-2 md:px-3 py-2 rounded-lg text-xs md:text-sm font-medium hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              Remove
-                            </button>
-                          </div>
-                        )}
+                            </div>
+                          )}
                       </motion.div>
                     );
                   })}
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <CalendarDays className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 text-lg mb-2">
+                  <CalendarDays className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4 transition-all duration-300" />
+                  <p className="text-gray-500 dark:text-gray-400 text-lg mb-2 transition-all duration-300">
                     {searchTerm || filterStatus !== "all"
                       ? "No appointments match your search."
                       : "No appointments yet."}
@@ -458,7 +523,7 @@ const DashboardPage: React.FC = () => {
                     <button
                       onClick={() => changePage(Math.max(currentPage - 1, 1))}
                       disabled={currentPage === 1 || pageTransition}
-                      className="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="px-3 py-2 rounded-lg bg-white dark:bg-dark-card border border-gray-300 dark:border-dark-border text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-surface disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                     >
                       Previous
                     </button>
@@ -468,10 +533,10 @@ const DashboardPage: React.FC = () => {
                           key={page}
                           onClick={() => changePage(page)}
                           disabled={pageTransition}
-                          className={`px-3 py-2 rounded-lg transition-all ${
+                          className={`px-3 py-2 rounded-lg transition-all duration-300 ${
                             currentPage === page
                               ? "bg-indigo-500 text-white"
-                              : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                              : "bg-white dark:bg-dark-card border border-gray-300 dark:border-dark-border text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-surface"
                           } disabled:opacity-50`}
                         >
                           {page}
@@ -483,7 +548,7 @@ const DashboardPage: React.FC = () => {
                         changePage(Math.min(currentPage + 1, totalPages))
                       }
                       disabled={currentPage === totalPages || pageTransition}
-                      className="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="px-3 py-2 rounded-lg bg-white dark:bg-dark-card border border-gray-300 dark:border-dark-border text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-surface disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                     >
                       Next
                     </button>
@@ -494,67 +559,40 @@ const DashboardPage: React.FC = () => {
           </div>
 
           {/* Confirmation Modal */}
-          {confirmModal && (
-            <motion.div
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setConfirmModal(null)}
-            >
-              <motion.div
-                className="bg-white rounded-lg p-4 md:p-6 max-w-md w-full mx-4"
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                onClick={(e) => e.stopPropagation()}
+          <Modal
+            isOpen={!!confirmModal}
+            onClose={() => setConfirmModal(null)}
+            title={confirmModal?.action === "cancel" ? "Withdraw Appointment?" : "Remove Appointment?"}
+            showCloseButton={false}
+          >
+            <p className="text-gray-600 dark:text-gray-400 mb-6 transition-all duration-300">
+              {confirmModal?.action === "cancel"
+                ? `Cancel your appointment with ${confirmModal?.name}?`
+                : `Permanently remove ${confirmModal?.name} from your list?`}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="flex-1 px-4 py-2 bg-gray-100 dark:bg-dark-surface text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-dark-border transition-all duration-300"
               >
-                <motion.h3
-                  className="text-lg font-semibold mb-4"
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-                >
-                  {confirmModal.action === "cancel" ? "Withdraw Appointment?" : "Remove Appointment?"}
-                </motion.h3>
-                <motion.p
-                  className="text-gray-600 mb-6"
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                >
-                  {confirmModal.action === "cancel"
-                    ? `Cancel your appointment with ${confirmModal.name}?`
-                    : `Permanently remove ${confirmModal.name} from your list?`}
-                </motion.p>
-                <motion.div
-                  className="flex gap-3"
-                  initial={{ y: 30, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-                >
-                  <button
-                    onClick={() => setConfirmModal(null)}
-                    className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                      executeAction(confirmModal.id, confirmModal.action);
-                      setConfirmModal(null);
-                    }}
-                    className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors ${
-                      confirmModal.action === "cancel" ? "bg-red-500 hover:bg-red-600" : "bg-gray-500 hover:bg-gray-600"
-                    }`}
-                  >
-                    {confirmModal.action === "cancel" ? "Withdraw" : "Remove"}
-                  </button>
-                </motion.div>
-              </motion.div>
-            </motion.div>
-          )}
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (confirmModal) {
+                    executeAction(confirmModal.id, confirmModal.action);
+                  }
+                }}
+                className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors ${
+                  confirmModal?.action === "cancel"
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-gray-500 hover:bg-gray-600"
+                }`}
+              >
+                {confirmModal?.action === "cancel" ? "Withdraw" : "Remove"}
+              </button>
+            </div>
+          </Modal>
         </div>
       </PageTransition>
     </SmartPageWrapper>

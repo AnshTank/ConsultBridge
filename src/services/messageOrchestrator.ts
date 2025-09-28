@@ -69,23 +69,22 @@ export class MessageOrchestrator {
 
     if (isBookingFlow) {
       // Handle booking flow
-      const bookingResult = await this.bookingFlowManager.processBookingFlow(
+      const bookingResult = await this.bookingFlowManager.processBookingStep(
         userMessage,
-        context.currentIntent || 'initial',
-        (context as any).bookingData || {},
-        context.lastConsultancies || []
+        sessionId || 'default',
+        (context as any).bookingData || {}
       );
 
       result = {
-        response: bookingResult.response,
-        actionType: bookingResult.nextState,
+        response: bookingResult.reply,
+        actionType: bookingResult.isComplete ? 'booking_completed' : 'booking',
         consultancies: [],
-        needsBooking: bookingResult.needsInput,
+        needsBooking: !bookingResult.isComplete,
         nextSteps: [],
         awaitingConsent: false,
         confidence: 0.9,
         bookingData: bookingResult.bookingData,
-        bookingOptions: bookingResult.options
+        processingPayment: bookingResult.processingPayment
       };
     } else {
       // Regular processing

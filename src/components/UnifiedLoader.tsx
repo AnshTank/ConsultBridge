@@ -40,7 +40,14 @@ export default function UnifiedLoader({
       {(!isClient || isLoading) ? (
         <LoadingScreen message={message} isHomePage={isHomePage} isFadingOut={isFadingOut} />
       ) : (
-        children
+        <div 
+          className="animate-in fade-in duration-1000 ease-out"
+          style={{
+            animation: 'fadeInUp 1s ease-out forwards'
+          }}
+        >
+          {children}
+        </div>
       )}
     </>
   );

@@ -2,6 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS Custom Properties for smooth transitions */
+:root {
+  --transition-duration: 300ms;
+  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Global smooth dark mode transitions */
+html {
+  transition: background-color var(--transition-duration) var(--transition-timing);
+}
+
+body {
+  transition: background-color var(--transition-duration) var(--transition-timing), color var(--transition-duration) var(--transition-timing);
+}
+
+/* Apply transitions to all elements that might change in dark mode */
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-duration: var(--transition-duration);
+  transition-timing-function: var(--transition-timing);
+}
+
+/* Ensure dark mode transitions are smooth */
+.dark,
+.dark *,
+.dark *::before,
+.dark *::after {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-duration: var(--transition-duration);
+  transition-timing-function: var(--transition-timing);
+}
+
+/* Prevent transitions on page load */
+.preload * {
+  transition: none !important;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
 /* Always reserve scrollbar space to prevent layout shift */
 html {
   overflow-y: scroll; /* Always keep scrollbar space */
@@ -33,7 +77,7 @@ body.loaded {
 
 /* Clean scrollbar styling */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 4px !important;
 }
 
 ::-webkit-scrollbar-track {
@@ -47,6 +91,23 @@ body.loaded {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.25);
+}
+
+/* Dark mode scrollbar - same width */
+.dark ::-webkit-scrollbar {
+  width: 4px !important;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 /* Background particles CSS animations for better performance */
@@ -79,4 +140,20 @@ body.loaded {
 @keyframes dhaba-float {
   0%, 100% { transform: translate(0, 0) scale(1); }
   50% { transform: translate(var(--x), var(--y)) scale(1.1); }
+}
+
+/* Smooth page appearance animation */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateY(15px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

@@ -74,18 +74,15 @@ function CategoriesPage() {
   return (
     <SmartPageWrapper loadingMessage="🔍 Exploring all categories...">
       <PageTransition>
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-          <Navbar />
-        </header>
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-all duration-300">
+        <Navbar />
 
         {/* Main Content */}
         <section className="container mx-auto px-4 md:px-6 py-12 md:py-16">
-          <h2 className="text-2xl md:text-4xl font-bold mb-4 text-center">
+          <h2 className="text-2xl md:text-4xl font-bold mb-4 text-center text-gray-900 dark:text-white transition-all duration-300">
             Explore All Categories
           </h2>
-          <p className="text-base md:text-xl text-gray-600 mb-8 md:mb-12 text-center max-w-3xl mx-auto px-4">
+          <p className="text-base md:text-xl text-gray-600 dark:text-gray-300 mb-8 md:mb-12 text-center max-w-3xl mx-auto px-4 transition-all duration-300">
             Browse through our comprehensive range of consultancy categories to
             find the perfect match for your specific needs.
           </p>
@@ -101,12 +98,12 @@ function CategoriesPage() {
                     .replace(/&/g, "%26");
                   window.location.href = `/category/${categorySlug}`;
                 }}
-                className="bg-white rounded-lg md:rounded-xl shadow-lg p-4 md:p-8 hover:shadow-xl transition-shadow cursor-pointer transform hover:-translate-y-1 transition-transform"
+                className="bg-white dark:bg-black rounded-lg md:rounded-xl shadow-lg dark:shadow-2xl p-4 md:p-8 hover:shadow-xl dark:hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] transition-all duration-300 cursor-pointer transform hover:-translate-y-2 hover:scale-105 border dark:border-white/20"
               >
                 <div className="text-4xl md:text-6xl mb-3 md:mb-4 text-center">{category.icon}</div>
-                <h3 className="text-lg md:text-2xl font-bold mb-2 text-center md:text-left">{category.title}</h3>
-                <p className="text-gray-600 mb-3 md:mb-4 text-sm md:text-base leading-relaxed">{category.description}</p>
-                <button className="text-blue-600 font-medium flex items-center justify-center md:justify-start w-full text-sm md:text-base">
+                <h3 className="text-lg md:text-2xl font-bold mb-2 text-center md:text-left text-gray-900 dark:text-white transition-all duration-300">{category.title}</h3>
+                <p className="text-gray-600 dark:text-white mb-3 md:mb-4 text-sm md:text-base leading-relaxed transition-all duration-300">{category.description}</p>
+                <button className="text-blue-600 dark:text-blue-400 font-medium flex items-center justify-center md:justify-start w-full text-sm md:text-base transition-all duration-300">
                   <span className="hidden md:inline">Explore {category.title}</span>
                   <span className="md:hidden">Explore</span>
                   <svg

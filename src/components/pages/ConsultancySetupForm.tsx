@@ -15,6 +15,8 @@ import {
   Clock,
   Calendar,
   ArrowRight,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../Navbar";
@@ -29,6 +31,9 @@ const ConsultancySetupForm: React.FC = () => {
   const [phoneCode, setPhoneCode] = useState("");
   const [consultancyId, setConsultancyId] = useState("");
   const [sentCodes, setSentCodes] = useState<{emailCode: string, phoneCode: string} | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showExistingPassword, setShowExistingPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     // Basic info
@@ -46,6 +51,7 @@ const ConsultancySetupForm: React.FC = () => {
     email: "",
     website: "",
     password: "",
+    confirmPassword: "",
 
     // Expertise (comma separated)
     expertise: "",
@@ -102,6 +108,13 @@ const ConsultancySetupForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate password confirmation for new consultancy
+    if (formType === "new" && formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match. Please check and try again.");
+      return;
+    }
+    
     setIsSubmitting(true);
 
     try {
@@ -657,15 +670,63 @@ const ConsultancySetupForm: React.FC = () => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               Password*
                             </label>
-                            <input
-                              type="password"
-                              name="password"
-                              value={formData.password}
-                              onChange={handleChange}
-                              required
-                              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                              placeholder="••••••••"
-                            />
+                            <div className="relative">
+                              <input
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                required
+                                className="block w-full px-3 pr-10 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="••••••••"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center hover:text-indigo-600 transition-colors"
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-5 w-5 text-gray-400" />
+                                ) : (
+                                  <Eye className="h-5 w-5 text-gray-400" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Confirm Password*
+                            </label>
+                            <div className="relative">
+                              <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                name="confirmPassword"
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                required
+                                className={`block w-full px-3 pr-10 py-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 ${
+                                  formData.confirmPassword && formData.password !== formData.confirmPassword
+                                    ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                                    : "border-gray-300"
+                                }`}
+                                placeholder="••••••••"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center hover:text-indigo-600 transition-colors"
+                              >
+                                {showConfirmPassword ? (
+                                  <EyeOff className="h-5 w-5 text-gray-400" />
+                                ) : (
+                                  <Eye className="h-5 w-5 text-gray-400" />
+                                )}
+                              </button>
+                            </div>
+                            {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                              <p className="mt-1 text-sm text-red-600">Passwords do not match</p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -754,15 +815,28 @@ const ConsultancySetupForm: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Password
                         </label>
-                        <input
-                          type="password"
-                          name="existingPassword"
-                          value={formData.existingPassword}
-                          onChange={handleChange}
-                          required
-                          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                          placeholder="••••••••"
-                        />
+                        <div className="relative">
+                          <input
+                            type={showExistingPassword ? "text" : "password"}
+                            name="existingPassword"
+                            value={formData.existingPassword}
+                            onChange={handleChange}
+                            required
+                            className="block w-full px-3 pr-10 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="••••••••"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowExistingPassword(!showExistingPassword)}
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center hover:text-indigo-600 transition-colors"
+                          >
+                            {showExistingPassword ? (
+                              <EyeOff className="h-5 w-5 text-gray-400" />
+                            ) : (
+                              <Eye className="h-5 w-5 text-gray-400" />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </motion.div>

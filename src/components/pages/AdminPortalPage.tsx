@@ -251,37 +251,37 @@ const AdminPortalPage: React.FC = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-lg p-8 w-96">
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex items-center justify-center transition-all duration-300">
+        <div className="bg-white dark:bg-dark-card dark:border dark:border-dark-border rounded-xl shadow-lg dark:shadow-neon-lg p-8 w-96 transition-all duration-300">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2 transition-all duration-300">
               Admin Login
             </h1>
-            <p className="text-gray-600">Access ConsultBridge Admin Portal</p>
+            <p className="text-gray-600 dark:text-gray-300 transition-all duration-300">Access ConsultBridge Admin Portal</p>
           </div>
           <form onSubmit={handleLogin}>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-all duration-300">
                 Username
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-neon-blue bg-white dark:bg-dark-surface dark:text-white transition-all duration-300"
                 placeholder="Enter username"
                 required
               />
             </div>
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-all duration-300">
                 Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-neon-blue bg-white dark:bg-dark-surface dark:text-white transition-all duration-300"
                 placeholder="Enter password"
                 required
               />
@@ -293,7 +293,7 @@ const AdminPortalPage: React.FC = () => {
             )}
             <button
               type="submit"
-              className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors"
+              className="w-full bg-indigo-600 dark:bg-neon-blue text-white py-2 px-4 rounded-lg hover:bg-indigo-700 dark:hover:bg-neon-cyan transition-all duration-300"
             >
               Login
             </button>
@@ -305,14 +305,14 @@ const AdminPortalPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex items-center justify-center transition-all duration-300">
+        <div className="text-xl text-gray-600 dark:text-gray-300 transition-all duration-300">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-dark-bg dark:via-dark-bg dark:to-dark-bg transition-all duration-300">
       {/* Move modals outside of .container */}
       {showDetailsModal && selectedConsultancy && (
         <>
@@ -703,7 +703,7 @@ const AdminPortalPage: React.FC = () => {
       <div className="container mx-auto px-6 py-8">
         {/* Enhanced Header */}
         <motion.div
-          className="bg-white rounded-2xl shadow-xl border border-indigo-100 p-8 mb-8 relative overflow-hidden"
+          className="bg-white dark:bg-dark-card dark:border dark:border-dark-border rounded-2xl shadow-xl dark:shadow-neon-lg border border-indigo-100 dark:border-dark-border p-8 mb-8 relative overflow-hidden transition-all duration-300"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
@@ -711,15 +711,15 @@ const AdminPortalPage: React.FC = () => {
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400 to-indigo-500 rounded-full translate-y-12 -translate-x-12 opacity-10"></div>
           <div className="relative z-10 flex justify-between items-center">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-neon-blue dark:to-neon-purple bg-clip-text text-transparent mb-3">
                 🏢 ConsultBridge Admin
               </h1>
-              <p className="text-gray-600 text-lg">
+              <p className="text-gray-600 dark:text-gray-300 text-lg transition-all duration-300">
                 Advanced Consultancy Management System
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm text-gray-500">System Online</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400 transition-all duration-300">System Online</span>
               </div>
             </div>
             <button
@@ -736,61 +736,61 @@ const AdminPortalPage: React.FC = () => {
 
         {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-8">
-          <motion.div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl md:rounded-2xl shadow-xl p-3 md:p-6 border border-blue-200 hover:shadow-2xl transition-all duration-300">
+          <motion.div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl md:rounded-2xl shadow-xl dark:shadow-neon-md p-3 md:p-6 border border-blue-200 dark:border-blue-700 hover:shadow-2xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-600 text-xs md:text-sm font-medium">📊 Total</p>
-                <p className="text-xl md:text-3xl font-bold text-blue-800">
+                <p className="text-blue-600 dark:text-blue-400 text-xs md:text-sm font-medium transition-all duration-300">📊 Total</p>
+                <p className="text-xl md:text-3xl font-bold text-blue-800 dark:text-blue-300 transition-all duration-300">
                   {stats.total}
                 </p>
               </div>
-              <div className="bg-blue-500 p-3 rounded-full">
+              <div className="bg-blue-500 dark:bg-blue-600 p-3 rounded-full transition-all duration-300">
                 <Users className="w-6 h-6 text-white" />
               </div>
             </div>
           </motion.div>
 
-          <motion.div className="bg-gradient-to-br from-yellow-50 to-orange-100 rounded-2xl shadow-xl p-6 border border-yellow-200 hover:shadow-2xl transition-all duration-300">
+          <motion.div className="bg-gradient-to-br from-yellow-50 to-orange-100 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-2xl shadow-xl dark:shadow-neon-md p-6 border border-yellow-200 dark:border-yellow-700 hover:shadow-2xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-yellow-600 text-sm font-medium">
+                <p className="text-yellow-600 dark:text-yellow-400 text-sm font-medium transition-all duration-300">
                   ⏳ Pending
                 </p>
-                <p className="text-3xl font-bold text-yellow-800">
+                <p className="text-3xl font-bold text-yellow-800 dark:text-yellow-300 transition-all duration-300">
                   {stats.pending}
                 </p>
               </div>
-              <div className="bg-yellow-500 p-3 rounded-full">
+              <div className="bg-yellow-500 dark:bg-yellow-600 p-3 rounded-full transition-all duration-300">
                 <Clock className="w-6 h-6 text-white" />
               </div>
             </div>
           </motion.div>
 
-          <motion.div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl shadow-xl p-6 border border-green-200 hover:shadow-2xl transition-all duration-300">
+          <motion.div className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl shadow-xl dark:shadow-neon-md p-6 border border-green-200 dark:border-green-700 hover:shadow-2xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-600 text-sm font-medium">
+                <p className="text-green-600 dark:text-green-400 text-sm font-medium transition-all duration-300">
                   ✅ Verified
                 </p>
-                <p className="text-3xl font-bold text-green-800">
+                <p className="text-3xl font-bold text-green-800 dark:text-green-300 transition-all duration-300">
                   {stats.verified}
                 </p>
               </div>
-              <div className="bg-green-500 p-3 rounded-full">
+              <div className="bg-green-500 dark:bg-green-600 p-3 rounded-full transition-all duration-300">
                 <CheckCircle className="w-6 h-6 text-white" />
               </div>
             </div>
           </motion.div>
 
-          <motion.div className="bg-gradient-to-br from-red-50 to-pink-100 rounded-2xl shadow-xl p-6 border border-red-200 hover:shadow-2xl transition-all duration-300">
+          <motion.div className="bg-gradient-to-br from-red-50 to-pink-100 dark:from-red-900/20 dark:to-pink-900/20 rounded-2xl shadow-xl dark:shadow-neon-md p-6 border border-red-200 dark:border-red-700 hover:shadow-2xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-red-600 text-sm font-medium">❌ Rejected</p>
-                <p className="text-3xl font-bold text-red-800">
+                <p className="text-red-600 dark:text-red-400 text-sm font-medium transition-all duration-300">❌ Rejected</p>
+                <p className="text-3xl font-bold text-red-800 dark:text-red-300 transition-all duration-300">
                   {stats.rejected}
                 </p>
               </div>
-              <div className="bg-red-500 p-3 rounded-full">
+              <div className="bg-red-500 dark:bg-red-600 p-3 rounded-full transition-all duration-300">
                 <XCircle className="w-6 h-6 text-white" />
               </div>
             </div>
@@ -798,14 +798,14 @@ const AdminPortalPage: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <div className="bg-white dark:bg-dark-card dark:border dark:border-dark-border rounded-xl shadow-lg dark:shadow-neon-lg p-6 mb-8 transition-all duration-300">
           <div className="flex flex-col md:flex-row gap-3 md:gap-4 items-stretch md:items-center justify-between">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5 transition-all duration-300" />
               <input
                 type="text"
                 placeholder="Search consultancies..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-neon-blue bg-white dark:bg-dark-surface dark:text-white transition-all duration-300"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -816,10 +816,10 @@ const AdminPortalPage: React.FC = () => {
                   <button
                     key={status}
                     onClick={() => setFilter(status)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                       filter === status
-                        ? "bg-indigo-500 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        ? "bg-indigo-500 dark:bg-neon-blue text-white"
+                        : "bg-gray-100 dark:bg-dark-surface text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-bg"
                     }`}
                   >
                     {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -835,14 +835,14 @@ const AdminPortalPage: React.FC = () => {
           {paginatedConsultancies.map((consultancy) => (
             <motion.div
               key={consultancy._id}
-              className="bg-white rounded-xl shadow-lg p-6 border border-gray-200"
+              className="bg-white dark:bg-dark-card dark:border dark:border-dark-border rounded-xl shadow-lg dark:shadow-neon-lg p-6 border border-gray-200 dark:border-dark-border transition-all duration-300"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-xl font-semibold text-gray-800">
+                    <h3 className="text-xl font-semibold text-gray-800 dark:text-white transition-all duration-300">
                       {consultancy.name}
                     </h3>
                     <div className="flex flex-col items-start gap-1">
@@ -868,15 +868,15 @@ const AdminPortalPage: React.FC = () => {
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 mb-4">
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-gray-600">
+                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 transition-all duration-300">
                         <span className="font-medium">Category:</span>
                         <span>{consultancy.category || "N/A"}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-600">
+                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 transition-all duration-300">
                         <MapPin className="w-4 h-4" />
                         <span>{consultancy.location || "N/A"}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-600">
+                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 transition-all duration-300">
                         <Star className="w-4 h-4" />
                         <span>
                           {consultancy.rating || 0}/5 (
@@ -886,21 +886,21 @@ const AdminPortalPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-gray-600">
+                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 transition-all duration-300">
                         <Mail className="w-4 h-4" />
                         <span>{consultancy.contact?.email || "N/A"}</span>
                         {consultancy.verification?.emailVerified && (
                           <CheckCircle className="w-4 h-4 text-green-500" />
                         )}
                       </div>
-                      <div className="flex items-center gap-2 text-gray-600">
+                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 transition-all duration-300">
                         <Phone className="w-4 h-4" />
                         <span>{consultancy.contact?.phone || "N/A"}</span>
                         {consultancy.verification?.phoneVerified && (
                           <CheckCircle className="w-4 h-4 text-green-500" />
                         )}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 transition-all duration-300">
                         Registered:{" "}
                         {consultancy.createdAt
                           ? new Date(consultancy.createdAt).toLocaleDateString()
@@ -909,7 +909,7 @@ const AdminPortalPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2 transition-all duration-300">
                     {consultancy.description || "No description available"}
                   </p>
                 </div>
@@ -923,14 +923,14 @@ const AdminPortalPage: React.FC = () => {
                         onClick={() =>
                           updateStatus(consultancy._id, "verified")
                         }
-                        className="bg-white border border-green-500 text-green-500 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors flex items-center gap-2"
+                        className="bg-green-500 dark:bg-green-600 border border-green-500 dark:border-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-600 dark:hover:bg-green-700 transition-all duration-300 flex items-center gap-2"
                       >
                         <CheckCircle className="w-4 h-4" />
                         Approve
                       </button>
                       <button
                         onClick={() => handleReject(consultancy._id)}
-                        className="bg-white border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2"
+                        className="bg-red-500 dark:bg-red-600 border border-red-500 dark:border-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-600 dark:hover:bg-red-700 transition-all duration-300 flex items-center gap-2"
                       >
                         <XCircle className="w-4 h-4" />
                         Reject
@@ -943,7 +943,7 @@ const AdminPortalPage: React.FC = () => {
                         localStorage.setItem('adminAuthenticated', 'true');
                         router.push(`/admin-portal/details/${consultancy._id}`);
                       }}
-                      className="bg-white border border-blue-500 text-blue-500 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-2"
+                      className="bg-blue-500 dark:bg-blue-600 border border-blue-500 dark:border-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-all duration-300 flex items-center gap-2"
                     >
                       <Eye className="w-4 h-4" />
                       View Details
@@ -960,11 +960,11 @@ const AdminPortalPage: React.FC = () => {
                           setTimeout(() => {
                             btn.classList.remove('confirm-delete');
                             btn.innerHTML = '🗑️ Remove';
-                            btn.className = 'bg-white border border-gray-500 text-gray-500 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2';
+                            btn.className = 'bg-gray-500 dark:bg-gray-600 border border-gray-500 dark:border-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-600 dark:hover:bg-gray-700 transition-all duration-300 flex items-center gap-2';
                           }, 3000);
                         }
                       }}
-                      className="bg-white border border-gray-500 text-gray-500 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+                      className="bg-gray-500 dark:bg-gray-600 border border-gray-500 dark:border-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-600 dark:hover:bg-gray-700 transition-all duration-300 flex items-center gap-2"
                     >
                       🗑️ Remove
                     </button>
@@ -976,7 +976,7 @@ const AdminPortalPage: React.FC = () => {
 
           {paginatedConsultancies.length === 0 && (
             <div className="text-center py-12">
-              <div className="text-gray-500 text-lg">
+              <div className="text-gray-500 dark:text-gray-400 text-lg transition-all duration-300">
                 No consultancies found matching your criteria.
               </div>
             </div>
@@ -994,21 +994,44 @@ const AdminPortalPage: React.FC = () => {
               >
                 Previous
               </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-2 rounded-lg transition-all ${
-                      currentPage === page
-                        ? "bg-indigo-500 text-white"
-                        : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                )
-              )}
+              {(() => {
+                const maxVisible = 5;
+                const start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+                const end = Math.min(totalPages, start + maxVisible - 1);
+                const pages = [];
+                
+                if (start > 1) {
+                  pages.push(1);
+                  if (start > 2) pages.push('...');
+                }
+                
+                for (let i = start; i <= end; i++) {
+                  pages.push(i);
+                }
+                
+                if (end < totalPages) {
+                  if (end < totalPages - 1) pages.push('...');
+                  pages.push(totalPages);
+                }
+                
+                return pages.map((page, index) => (
+                  page === '...' ? (
+                    <span key={`ellipsis-${index}`} className="px-3 py-2 text-gray-500 dark:text-gray-400">...</span>
+                  ) : (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page as number)}
+                      className={`px-3 py-2 rounded-lg transition-all duration-300 ${
+                        currentPage === page
+                          ? "bg-indigo-500 dark:bg-neon-blue text-white"
+                          : "bg-white dark:bg-dark-surface border border-gray-300 dark:border-dark-border text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-card"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                ));
+              })()}
               <button
                 onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
                 disabled={currentPage === totalPages}

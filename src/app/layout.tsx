@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 // import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "../styles/globals.css";
+import "../styles/dark-mode.css";
 import Chatbot from "@/components/Chatbot";
 import FloatingParticles from "../components/FloatingParticles";
 import FloatingDhaba from "../components/FloatingDhaba";
+import { PopupProvider } from "../contexts/PopupContext";
+import { ThemeProvider } from "../contexts/ThemeContext";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 // const inter = Inter({ subsets: ["latin"] });
@@ -25,12 +28,28 @@ export default function RootLayout({
       publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
     >
       <html lang="en">
-        <body suppressHydrationWarning={true}>
-          {children}
-          <FloatingDhaba />
-          <FloatingParticles />
-          <Chatbot />
-          <SpeedInsights />
+        <body suppressHydrationWarning={true} className="preload bg-white dark:bg-dark-bg text-gray-900 dark:text-gray-100 transition-all duration-500 antialiased">
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                // Remove preload class after page loads to enable smooth transitions
+                window.addEventListener('load', () => {
+                  setTimeout(() => {
+                    document.body.classList.remove('preload');
+                  }, 100);
+                });
+              `,
+            }}
+          />
+          <ThemeProvider>
+            <PopupProvider>
+              {children}
+              <FloatingDhaba />
+              <FloatingParticles />
+              <Chatbot />
+              <SpeedInsights />
+            </PopupProvider>
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

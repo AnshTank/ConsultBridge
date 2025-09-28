@@ -1,554 +1,438 @@
-import { SmartBookingOrchestrator } from './smartBookingOrchestrator';
-import { BookingValidator } from './bookingValidator';
+import connectDB from '../lib/mongodb';
+import mongoose from 'mongoose';
+
+interface BookingSession {
+  consultantId: string;
+  consultantName: string;
+  userId?: string;
+  step: 'date_selection' | 'time_selection' | 'type_selection' | 'payment_selection' | 'confirmation' | 'processing' | 'complete';
+  selectedDate?: string;
+  selectedTime?: string;
+  appointmentType?: 'online' | 'offline';
+  paymentMethod?: string;
+  lastActivity: number;
+  receipt?: any;
+}
+
+interface BookingResponse {
+  reply: string;
+  isComplete: boolean;
+  bookingData: BookingSession;
+  processingPayment?: boolean;
+}
 
 export class BookingFlowManager {
-  private bookingOrchestrator: SmartBookingOrchestrator;
-  private bookingValidator: BookingValidator;
+  private sessions = new Map<string, BookingSession>();
 
-  constructor() {
-    this.bookingOrchestrator = new SmartBookingOrchestrator();
-    this.bookingValidator = new BookingValidator();
-  }
-
-  // Main booking flow processor
-  async processBookingFlow(
-    message: string,
-    currentState: string,
-    bookingContext: any,
-    consultancies: any[] = []
-  ): Promise<{
-    response: string;
-    nextState: string;
-    bookingData: any;
-    needsInput: boolean;
-    options?: any;
-  }> {
-    
-    switch (currentState) {
-      case 'initial':
-        return await this.handleInitialBooking(message, consultancies);
+  async processBookingStep(message: string, sessionId: string, currentSession: BookingSession): Promise<BookingResponse> {
+    try {
+      const { step } = currentSession;
       
-      case 'booking_consultancy_selection':
-        return await this.handleConsultancySelection(message, bookingContext);
-      
-      case 'booking_date_selection':
-        return await this.handleDateSelection(message, bookingContext);
-      
-      case 'booking_time_selection':
-        return await this.handleTimeSelection(message, bookingContext);
-      
-      case 'booking_type_selection':
-        return await this.handleTypeSelection(message, bookingContext);
-      
-      case 'booking_confirmation':
-        return await this.handleBookingConfirmation(message, bookingContext);
-      
-      case 'booking_payment_method':
-        return await this.handlePaymentMethod(message, bookingContext);
-      
-      case 'booking_processing':
-        return await this.handlePaymentProcessing(bookingContext);
-      
-      default:
-        return await this.handleInitialBooking(message, consultancies);
+      switch (step) {
+        case 'date_selection':
+          return await this.handleDateSelection(message, sessionId, currentSession);
+        case 'time_selection':
+          return await this.handleTimeSelection(message, sessionId, currentSession);
+        case 'type_selection':
+          return await this.handleTypeSelection(message, sessionId, currentSession);
+        case 'payment_selection':
+          return await this.handlePaymentSelection(message, sessionId, currentSession);
+        case 'confirmation':
+          return await this.handleConfirmation(message, sessionId, currentSession);
+        case 'processing':
+          return await this.handleProcessing(sessionId, currentSession);
+        default:
+          return this.handleError(currentSession);
+      }
+    } catch (error: any) {
+      console.error('Booking flow error:', error);
+      return this.handleError(currentSession);
     }
   }
 
-  // Handle initial booking detection
-  private async handleInitialBooking(message: string, consultancies: any[]): Promise<any> {
-    const bookingIntent = await this.bookingOrchestrator.detectBookingIntent(message, consultancies);
+  private async handleDateSelection(message: string, sessionId: string, session: BookingSession): Promise<BookingResponse> {
+    const datePattern = /(\d{1,2})[\\/\-](\d{1,2})[\\/\-](\d{4})/;
+    const match = message.match(datePattern);
     
-    if (!bookingIntent.isBooking) {
+    if (!match) {
       return {
-        response: "I didn't detect a booking request. Could you please clarify what you'd like to book?",
-        nextState: 'initial',
-        bookingData: {},
-        needsInput: true
+        reply: "Please provide a valid date in DD/MM/YYYY format (e.g., 25/12/2024):",
+        isComplete: false,
+        bookingData: session
       };
     }
-
-    // If consultancy already identified
-    if (bookingIntent.consultancy) {
-      const availabilityData = await this.bookingValidator.getAvailableSlots(bookingIntent.consultancy._id);
-      
+    
+    const [, day, month, year] = match;
+    const selectedDate = `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+    const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    
+    // Check if date is today or in future
+    const today = new Date();
+    const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const selectedDateOnly = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+    
+    if (selectedDateOnly < todayDateOnly) {
       return {
-        response: `Great! I'll help you book an appointment with **${bookingIntent.consultancy.name}**.\n\nLet's start with your preferred date. Here are the available dates:\n\n${this.formatAvailableDates(availabilityData.availableDates)}`,
-        nextState: 'booking_date_selection',
-        bookingData: {
-          consultancy: bookingIntent.consultancy,
-          availabilityData
-        },
-        needsInput: true,
-        options: {
-          type: 'date_picker',
-          availableDates: availabilityData.availableDates
-        }
+        reply: "Please select today's date or a future date. What date would you prefer?",
+        isComplete: false,
+        bookingData: session
       };
     }
-
-    // If from consultancy suggestions, ask for selection
-    if (consultancies.length > 0) {
-      return {
-        response: "Which consultancy would you like to book an appointment with?\n\n" + 
-                 consultancies.map((c, i) => `${i + 1}. **${c.name}** - ${c.category}`).join('\n'),
-        nextState: 'booking_consultancy_selection',
-        bookingData: { availableConsultancies: consultancies },
-        needsInput: true,
-        options: {
-          type: 'consultancy_selection',
-          consultancies
-        }
-      };
-    }
-
-    return {
-      response: "I'd be happy to help you book an appointment! Could you please specify which consultancy you'd like to book with?",
-      nextState: 'booking_consultancy_selection',
-      bookingData: {},
-      needsInput: true
-    };
-  }
-
-  // Handle consultancy selection
-  private async handleConsultancySelection(message: string, bookingContext: any): Promise<any> {
-    const { availableConsultancies } = bookingContext;
     
-    // Try to match selection
-    let selectedConsultancy = null;
-    
-    // Check for number selection
-    const numberMatch = message.match(/(\d+)/);
-    if (numberMatch && availableConsultancies) {
-      const index = parseInt(numberMatch[1]) - 1;
-      if (index >= 0 && index < availableConsultancies.length) {
-        selectedConsultancy = availableConsultancies[index];
+    // If it's today, check if there's still time for booking (allow if before 11 PM)
+    if (selectedDateOnly.getTime() === todayDateOnly.getTime()) {
+      const currentHour = today.getHours();
+      if (currentHour >= 23) {
+        return {
+          reply: "It's too late to book for today. Please select tomorrow or a future date:",
+          isComplete: false,
+          bookingData: session
+        };
       }
     }
     
-    // Try fuzzy matching directly
-    if (!selectedConsultancy) {
-      selectedConsultancy = await this.fuzzyMatchConsultancyDirect(message);
-    }
-
-    if (!selectedConsultancy) {
-      return {
-        response: "I couldn't identify the consultancy. Please select by number or specify the name clearly.",
-        nextState: 'booking_consultancy_selection',
-        bookingData: bookingContext,
-        needsInput: true
-      };
-    }
-
-    const availabilityData = await this.bookingValidator.getAvailableSlots(selectedConsultancy._id);
+    const consultant = await this.getConsultant(session.consultantId);
+    const timeSlots = this.generateTimeSlots(consultant);
+    const updatedSession = {
+      ...session,
+      selectedDate,
+      step: 'time_selection' as const,
+      lastActivity: Date.now()
+    };
     
     return {
-      response: `Perfect! I'll help you book with **${selectedConsultancy.name}**.\n\nPlease select your preferred date:\n\n${this.formatAvailableDates(availabilityData.availableDates)}`,
-      nextState: 'booking_date_selection',
-      bookingData: {
-        consultancy: selectedConsultancy,
-        availabilityData
-      },
-      needsInput: true,
-      options: {
-        type: 'date_picker',
-        availableDates: availabilityData.availableDates
+      reply: `Great! ${selectedDate} is available.\n\n🕐 Available time slots:\n${timeSlots.map((slot, i) => `${i + 1}. ${slot}`).join('\n')}\n\nPlease choose a time slot (1-${timeSlots.length}):`,
+      isComplete: false,
+      bookingData: updatedSession
+    };
+  }
+
+  private async handleTimeSelection(message: string, sessionId: string, session: BookingSession): Promise<BookingResponse> {
+    const consultant = await this.getConsultant(session.consultantId);
+    const timeSlots = this.generateTimeSlots(consultant);
+    
+    const slotNumber = parseInt(message.trim());
+    if (slotNumber >= 1 && slotNumber <= timeSlots.length) {
+      const selectedTime = timeSlots[slotNumber - 1];
+      
+      // Check for conflicts
+      const hasConflict = await this.checkTimeConflict(session.selectedDate!, selectedTime, session.userId);
+      
+      if (hasConflict) {
+        return {
+          reply: `⚠️ You already have an appointment at ${selectedTime} on ${session.selectedDate}.\n\nPlease choose a different time slot:\n${timeSlots.map((slot, i) => `${i + 1}. ${slot}`).join('\n')}`,
+          isComplete: false,
+          bookingData: session
+        };
       }
-    };
-  }
-
-  // Handle date selection
-  private async handleDateSelection(message: string, bookingContext: any): Promise<any> {
-    const { consultancy, availabilityData } = bookingContext;
-    
-    // Extract date from message
-    const selectedDate = this.extractDate(message, availabilityData.availableDates);
-    
-    if (!selectedDate) {
-      return {
-        response: "Please select a valid date from the available options:\n\n" + 
-                 this.formatAvailableDates(availabilityData.availableDates),
-        nextState: 'booking_date_selection',
-        bookingData: bookingContext,
-        needsInput: true
+      
+      const updatedSession = {
+        ...session,
+        selectedTime,
+        step: 'type_selection' as const,
+        lastActivity: Date.now()
       };
-    }
-
-    const availableSlots = availabilityData.availableSlots[selectedDate] || [];
-    
-    return {
-      response: `Great! You selected **${this.formatDate(selectedDate)}**.\n\nNow please choose your preferred time:\n\n${this.formatTimeSlots(availableSlots)}`,
-      nextState: 'booking_time_selection',
-      bookingData: {
-        ...bookingContext,
-        selectedDate,
-        availableSlots
-      },
-      needsInput: true,
-      options: {
-        type: 'time_picker',
-        availableSlots
-      }
-    };
-  }
-
-  // Handle time selection
-  private async handleTimeSelection(message: string, bookingContext: any): Promise<any> {
-    const { consultancy, selectedDate, availableSlots } = bookingContext;
-    
-    const selectedTime = this.extractTime(message, availableSlots);
-    
-    if (!selectedTime) {
-      return {
-        response: "Please select a valid time from the available slots:\n\n" + 
-                 this.formatTimeSlots(availableSlots),
-        nextState: 'booking_time_selection',
-        bookingData: bookingContext,
-        needsInput: true
-      };
-    }
-
-    return {
-      response: `Perfect! You selected **${selectedTime}** on **${this.formatDate(selectedDate)}**.\n\nWould you prefer an **online** or **offline** consultation?`,
-      nextState: 'booking_type_selection',
-      bookingData: {
-        ...bookingContext,
-        selectedTime
-      },
-      needsInput: true,
-      options: {
-        type: 'consultation_type',
-        options: ['online', 'offline']
-      }
-    };
-  }
-
-  // Handle consultation type selection
-  private async handleTypeSelection(message: string, bookingContext: any): Promise<any> {
-    const consultationType = message.toLowerCase().includes('offline') ? 'offline' : 'online';
-    
-    const { consultancy, selectedDate, selectedTime } = bookingContext;
-    
-    return {
-      response: `Excellent! Here's your booking summary:\n\n` +
-               `**Consultancy:** ${consultancy.name}\n` +
-               `**Date:** ${this.formatDate(selectedDate)}\n` +
-               `**Time:** ${selectedTime}\n` +
-               `**Type:** ${consultationType.charAt(0).toUpperCase() + consultationType.slice(1)}\n` +
-               `**Duration:** 1 hour\n` +
-               `**Fee:** ₹${consultancy.price || 1500}\n\n` +
-               `Please confirm to proceed with the booking.`,
-      nextState: 'booking_confirmation',
-      bookingData: {
-        ...bookingContext,
-        consultationType,
-        fee: consultancy.price || 1500
-      },
-      needsInput: true,
-      options: {
-        type: 'confirmation',
-        options: ['confirm', 'cancel']
-      }
-    };
-  }
-
-  // Handle booking confirmation
-  private async handleBookingConfirmation(message: string, bookingContext: any): Promise<any> {
-    const isConfirmed = message.toLowerCase().includes('confirm') || message.toLowerCase().includes('yes');
-    
-    if (!isConfirmed) {
-      return {
-        response: "Booking cancelled. Is there anything else I can help you with?",
-        nextState: 'completed',
-        bookingData: {},
-        needsInput: false
-      };
-    }
-
-    return {
-      response: `Great! Your booking is confirmed. Now let's proceed with payment.\n\nPlease select your preferred payment method:\n\n1. **Credit/Debit Card**\n2. **UPI**\n3. **Net Banking**\n4. **Wallet**`,
-      nextState: 'booking_payment_method',
-      bookingData: bookingContext,
-      needsInput: true,
-      options: {
-        type: 'payment_method',
-        options: ['card', 'upi', 'netbanking', 'wallet']
-      }
-    };
-  }
-
-  // Handle payment method selection
-  private async handlePaymentMethod(message: string, bookingContext: any): Promise<any> {
-    const paymentMethods = {
-      '1': 'Credit/Debit Card',
-      '2': 'UPI',
-      '3': 'Net Banking',
-      '4': 'Wallet',
-      'card': 'Credit/Debit Card',
-      'upi': 'UPI',
-      'netbanking': 'Net Banking',
-      'wallet': 'Wallet'
-    };
-
-    const selectedMethod = (paymentMethods as any)[message.toLowerCase()] || (paymentMethods as any)[message.trim()];
-    
-    if (!selectedMethod) {
-      return {
-        response: "Please select a valid payment method:\n\n1. Credit/Debit Card\n2. UPI\n3. Net Banking\n4. Wallet",
-        nextState: 'booking_payment_method',
-        bookingData: bookingContext,
-        needsInput: true
-      };
-    }
-
-    return {
-      response: `Processing payment via **${selectedMethod}**...\n\nPlease wait while we validate your payment details.`,
-      nextState: 'booking_processing',
-      bookingData: {
-        ...bookingContext,
-        paymentMethod: selectedMethod
-      },
-      needsInput: false
-    };
-  }
-
-  // Handle payment processing (dummy)
-  private async handlePaymentProcessing(bookingContext: any): Promise<any> {
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // Simulate success/failure (90% success rate)
-    const isSuccess = Math.random() > 0.1;
-    
-    if (isSuccess) {
-      const receiptId = `CB${Date.now()}${Math.floor(Math.random() * 1000)}`;
       
       return {
-        response: `🎉 **Payment Successful!**\n\nYour appointment has been booked successfully.`,
-        nextState: 'booking_completed',
-        bookingData: {
-          ...bookingContext,
-          receiptId,
-          status: 'confirmed',
-          paymentStatus: 'completed'
-        },
-        needsInput: false,
-        options: {
-          type: 'booking_receipt',
-          receiptData: {
-            id: receiptId,
-            consultancyName: bookingContext.consultancy.name,
-            date: bookingContext.selectedDate,
-            time: bookingContext.selectedTime,
-            type: bookingContext.consultationType,
-            amount: bookingContext.fee,
-            paymentMethod: bookingContext.paymentMethod,
-            status: 'Confirmed'
-          }
-        }
+        reply: `Perfect! You've selected ${selectedTime} on ${session.selectedDate}.\n\n📍 **How would you prefer to meet?**\n\n1. 💻 Online consultation (Video call)\n2. 🏢 In-person meeting\n\nPlease choose 1 or 2:`,
+        isComplete: false,
+        bookingData: updatedSession
       };
+    }
+    
+    return {
+      reply: `Please select a valid time slot (1-${timeSlots.length}) or choose from:\n${timeSlots.map((slot, i) => `${i + 1}. ${slot}`).join('\n')}`,
+      isComplete: false,
+      bookingData: session
+    };
+  }
+
+  private async handleTypeSelection(message: string, sessionId: string, session: BookingSession): Promise<BookingResponse> {
+    const choice = message.trim();
+    let appointmentType: 'online' | 'offline';
+    let typeText: string;
+    
+    if (choice === '1' || choice.toLowerCase().includes('online')) {
+      appointmentType = 'online';
+      typeText = 'Online consultation';
+    } else if (choice === '2' || choice.toLowerCase().includes('person')) {
+      appointmentType = 'offline';
+      typeText = 'In-person meeting';
     } else {
       return {
-        response: `❌ **Payment Failed**\n\nThere was an issue processing your payment. Please try again or contact support.`,
-        nextState: 'booking_payment_method',
-        bookingData: bookingContext,
-        needsInput: true
+        reply: "Please choose 1 for Online or 2 for In-person meeting:",
+        isComplete: false,
+        bookingData: session
+      };
+    }
+    
+    const updatedSession = {
+      ...session,
+      appointmentType,
+      step: 'payment_selection' as const,
+      lastActivity: Date.now()
+    };
+    
+    return {
+      reply: `Great! You've chosen ${typeText}.\n\n💳 **How would you like to pay?**\n\n1. 💳 Credit/Debit Card\n2. 🏦 Bank Transfer\n3. 📱 Digital Wallet (PayPal/UPI)\n\nPlease choose 1, 2, or 3:`,
+      isComplete: false,
+      bookingData: updatedSession
+    };
+  }
+
+  private async handlePaymentSelection(message: string, sessionId: string, session: BookingSession): Promise<BookingResponse> {
+    const choice = message.trim();
+    let paymentMethod: string;
+    
+    if (choice === '1' || choice.toLowerCase().includes('card')) {
+      paymentMethod = 'Credit Card';
+    } else if (choice === '2' || choice.toLowerCase().includes('bank')) {
+      paymentMethod = 'Bank Transfer';
+    } else if (choice === '3' || choice.toLowerCase().includes('wallet')) {
+      paymentMethod = 'Digital Wallet';
+    } else {
+      return {
+        reply: "Please choose 1 for Card, 2 for Bank Transfer, or 3 for Digital Wallet:",
+        isComplete: false,
+        bookingData: session
+      };
+    }
+    
+    const consultant = await this.getConsultant(session.consultantId);
+    const updatedSession = {
+      ...session,
+      paymentMethod,
+      step: 'confirmation' as const,
+      lastActivity: Date.now()
+    };
+    
+    return {
+      reply: `Perfect! Here's your booking summary:\n\n👨💼 Consultant: ${session.consultantName}\n📅 Date: ${session.selectedDate}\n🕐 Time: ${session.selectedTime}\n💰 Rate: $${consultant?.price || '100'}/hour\n📍 Type: ${session.appointmentType === 'online' ? 'Online consultation' : 'In-person meeting'}\n💳 Payment: ${paymentMethod}\n\nConfirm booking? (yes/no)`,
+      isComplete: false,
+      bookingData: updatedSession
+    };
+  }
+
+  private async handleConfirmation(message: string, sessionId: string, session: BookingSession): Promise<BookingResponse> {
+    const response = message.toLowerCase().trim();
+    
+    if (['yes', 'y', 'confirm', 'ok', 'sure'].includes(response)) {
+      const updatedSession = {
+        ...session,
+        step: 'processing' as const,
+        lastActivity: Date.now()
+      };
+      
+      return {
+        reply: "🔄 Processing your booking and payment...\n\nPlease wait while I confirm your appointment.",
+        isComplete: false,
+        bookingData: updatedSession,
+        processingPayment: true
+      };
+    }
+    
+    if (['no', 'n', 'cancel'].includes(response)) {
+      return {
+        reply: "Booking cancelled. Would you like to:\n• Choose a different time\n• Select another consultant\n• Start over",
+        isComplete: true,
+        bookingData: session
+      };
+    }
+    
+    return {
+      reply: "Please confirm your booking by typing 'yes' or 'no':",
+      isComplete: false,
+      bookingData: session
+    };
+  }
+
+  private async handleProcessing(sessionId: string, session: BookingSession): Promise<BookingResponse> {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    try {
+      const appointmentId = await this.createAppointment(session);
+      const consultant = await this.getConsultant(session.consultantId);
+      
+      return {
+        reply: `✅ Booking Confirmed!\n\nAppointment ID: ${appointmentId}\n👨💼 Consultant: ${session.consultantName}\n📅 Date: ${session.selectedDate}\n🕐 Time: ${session.selectedTime}\n📍 Type: ${session.appointmentType === 'online' ? 'Online consultation' : 'In-person meeting'}\n💳 Payment: ${session.paymentMethod}\n\nYou'll receive a confirmation email shortly.`,
+        isComplete: true,
+        bookingData: { ...session, step: 'complete' }
+      };
+    } catch (error: any) {
+      return {
+        reply: "❌ Booking failed. Please try again or contact support.",
+        isComplete: true,
+        bookingData: session
       };
     }
   }
 
-  // Direct fuzzy matching for consultancy names
-  private async fuzzyMatchConsultancyDirect(name: string): Promise<any | null> {
+  private handleError(session: BookingSession): BookingResponse {
+    return {
+      reply: "Something went wrong with your booking. Please start over by telling me which consultant you'd like to book with.",
+      isComplete: true,
+      bookingData: session
+    };
+  }
+
+  private async getConsultant(consultantId: string): Promise<any> {
     try {
-      console.log('🔍 Direct fuzzy matching for:', name);
-      const response = await fetch('/api/consultancies');
-      const data = await response.json();
-      const consultancies = data.consultancies || [];
-      console.log('📊 Found consultancies:', consultancies.length, consultancies.map((c: any) => c.name));
-
-      // First try exact match (case insensitive)
-      for (const consultancy of consultancies) {
-        if (consultancy.name.toLowerCase() === name.toLowerCase()) {
-          console.log('✅ Exact match found:', consultancy.name);
-          return consultancy;
-        }
-      }
-
-      // Then try partial match and typo tolerance
-      for (const consultancy of consultancies) {
-        const consultancyLower = consultancy.name.toLowerCase();
-        const nameLower = name.toLowerCase();
-        
-        // Partial match
-        if (consultancyLower.includes(nameLower) || nameLower.includes(consultancyLower)) {
-          console.log('✅ Partial match found:', consultancy.name);
-          return consultancy;
-        }
-        
-        // Handle common typos (double letters)
-        const nameWithoutDoubles = nameLower.replace(/(.)\1+/g, '$1');
-        const consultancyWithoutDoubles = consultancyLower.replace(/(.)\1+/g, '$1');
-        
-        if (nameWithoutDoubles === consultancyWithoutDoubles) {
-          console.log('✅ Typo match found:', consultancy.name);
-          return consultancy;
-        }
-      }
-
-      // Finally try fuzzy matching
-      let bestMatch = null;
-      let bestScore = 0;
-      const normalizedInput = this.normalizeConsultancyName(name.toLowerCase());
-      console.log('🔄 Normalized input:', normalizedInput);
-
-      for (const consultancy of consultancies) {
-        const normalizedConsultancy = this.normalizeConsultancyName(consultancy.name.toLowerCase());
-        const score = this.calculateSimilarity(normalizedInput, normalizedConsultancy);
-        
-        console.log(`🔍 Comparing "${normalizedInput}" vs "${normalizedConsultancy}" (${consultancy.name}): ${score.toFixed(3)}`);
-        
-        if (score > bestScore && score > 0.3) {
-          bestScore = score;
-          bestMatch = consultancy;
-          console.log(`✅ New best match: ${consultancy.name} (${score.toFixed(3)})`);
-        }
-      }
-
-      console.log('🏆 Final result:', bestMatch ? `${bestMatch.name} (${bestScore.toFixed(3)})` : 'No match');
-      return bestMatch;
-    } catch (error) {
-      console.error('Error fuzzy matching consultancy:', error);
+      await connectDB();
+      const db = mongoose.connection.db;
+      if (!db) throw new Error('Database not connected');
+      const consultanciesCollection = db.collection('consultancies');
+      return await consultanciesCollection.findOne({ _id: new mongoose.Types.ObjectId(consultantId) });
+    } catch (error: any) {
+      console.error('Get consultant error:', error);
       return null;
     }
   }
 
-  private normalizeConsultancyName(name: string): string {
-    return name
-      .toLowerCase()
-      .replace(/\s+/g, '') // Remove spaces
-      .replace(/[^a-z0-9]/g, '') // Remove special characters
-      .replace(/(consultancy|consultant|consulting|llp|ltd|pvt|private|limited)$/i, ''); // Remove common suffixes
+  private generateTimeSlots(consultant: any): string[] {
+    const hours = consultant?.availability?.hours || '9:00 AM - 6:00 PM';
+    const [startTime, endTime] = hours.split(' - ');
+    const slots = [];
+    const start = this.parseTime(startTime);
+    const end = this.parseTime(endTime);
+    
+    for (let hour = start; hour < end; hour++) {
+      slots.push(this.formatHour(hour));
+    }
+    return slots;
   }
 
-  private calculateSimilarity(str1: string, str2: string): number {
-    const longer = str1.length > str2.length ? str1 : str2;
-    const shorter = str1.length > str2.length ? str2 : str1;
-    
-    if (longer.length === 0) return 1.0;
-    
-    const distance = this.levenshteinDistance(longer, shorter);
-    return (longer.length - distance) / longer.length;
+  private parseTime(timeStr: string): number {
+    const [time, period] = timeStr.split(' ');
+    const [hours] = time.split(':').map(Number);
+    let hour24 = hours;
+    if (period === 'PM' && hours !== 12) hour24 += 12;
+    if (period === 'AM' && hours === 12) hour24 = 0;
+    return hour24;
   }
 
-  private levenshteinDistance(str1: string, str2: string): number {
-    const matrix = [];
-    
-    for (let i = 0; i <= str2.length; i++) {
-      matrix[i] = [i];
-    }
-    
-    for (let j = 0; j <= str1.length; j++) {
-      matrix[0][j] = j;
-    }
-    
-    for (let i = 1; i <= str2.length; i++) {
-      for (let j = 1; j <= str1.length; j++) {
-        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1];
-        } else {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j] + 1
-          );
+  private formatHour(hour: number): string {
+    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    const period = hour < 12 ? 'AM' : 'PM';
+    return `${hour12}:00 ${period}`;
+  }
+
+  private async createAppointment(session: BookingSession): Promise<string> {
+    try {
+      await connectDB();
+      
+      // Import the Appointment model
+      const Appointment = (await import('../models/Appointment')).default;
+      
+      const [day, month, year] = session.selectedDate!.split('/');
+      const appointmentDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      
+      console.log('Creating appointment with data:', {
+        consultancyId: session.consultantId,
+        consultancyName: session.consultantName,
+        clientId: session.userId || 'anonymous',
+        clientName: 'User',
+        clientEmail: 'user@example.com',
+        clientPhone: '+1234567890',
+        appointmentDate,
+        appointmentTime: session.selectedTime,
+        appointmentType: session.appointmentType || 'online',
+        status: 'pending'
+      });
+      
+      // Get user data from Clerk
+      let clientName = 'User';
+      let clientEmail = 'user@example.com';
+      let clientPhone = '+1234567890';
+      
+      if (session.userId && session.userId !== 'anonymous') {
+        try {
+          const { clerkClient } = await import('@clerk/nextjs/server');
+          const user = await clerkClient.users.getUser(session.userId);
+          clientName = (user as any).fullName || user.firstName || 'User';
+          clientEmail = user.emailAddresses[0]?.emailAddress || 'user@example.com';
+          clientPhone = user.phoneNumbers[0]?.phoneNumber || '+1234567890';
+        } catch (error: any) {
+          console.error('Error fetching user data from Clerk:', error);
         }
       }
-    }
-    
-    return matrix[str2.length][str1.length];
-  }
-
-  // Utility methods
-  private formatAvailableDates(dates: string[]): string {
-    return dates.slice(0, 7).map((date, i) => 
-      `${i + 1}. **${this.formatDate(date)}**`
-    ).join('\n');
-  }
-
-  private formatTimeSlots(slots: string[]): string {
-    return slots.map((slot, i) => 
-      `${i + 1}. **${this.formatTime(slot)}**`
-    ).join('\n');
-  }
-
-  private formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-  }
-
-  private formatTime(timeStr: string): string {
-    const [hours, minutes] = timeStr.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
-  }
-
-  private extractDate(message: string, availableDates: string[]): string | null {
-    console.log('🗓️ Extracting date from:', message, 'Available:', availableDates);
-    
-    // Try number selection first
-    const numberMatch = message.match(/(\d+)/);
-    if (numberMatch) {
-      const index = parseInt(numberMatch[1]) - 1;
-      if (index >= 0 && index < availableDates.length) {
-        console.log('✅ Number match found:', availableDates[index]);
-        return availableDates[index];
-      }
-    }
-
-    // Try various date formats
-    const lowerMessage = message.toLowerCase();
-    for (const date of availableDates) {
-      const formattedDate = this.formatDate(date).toLowerCase();
-      const shortDate = date.split('T')[0]; // YYYY-MM-DD format
       
-      if (lowerMessage.includes(formattedDate) || 
-          lowerMessage.includes(date) ||
-          lowerMessage.includes(shortDate) ||
-          message.includes(date.split('T')[0])) {
-        console.log('✅ Date match found:', date);
-        return date;
-      }
+      const appointment = new Appointment({
+        consultancyId: session.consultantId,
+        consultancyName: session.consultantName,
+        clientId: session.userId || 'anonymous',
+        clientName,
+        clientEmail,
+        clientPhone,
+        appointmentDate,
+        appointmentTime: session.selectedTime,
+        appointmentType: session.appointmentType || 'online',
+        status: 'pending'
+      });
+      
+      const savedAppointment = await appointment.save();
+      console.log('Appointment saved successfully:', savedAppointment._id, savedAppointment);
+      return (savedAppointment._id as any).toString();
+    } catch (error: any) {
+      console.error('Create appointment error:', error);
+      console.error('Error details:', error?.message);
+      throw error;
     }
-
-    console.log('❌ No date match found');
-    return null;
   }
 
-  private extractTime(message: string, availableSlots: string[]): string | null {
-    // Try number selection first
-    const numberMatch = message.match(/(\d+)/);
-    if (numberMatch) {
-      const index = parseInt(numberMatch[1]) - 1;
-      if (index >= 0 && index < availableSlots.length) {
-        return availableSlots[index];
-      }
+  async completePaymentProcessing(session: BookingSession): Promise<{ reply: string; bookingData: BookingSession }> {
+    try {
+      const appointmentId = await this.createAppointment(session);
+      const consultant = await this.getConsultant(session.consultantId);
+      
+      // Generate receipt
+      const receipt = {
+        id: `CB-${appointmentId.slice(-8).toUpperCase()}`,
+        clientName: 'User',
+        consultancyName: session.consultantName,
+        date: session.selectedDate,
+        time: session.selectedTime,
+        appointmentType: session.appointmentType || 'online',
+        amount: consultant?.price || '100',
+        paymentMethod: session.paymentMethod || 'Credit Card'
+      };
+      
+      return {
+        reply: `✅ Payment Successful!\n\nBooking Submitted!\nAppointment ID: ${appointmentId}\n👨💼 Consultant: ${session.consultantName}\n📅 Date: ${session.selectedDate}\n🕐 Time: ${session.selectedTime}\n📍 Type: ${session.appointmentType === 'online' ? 'Online consultation' : 'In-person meeting'}\n💳 Payment: ${session.paymentMethod}\n\n⏳ Status: Pending consultant approval\nYou'll receive a confirmation email once approved.`,
+        bookingData: { ...session, step: 'complete', receipt }
+      };
+    } catch (error: any) {
+      return {
+        reply: "❌ Payment failed. Please try booking again.",
+        bookingData: session
+      };
     }
+  }
 
-    // Try time matching
-    for (const slot of availableSlots) {
-      const formattedTime = this.formatTime(slot).toLowerCase();
-      if (message.toLowerCase().includes(formattedTime) || 
-          message.toLowerCase().includes(slot)) {
-        return slot;
-      }
+  private async checkTimeConflict(date: string, time: string, userId?: string): Promise<boolean> {
+    if (!userId) return false;
+    
+    try {
+      await connectDB();
+      const Appointment = (await import('../models/Appointment')).default;
+      
+      // Convert date format
+      const [day, month, year] = date.split('/');
+      const appointmentDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      
+      const existingAppointment = await Appointment.findOne({
+        clientId: userId,
+        appointmentDate: {
+          $gte: new Date(appointmentDate.getFullYear(), appointmentDate.getMonth(), appointmentDate.getDate()),
+          $lt: new Date(appointmentDate.getFullYear(), appointmentDate.getMonth(), appointmentDate.getDate() + 1)
+        },
+        appointmentTime: time,
+        status: { $in: ['pending', 'confirmed'] }
+      });
+      
+      return !!existingAppointment;
+    } catch (error: any) {
+      console.error('Conflict check error:', error);
+      return false;
     }
-
-    return null;
   }
 }

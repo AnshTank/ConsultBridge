@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+
 import {
   Settings,
   Calendar,
@@ -14,6 +15,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { getConsultancyProfile } from "../../utils/consultancyUtils";
+import Modal from "../Modal";
+import ThemeToggle from "../ThemeToggle";
 
 interface Appointment {
   _id: string;
@@ -34,6 +37,7 @@ interface Appointment {
 const ConsultancyAdminPage: React.FC = () => {
   const { user, isLoaded } = useUser();
   const router = useRouter();
+
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -65,9 +69,8 @@ const ConsultancyAdminPage: React.FC = () => {
     });
   }, []);
 
-  // Remove loading overlay and lock body scroll when any modal is open
+  // Remove loading overlay
   useEffect(() => {
-    // Remove loading overlay if it exists
     const overlay = document.querySelector('.page-loading-overlay');
     if (overlay) {
       setTimeout(() => {
@@ -75,36 +78,7 @@ const ConsultancyAdminPage: React.FC = () => {
         setTimeout(() => overlay.remove(), 300);
       }, 800);
     }
-    
-    const body = document.body;
-    const html = document.documentElement;
-    
-    if (showCalendar || showAnalytics || showProfileViews || showEditProfile || showDateModal) {
-      // Store current scroll position
-      const scrollY = window.scrollY;
-      body.style.setProperty('--scroll-y', `-${scrollY}px`);
-      
-      // Lock scroll
-      body.classList.add('scroll-locked');
-      html.style.overflow = 'hidden';
-    } else {
-      // Restore scroll
-      body.classList.remove('scroll-locked');
-      html.style.overflow = '';
-      
-      // Restore scroll position
-      const scrollY = body.style.getPropertyValue('--scroll-y');
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
-      }
-    }
-    
-    // Cleanup on unmount
-    return () => {
-      body?.classList.remove('scroll-locked');
-      html.style.overflow = '';
-    };
-  }, [showCalendar, showAnalytics, showProfileViews, showEditProfile, showDateModal]);
+  }, []);
 
 
 
@@ -250,9 +224,9 @@ const ConsultancyAdminPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
       {/* Admin Header */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 text-white">
+      <div className="bg-gradient-to-r from-slate-800 to-slate-900 dark:from-gray-800 dark:to-gray-900 text-white transition-colors duration-300">
         <div className="container mx-auto px-6 py-8">
           <div className="flex justify-between items-center">
             <div>
@@ -263,12 +237,15 @@ const ConsultancyAdminPage: React.FC = () => {
                 Manage your consultancy services and appointments
               </p>
             </div>
-            <button
-              onClick={handleLogout}
-              className="bg-slate-700 px-4 py-2 rounded-lg hover:bg-slate-600 transition-colors"
-            >
-              Logout
-            </button>
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              <button
+                onClick={handleLogout}
+                className="bg-slate-700 px-4 py-2 rounded-lg hover:bg-slate-600 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -276,11 +253,11 @@ const ConsultancyAdminPage: React.FC = () => {
       <div className="container mx-auto px-6 py-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-blue-500 transition-colors duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm">Total Appointments</p>
-                <p className="text-2xl font-bold text-gray-800">
+                <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors duration-300">Total Appointments</p>
+                <p className="text-2xl font-bold text-gray-800 dark:text-white transition-colors duration-300">
                   {stats.totalAppointments}
                 </p>
               </div>
@@ -288,11 +265,11 @@ const ConsultancyAdminPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-green-500 transition-colors duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm">Confirmed</p>
-                <p className="text-2xl font-bold text-gray-800">
+                <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors duration-300">Confirmed</p>
+                <p className="text-2xl font-bold text-gray-800 dark:text-white transition-colors duration-300">
                   {stats.confirmed}
                 </p>
               </div>
@@ -300,11 +277,11 @@ const ConsultancyAdminPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-500">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-yellow-500 transition-colors duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm">Pending</p>
-                <p className="text-2xl font-bold text-gray-800">
+                <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors duration-300">Pending</p>
+                <p className="text-2xl font-bold text-gray-800 dark:text-white transition-colors duration-300">
                   {stats.pending}
                 </p>
               </div>
@@ -312,11 +289,11 @@ const ConsultancyAdminPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-purple-500 transition-colors duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm">Revenue</p>
-                <p className="text-2xl font-bold text-gray-800">
+                <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors duration-300">Revenue</p>
+                <p className="text-2xl font-bold text-gray-800 dark:text-white transition-colors duration-300">
                   ${stats.revenue}
                 </p>
               </div>
@@ -328,39 +305,39 @@ const ConsultancyAdminPage: React.FC = () => {
         {/* Admin Controls */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Profile Management */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-300">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white transition-colors duration-300">
               <Settings className="w-5 h-5" />
               Profile Management
             </h2>
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-gray-600">Consultancy Name</p>
-                <p className="font-medium">{currentProfile.name}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300">Consultancy Name</p>
+                <p className="font-medium text-gray-900 dark:text-white transition-colors duration-300">{currentProfile.name}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Category</p>
-                <p className="font-medium">{currentProfile.category}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300">Category</p>
+                <p className="font-medium text-gray-900 dark:text-white transition-colors duration-300">{currentProfile.category}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Location</p>
-                <p className="font-medium">{currentProfile.location}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300">Location</p>
+                <p className="font-medium text-gray-900 dark:text-white transition-colors duration-300">{currentProfile.location}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Phone</p>
-                <p className="font-medium">
+                <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300">Phone</p>
+                <p className="font-medium text-gray-900 dark:text-white transition-colors duration-300">
                   {currentProfile.phone || "Not provided"}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Email</p>
-                <p className="font-medium">
+                <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300">Email</p>
+                <p className="font-medium text-gray-900 dark:text-white transition-colors duration-300">
                   {currentProfile.email || "Not provided"}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Price</p>
-                <p className="font-medium">
+                <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300">Price</p>
+                <p className="font-medium text-gray-900 dark:text-white transition-colors duration-300">
                   {currentProfile.price || "Not set"}
                 </p>
               </div>
@@ -402,8 +379,8 @@ const ConsultancyAdminPage: React.FC = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-300">
+            <h2 className="text-xl font-semibold mb-6 flex items-center gap-2 text-gray-900 dark:text-white transition-colors duration-300">
               <Settings className="w-5 h-5" />
               Quick Actions
             </h2>
@@ -480,19 +457,19 @@ const ConsultancyAdminPage: React.FC = () => {
         </div>
 
         {/* Appointments Table */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
-          <h2 className="text-xl font-semibold mb-4">Recent Appointments</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mt-8 transition-colors duration-300">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white transition-colors duration-300">Recent Appointments</h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3">Client Details</th>
-                  <th className="text-left py-3">Service</th>
-                  <th className="text-left py-3">Date & Time</th>
-                  <th className="text-left py-3">Type</th>
-                  <th className="text-left py-3">Status</th>
-                  <th className="text-left py-3">Payment</th>
-                  <th className="text-left py-3">Actions</th>
+                <tr className="border-b border-gray-200 dark:border-gray-700">
+                  <th className="text-left py-3 text-gray-900 dark:text-white transition-colors duration-300">Client Details</th>
+                  <th className="text-left py-3 text-gray-900 dark:text-white transition-colors duration-300">Service</th>
+                  <th className="text-left py-3 text-gray-900 dark:text-white transition-colors duration-300">Date & Time</th>
+                  <th className="text-left py-3 text-gray-900 dark:text-white transition-colors duration-300">Type</th>
+                  <th className="text-left py-3 text-gray-900 dark:text-white transition-colors duration-300">Status</th>
+                  <th className="text-left py-3 text-gray-900 dark:text-white transition-colors duration-300">Payment</th>
+                  <th className="text-left py-3 text-gray-900 dark:text-white transition-colors duration-300">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -501,15 +478,15 @@ const ConsultancyAdminPage: React.FC = () => {
                   .map((appointment) => (
                   <tr
                     key={appointment._id}
-                    className="border-b hover:bg-gray-50"
+                    className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300"
                   >
                     <td className="py-3">
                       <div>
-                        <p className="font-medium">{appointment.clientName}</p>
-                        <p className="text-sm text-gray-500">
+                        <p className="font-medium text-gray-900 dark:text-white transition-colors duration-300">{appointment.clientName}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">
                           {appointment.clientEmail}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">
                           {appointment.clientPhone}
                         </p>
                       </div>
@@ -551,7 +528,7 @@ const ConsultancyAdminPage: React.FC = () => {
                         )}
                       </div>
                     </td>
-                    <td className="py-3">
+                    <td className="py-3 text-gray-900 dark:text-white transition-colors duration-300">
                       {new Date(appointment.appointmentDate).toLocaleDateString()} at {appointment.appointmentTime}
                     </td>
                     <td className="py-3">
@@ -697,30 +674,36 @@ const ConsultancyAdminPage: React.FC = () => {
         </div>
 
         {/* Verification Status Section - Moved to Bottom */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mt-8 transition-colors duration-300">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white transition-colors duration-300">
             <CheckCircle className="w-5 h-5" />
             Verification Status
           </h2>
           <div className="space-y-4">
-            <div className={`p-4 rounded-lg border-2 ${
+            <div className={`p-4 rounded-lg border-2 transition-colors duration-300 ${
               profile?.status === 'verified' 
-                ? 'bg-green-50 border-green-200'
+                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700'
                 : profile?.status === 'rejected'
-                ? 'bg-red-50 border-red-200'
-                : 'bg-yellow-50 border-yellow-200'
+                ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700'
+                : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700'
             }`}>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl">
                   {profile?.status === 'verified' ? '✅' : 
                    profile?.status === 'rejected' ? '❌' : '⏳'}
                 </span>
-                <span className="font-semibold text-lg">
+                <span className={`font-semibold text-lg transition-colors duration-300 ${
+                  profile?.status === 'verified' 
+                    ? 'text-green-900 dark:text-green-100'
+                    : profile?.status === 'rejected'
+                    ? 'text-red-900 dark:text-red-100'
+                    : 'text-yellow-900 dark:text-yellow-100'
+                }`}>
                   {profile?.status === 'verified' ? 'Verified' : 
                    profile?.status === 'rejected' ? 'Rejected' : 'Under Review'}
                 </span>
               </div>
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-gray-700 dark:text-gray-200 mb-3 transition-colors duration-300">
                 {profile?.status === 'verified' 
                   ? 'Your consultancy is verified and live on the platform!'
                   : profile?.status === 'rejected'
@@ -728,9 +711,9 @@ const ConsultancyAdminPage: React.FC = () => {
                   : 'Your consultancy is under admin review. Usually takes 2-3 working days.'}
               </p>
               {profile?.status === 'rejected' && profile?.rejectionReason && (
-                <div className="bg-red-100 border border-red-200 rounded p-3 mb-3">
-                  <p className="text-sm font-medium text-red-800 mb-1">Rejection Reason:</p>
-                  <p className="text-sm text-red-700">{profile.rejectionReason}</p>
+                <div className="bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded p-3 mb-3 transition-colors duration-300">
+                  <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-1 transition-colors duration-300">Rejection Reason:</p>
+                  <p className="text-sm text-red-700 dark:text-red-300 transition-colors duration-300">{profile.rejectionReason}</p>
                 </div>
               )}
               {profile?.status === 'rejected' && (
@@ -773,26 +756,13 @@ const ConsultancyAdminPage: React.FC = () => {
 
 
       {/* Calendar Modal */}
-      {showCalendar && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4"
-          onClick={() => setShowCalendar(false)}
-        >
-          <div 
-            className="bg-white rounded-lg p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-semibold">Monthly Calendar</h3>
-              <button
-                onClick={() => setShowCalendar(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
-              >
-                ×
-              </button>
-            </div>
-            
-            {(() => {
+      <Modal
+        isOpen={showCalendar}
+        onClose={() => setShowCalendar(false)}
+        title="Monthly Calendar"
+        maxWidth="max-w-5xl"
+      >
+        {(() => {
               const today = new Date();
               const year = today.getFullYear();
               const month = today.getMonth();
@@ -835,14 +805,14 @@ const ConsultancyAdminPage: React.FC = () => {
               return (
                 <div>
                   <div className="text-center mb-4">
-                    <h4 className="text-xl font-semibold">
+                    <h4 className="text-xl font-semibold text-gray-900 dark:text-white transition-colors duration-300">
                       {today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                     </h4>
                   </div>
                   
                   <div className="grid grid-cols-7 gap-1 mb-2">
                     {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                      <div key={day} className="p-2 text-center font-medium text-gray-600 text-sm">
+                      <div key={day} className="p-2 text-center font-medium text-gray-600 dark:text-gray-300 text-sm transition-colors duration-300">
                         {day}
                       </div>
                     ))}
@@ -854,7 +824,7 @@ const ConsultancyAdminPage: React.FC = () => {
                       const isToday = date.toDateString() === today.toDateString();
                       const appointmentCount = appointmentCounts[date.toDateString()] || 0;
                       
-                      let bgColor = 'bg-white';
+                      let bgColor = 'bg-white dark:bg-gray-700';
                       if (appointmentCount > 0) {
                         if (appointmentCount >= 5) bgColor = 'bg-blue-600';
                         else if (appointmentCount >= 3) bgColor = 'bg-blue-500';
@@ -862,20 +832,23 @@ const ConsultancyAdminPage: React.FC = () => {
                         else bgColor = 'bg-blue-200';
                       }
                       
-                      const textColor = appointmentCount >= 3 ? 'text-white' : 'text-gray-900';
+                      const textColor = appointmentCount >= 3 ? 'text-white' : 'text-gray-900 dark:text-gray-100';
                       
                       return (
                         <div
                           key={index}
-                          className={`h-12 border border-gray-200 flex items-center justify-center text-sm relative cursor-pointer hover:bg-gray-50 ${
-                            isCurrentMonth ? '' : 'text-gray-400'
-                          } ${bgColor} ${textColor} ${
-                            isToday ? 'ring-2 ring-indigo-500' : ''
+                          className={`h-12 border border-gray-200 dark:border-gray-600 flex items-center justify-center text-sm relative cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-300 ${
+                            isCurrentMonth ? textColor : 'text-gray-400 dark:text-gray-500'
+                          } ${bgColor} ${
+                            isToday ? 'ring-2 ring-indigo-500 dark:ring-indigo-400' : ''
                           }`}
                           title={appointmentCount > 0 ? `${appointmentCount} appointment${appointmentCount > 1 ? 's' : ''}` : ''}
                           onClick={() => handleDateClick(date, appointmentsByDate)}
                         >
-                          <span className="font-medium">{date.getDate()}</span>
+                          <span className={`font-medium ${
+                            !isCurrentMonth ? 'text-gray-400 dark:text-gray-500' : 
+                            appointmentCount >= 3 ? 'text-white' : 'text-gray-900 dark:text-gray-100'
+                          } transition-colors duration-300`}>{date.getDate()}</span>
                           {appointmentCount > 0 && (
                             <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                               {appointmentCount > 9 ? '9+' : appointmentCount}
@@ -889,77 +862,62 @@ const ConsultancyAdminPage: React.FC = () => {
                   <div className="mt-6 flex items-center justify-center space-x-6 text-sm">
                     <div className="flex items-center">
                       <div className="w-4 h-4 bg-blue-200 rounded mr-2"></div>
-                      <span>1 appointment</span>
+                      <span className="text-gray-700 dark:text-gray-300 transition-colors duration-300">1 appointment</span>
                     </div>
                     <div className="flex items-center">
                       <div className="w-4 h-4 bg-blue-400 rounded mr-2"></div>
-                      <span>2 appointments</span>
+                      <span className="text-gray-700 dark:text-gray-300 transition-colors duration-300">2 appointments</span>
                     </div>
                     <div className="flex items-center">
                       <div className="w-4 h-4 bg-blue-500 rounded mr-2"></div>
-                      <span>3-4 appointments</span>
+                      <span className="text-gray-700 dark:text-gray-300 transition-colors duration-300">3-4 appointments</span>
                     </div>
                     <div className="flex items-center">
                       <div className="w-4 h-4 bg-blue-600 rounded mr-2"></div>
-                      <span>5+ appointments</span>
+                      <span className="text-gray-700 dark:text-gray-300 transition-colors duration-300">5+ appointments</span>
                     </div>
                   </div>
                 </div>
               );
             })()}
-          </div>
-        </div>
-      )}
+      </Modal>
 
       {/* Analytics Modal */}
-      {showAnalytics && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4"
-          onClick={() => setShowAnalytics(false)}
-        >
-          <div 
-            className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-semibold">Analytics Dashboard</h3>
-              <button
-                onClick={() => setShowAnalytics(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
-              >
-                ×
-              </button>
-            </div>
-            
-            {/* Stats Overview */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-blue-50 p-4 rounded-lg text-center">
-                <div className="text-2xl font-bold text-blue-600">{stats.totalAppointments}</div>
-                <div className="text-sm text-gray-600">Total Appointments</div>
+      <Modal
+        isOpen={showAnalytics}
+        onClose={() => setShowAnalytics(false)}
+        title="Analytics Dashboard"
+        maxWidth="max-w-4xl"
+      >
+        {/* Stats Overview */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center transition-colors duration-300">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 transition-colors duration-300">{stats.totalAppointments}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">Total Appointments</div>
               </div>
-              <div className="bg-green-50 p-4 rounded-lg text-center">
-                <div className="text-2xl font-bold text-green-600">{stats.confirmed}</div>
-                <div className="text-sm text-gray-600">Confirmed</div>
+              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg text-center transition-colors duration-300">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400 transition-colors duration-300">{stats.confirmed}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">Confirmed</div>
               </div>
-              <div className="bg-yellow-50 p-4 rounded-lg text-center">
-                <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-                <div className="text-sm text-gray-600">Pending</div>
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg text-center transition-colors duration-300">
+                <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400 transition-colors duration-300">{stats.pending}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">Pending</div>
               </div>
-              <div className="bg-purple-50 p-4 rounded-lg text-center">
-                <div className="text-2xl font-bold text-purple-600">
+              <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg text-center transition-colors duration-300">
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 transition-colors duration-300">
                   {Math.round((stats.confirmed / Math.max(stats.totalAppointments, 1)) * 100)}%
                 </div>
-                <div className="text-sm text-gray-600">Success Rate</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">Success Rate</div>
               </div>
             </div>
 
             {/* Simple Bar Chart */}
             <div className="mb-8">
-              <h4 className="text-lg font-semibold mb-4">Appointment Status Distribution</h4>
+              <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white transition-colors duration-300">Appointment Status Distribution</h4>
               <div className="space-y-3">
                 <div className="flex items-center">
-                  <div className="w-20 text-sm text-gray-600">Confirmed</div>
-                  <div className="flex-1 bg-gray-200 rounded-full h-6 mx-3">
+                  <div className="w-20 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">Confirmed</div>
+                  <div className="flex-1 bg-gray-200 dark:bg-gray-600 rounded-full h-6 mx-3 transition-colors duration-300">
                     <div 
                       className="bg-green-500 h-6 rounded-full flex items-center justify-end pr-2"
                       style={{ width: `${(stats.confirmed / Math.max(stats.totalAppointments, 1)) * 100}%` }}
@@ -969,8 +927,8 @@ const ConsultancyAdminPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center">
-                  <div className="w-20 text-sm text-gray-600">Pending</div>
-                  <div className="flex-1 bg-gray-200 rounded-full h-6 mx-3">
+                  <div className="w-20 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">Pending</div>
+                  <div className="flex-1 bg-gray-200 dark:bg-gray-600 rounded-full h-6 mx-3 transition-colors duration-300">
                     <div 
                       className="bg-yellow-500 h-6 rounded-full flex items-center justify-end pr-2"
                       style={{ width: `${(stats.pending / Math.max(stats.totalAppointments, 1)) * 100}%` }}
@@ -980,8 +938,8 @@ const ConsultancyAdminPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center">
-                  <div className="w-20 text-sm text-gray-600">Cancelled</div>
-                  <div className="flex-1 bg-gray-200 rounded-full h-6 mx-3">
+                  <div className="w-20 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">Cancelled</div>
+                  <div className="flex-1 bg-gray-200 dark:bg-gray-600 rounded-full h-6 mx-3 transition-colors duration-300">
                     <div 
                       className="bg-red-500 h-6 rounded-full flex items-center justify-end pr-2"
                       style={{ width: `${((stats.totalAppointments - stats.confirmed - stats.pending) / Math.max(stats.totalAppointments, 1)) * 100}%` }}
@@ -995,73 +953,58 @@ const ConsultancyAdminPage: React.FC = () => {
 
             {/* Recent Activity */}
             <div>
-              <h4 className="text-lg font-semibold mb-4">Recent Activity</h4>
+              <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white transition-colors duration-300">Recent Activity</h4>
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {appointments.slice(0, 10).map((appointment) => (
-                  <div key={appointment._id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div key={appointment._id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded transition-colors duration-300">
                     <div>
-                      <span className="font-medium">{appointment.clientName}</span>
-                      <span className="text-gray-500 ml-2">booked appointment</span>
+                      <span className="font-medium text-gray-900 dark:text-white transition-colors duration-300">{appointment.clientName}</span>
+                      <span className="text-gray-500 dark:text-gray-400 ml-2 transition-colors duration-300">booked appointment</span>
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">
                       {new Date(appointment.appointmentDate).toLocaleDateString()}
                     </div>
                   </div>
                 ))}
                 {appointments.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400 transition-colors duration-300">
+                    <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600 transition-colors duration-300" />
                     <p>No activity data available</p>
                   </div>
                 )}
               </div>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
 
       {/* Profile Views Modal */}
-      {showProfileViews && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4"
-          onClick={() => setShowProfileViews(false)}
-        >
-          <div 
-            className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-semibold">Profile Views Analytics</h3>
-              <button
-                onClick={() => setShowProfileViews(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-blue-50 p-4 rounded-lg text-center">
-                <div className="text-2xl font-bold text-blue-600">{profileViewsData.totalViews}</div>
-                <div className="text-sm text-gray-600">Total Views</div>
+      <Modal
+        isOpen={showProfileViews}
+        onClose={() => setShowProfileViews(false)}
+        title="Profile Views Analytics"
+        maxWidth="max-w-4xl"
+      >
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center transition-colors duration-300">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 transition-colors duration-300">{profileViewsData.totalViews}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">Total Views</div>
               </div>
-              <div className="bg-green-50 p-4 rounded-lg text-center">
-                <div className="text-2xl font-bold text-green-600">{profileViewsData.todayViews}</div>
-                <div className="text-sm text-gray-600">Today</div>
+              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg text-center transition-colors duration-300">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400 transition-colors duration-300">{profileViewsData.todayViews}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">Today</div>
               </div>
-              <div className="bg-purple-50 p-4 rounded-lg text-center">
-                <div className="text-2xl font-bold text-purple-600">{profileViewsData.weekViews}</div>
-                <div className="text-sm text-gray-600">This Week</div>
+              <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg text-center transition-colors duration-300">
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 transition-colors duration-300">{profileViewsData.weekViews}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">This Week</div>
               </div>
-              <div className="bg-orange-50 p-4 rounded-lg text-center">
-                <div className="text-2xl font-bold text-orange-600">+{profileViewsData.growth}%</div>
-                <div className="text-sm text-gray-600">Growth</div>
+              <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg text-center transition-colors duration-300">
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400 transition-colors duration-300">+{profileViewsData.growth}%</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">Growth</div>
               </div>
             </div>
 
             <div className="mb-8">
-              <h4 className="text-lg font-semibold mb-4">User Interaction Over Time (Last 7 Days)</h4>
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white transition-colors duration-300">User Interaction Over Time (Last 7 Days)</h4>
+              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg transition-colors duration-300">
                 <div className="flex items-end justify-between h-40 gap-2">
                   {[45, 32, 28, 65, 52, 38, 71].map((views, i) => {
                     const height = (views / 80) * 120 + 20; // Scale height based on views
@@ -1078,49 +1021,49 @@ const ConsultancyAdminPage: React.FC = () => {
                             {views} views
                           </div>
                         </div>
-                        <div className="text-xs text-gray-600 mt-2 text-center font-medium">
+                        <div className="text-xs text-gray-600 dark:text-gray-300 mt-2 text-center font-medium transition-colors duration-300">
                           {date.toLocaleDateString('en-US', { weekday: 'short' })}
                         </div>
                       </div>
                     );
                   })}
                 </div>
-                <div className="flex justify-between text-xs text-gray-500 mt-4 px-2">
+                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-4 px-2 transition-colors duration-300">
                   <span>7 days ago</span>
                   <span>Today</span>
                 </div>
                 <div className="mt-4 text-center">
-                  <div className="text-sm text-gray-600">Total views this week: <span className="font-semibold text-blue-600">331</span></div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">Total views this week: <span className="font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300">331</span></div>
                 </div>
               </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <h4 className="text-lg font-semibold mb-4">Traffic Sources</h4>
+                <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white transition-colors duration-300">Traffic Sources</h4>
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                    <span>Direct Search</span>
-                    <span className="font-medium">45%</span>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded transition-colors duration-300">
+                    <span className="text-gray-900 dark:text-white transition-colors duration-300">Direct Search</span>
+                    <span className="font-medium text-gray-900 dark:text-white transition-colors duration-300">45%</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                    <span>Category Browse</span>
-                    <span className="font-medium">30%</span>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded transition-colors duration-300">
+                    <span className="text-gray-900 dark:text-white transition-colors duration-300">Category Browse</span>
+                    <span className="font-medium text-gray-900 dark:text-white transition-colors duration-300">30%</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                    <span>Recommendations</span>
-                    <span className="font-medium">25%</span>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded transition-colors duration-300">
+                    <span className="text-gray-900 dark:text-white transition-colors duration-300">Recommendations</span>
+                    <span className="font-medium text-gray-900 dark:text-white transition-colors duration-300">25%</span>
                   </div>
                 </div>
               </div>
               
               <div>
-                <h4 className="text-lg font-semibold mb-4">Peak Hours</h4>
+                <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white transition-colors duration-300">Peak Hours</h4>
                 <div className="space-y-2">
                   {[{time: '9:00 AM', activity: 65}, {time: '12:00 PM', activity: 80}, {time: '3:00 PM', activity: 45}, {time: '6:00 PM', activity: 70}].map(({time, activity}) => (
                     <div key={time} className="flex items-center">
-                      <div className="w-16 text-sm text-gray-600">{time}</div>
-                      <div className="flex-1 bg-gray-200 rounded-full h-4 mx-3">
+                      <div className="w-16 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">{time}</div>
+                      <div className="flex-1 bg-gray-200 dark:bg-gray-600 rounded-full h-4 mx-3 transition-colors duration-300">
                         <div 
                           className="bg-blue-500 h-4 rounded-full flex items-center justify-end pr-2"
                           style={{ width: `${activity}%` }}
@@ -1133,9 +1076,7 @@ const ConsultancyAdminPage: React.FC = () => {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
 
       {/* Edit Profile Modal */}
       {showEditProfile && (

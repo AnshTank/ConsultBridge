@@ -87,12 +87,12 @@ function ContactPage() {
   return (
     <SmartPageWrapper loadingMessage="📞 Connecting you to our support team...">
       <PageTransition>
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white">
-          <Navbar />
-        </header>
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-all duration-300">
+        <Navbar />
 
-        <section className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white py-20">
+        <section className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 dark:bg-gradient-to-br dark:from-slate-900 dark:via-gray-900 dark:to-black text-white py-20 relative overflow-hidden">
+          <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-blue-900/30 dark:via-purple-900/40 dark:to-pink-900/30"></div>
+          <div className="relative z-10">
           <div className="container mx-auto px-6">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-4xl font-bold mb-6">Get in Touch</h2>
@@ -101,23 +101,24 @@ function ContactPage() {
               </p>
             </div>
           </div>
+          </div>
         </section>
 
         <section className="py-16">
           <div className="container mx-auto px-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-1 bg-white rounded-xl shadow-lg p-8 flex flex-col h-full">
-                <h3 className="text-2xl font-bold mb-6 text-gray-800">
+              <div className="lg:col-span-1 bg-white dark:bg-black rounded-xl shadow-lg dark:shadow-2xl p-8 flex flex-col h-full border dark:border-white/20 transition-all duration-300">
+                <h3 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white transition-all duration-300">
                   Contact Information
                 </h3>
                 <div className="space-y-6">
                   <div className="flex items-start">
                     <MapPin className="w-6 h-6 text-indigo-500 mr-4 mt-1 flex-shrink-0" />
                     <div>
-                      <h4 className="font-semibold mb-2 text-gray-800">
+                      <h4 className="font-semibold mb-2 text-gray-800 dark:text-white transition-all duration-300">
                         Our Office
                       </h4>
-                      <p className="text-gray-600 leading-relaxed">
+                      <p className="text-gray-600 dark:text-white leading-relaxed transition-all duration-300">
                         123 Innovation Drive
                         <br />
                         Vadodara, P.C. 391760
@@ -129,11 +130,11 @@ function ContactPage() {
                   <div className="flex items-start">
                     <Phone className="w-6 h-6 text-purple-500 mr-4 mt-1 flex-shrink-0" />
                     <div>
-                      <h4 className="font-semibold mb-2 text-gray-800">
+                      <h4 className="font-semibold mb-2 text-gray-800 dark:text-white transition-all duration-300">
                         Phone Support
                       </h4>
-                      <p className="text-gray-600">+91 95102-99313</p>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-gray-600 dark:text-white transition-all duration-300">+91 95102-99313</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-300 mt-1 transition-all duration-300">
                         Available 24/7 for urgent matters
                       </p>
                     </div>
@@ -141,11 +142,11 @@ function ContactPage() {
                   <div className="flex items-start">
                     <Mail className="w-6 h-6 text-pink-500 mr-4 mt-1 flex-shrink-0" />
                     <div>
-                      <h4 className="font-semibold mb-2 text-gray-800">
+                      <h4 className="font-semibold mb-2 text-gray-800 dark:text-white transition-all duration-300">
                         Email Support
                       </h4>
-                      <p className="text-gray-600">support@consultbridge.com</p>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-gray-600 dark:text-white transition-all duration-300">support@consultbridge.com</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-300 mt-1 transition-all duration-300">
                         We respond within 24 hours
                       </p>
                     </div>
@@ -153,10 +154,10 @@ function ContactPage() {
                   <div className="flex items-start">
                     <Clock className="w-6 h-6 text-indigo-600 mr-4 mt-1 flex-shrink-0" />
                     <div>
-                      <h4 className="font-semibold mb-2 text-gray-800">
+                      <h4 className="font-semibold mb-2 text-gray-800 dark:text-white transition-all duration-300">
                         Business Hours
                       </h4>
-                      <p className="text-gray-600">
+                      <p className="text-gray-600 dark:text-white transition-all duration-300">
                         Monday - Friday: 9:00 AM - 6:00 PM PST
                         <br />
                         Saturday: 10:00 AM - 4:00 PM PST
@@ -168,18 +169,18 @@ function ContactPage() {
                 </div>
 
                 <div className="flex-grow flex items-center justify-center mt-8">
-                  <div className="text-center p-8 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 rounded-2xl border border-slate-200 w-full">
-                    <div className="text-base text-slate-600 font-light leading-relaxed space-y-2">
-                      <p className="text-blue-600">
+                  <div className="text-center p-8 bg-gray-100 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-white/20 w-full transition-all duration-300">
+                    <div className="text-base text-gray-600 dark:text-white font-light leading-relaxed space-y-2 transition-all duration-300">
+                      <p className="text-blue-600 dark:text-blue-400">
                         "Where expertise meets opportunity,
                       </p>
-                      <p className="text-slate-700">
+                      <p className="text-gray-700 dark:text-white">
                         Every connection sparks innovation,
                       </p>
-                      <p className="text-purple-600">
+                      <p className="text-purple-600 dark:text-purple-400">
                         Building bridges to your success,
                       </p>
-                      <p className="text-slate-800 font-medium">
+                      <p className="text-gray-800 dark:text-white font-medium">
                         ConsultBridge - Your growth partner."
                       </p>
                     </div>
@@ -188,8 +189,8 @@ function ContactPage() {
                 </div>
               </div>
 
-              <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-8">
-                <h3 className="text-2xl font-bold mb-6">Send Us a Message</h3>
+              <div className="lg:col-span-2 bg-white dark:bg-black rounded-xl shadow-lg dark:shadow-2xl p-8 border dark:border-white/20 transition-all duration-300">
+                <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white transition-all duration-300">Send Us a Message</h3>
                 {submitted && (
                   <div className="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-6">
                     <p className="font-semibold">
@@ -202,7 +203,7 @@ function ContactPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* User Type Selection */}
                   <div>
-                    <label className="text-gray-700 text-sm font-semibold mb-3 block">
+                    <label className="text-gray-700 dark:text-white text-sm font-semibold mb-3 block transition-all duration-300">
                       I am contacting as a:
                     </label>
                     <div className="flex flex-wrap gap-2 md:gap-3">
@@ -211,8 +212,8 @@ function ContactPage() {
                         onClick={() => setUserType("user")}
                         className={`flex items-center px-3 md:px-4 py-2 rounded-lg border-2 transition-all text-xs md:text-sm ${
                           userType === "user"
-                            ? "border-blue-500 bg-blue-50 text-blue-700"
-                            : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                            : "border-gray-300 dark:border-white/20 bg-white dark:bg-gray-800 text-gray-700 dark:text-white hover:border-gray-400 dark:hover:border-white/30"
                         }`}
                       >
                         <User className="w-4 h-4 mr-2" />
@@ -223,8 +224,8 @@ function ContactPage() {
                         onClick={() => setUserType("consultancy")}
                         className={`flex items-center px-3 md:px-4 py-2 rounded-lg border-2 transition-all text-xs md:text-sm ${
                           userType === "consultancy"
-                            ? "border-blue-500 bg-blue-50 text-blue-700"
-                            : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                            : "border-gray-300 dark:border-white/20 bg-white dark:bg-gray-800 text-gray-700 dark:text-white hover:border-gray-400 dark:hover:border-white/30"
                         }`}
                       >
                         <Building className="w-4 h-4 mr-2" />
@@ -235,8 +236,8 @@ function ContactPage() {
                         onClick={() => setUserType("enterprise")}
                         className={`flex items-center px-3 md:px-4 py-2 rounded-lg border-2 transition-all text-xs md:text-sm ${
                           userType === "enterprise"
-                            ? "border-blue-500 bg-blue-50 text-blue-700"
-                            : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                            : "border-gray-300 dark:border-white/20 bg-white dark:bg-gray-800 text-gray-700 dark:text-white hover:border-gray-400 dark:hover:border-white/30"
                         }`}
                       >
                         <Building className="w-4 h-4 mr-2" />
@@ -248,12 +249,12 @@ function ContactPage() {
                   {/* Basic Information */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-gray-700 text-sm font-semibold mb-2 block">
+                      <label className="text-gray-700 dark:text-white text-sm font-semibold mb-2 block transition-all duration-300">
                         Full Name *
                       </label>
                       <input
                         type="text"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        className="w-full p-3 border border-gray-300 dark:border-white/20 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         placeholder="Enter your full name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -261,12 +262,12 @@ function ContactPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-gray-700 text-sm font-semibold mb-2 block">
+                      <label className="text-gray-700 dark:text-white text-sm font-semibold mb-2 block transition-all duration-300">
                         Email Address *
                       </label>
                       <input
                         type="email"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        className="w-full p-3 border border-gray-300 dark:border-white/20 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         placeholder="Enter your email address"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -277,24 +278,24 @@ function ContactPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-gray-700 text-sm font-semibold mb-2 block">
+                      <label className="text-gray-700 dark:text-white text-sm font-semibold mb-2 block transition-all duration-300">
                         Phone Number
                       </label>
                       <input
                         type="tel"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        className="w-full p-3 border border-gray-300 dark:border-white/20 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         placeholder="Enter your phone number"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                       />
                     </div>
                     <div>
-                      <label className="text-gray-700 text-sm font-semibold mb-2 block">
+                      <label className="text-gray-700 dark:text-white text-sm font-semibold mb-2 block transition-all duration-300">
                         Company/Organization
                       </label>
                       <input
                         type="text"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        className="w-full p-3 border border-gray-300 dark:border-white/20 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         placeholder="Enter company name (optional)"
                         value={company}
                         onChange={(e) => setCompany(e.target.value)}
@@ -305,11 +306,11 @@ function ContactPage() {
                   {/* Inquiry Details */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-gray-700 text-sm font-semibold mb-2 block">
+                      <label className="text-gray-700 dark:text-white text-sm font-semibold mb-2 block transition-all duration-300">
                         Inquiry Type *
                       </label>
                       <select
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        className="w-full p-3 border border-gray-300 dark:border-white/20 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         value={inquiryType}
                         onChange={(e) => setInquiryType(e.target.value)}
                         required
@@ -329,11 +330,11 @@ function ContactPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-gray-700 text-sm font-semibold mb-2 block">
+                      <label className="text-gray-700 dark:text-white text-sm font-semibold mb-2 block transition-all duration-300">
                         Priority Level
                       </label>
                       <select
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        className="w-full p-3 border border-gray-300 dark:border-white/20 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         value={priority}
                         onChange={(e) => setPriority(e.target.value)}
                       >
@@ -346,12 +347,12 @@ function ContactPage() {
                   </div>
 
                   <div>
-                    <label className="text-gray-700 text-sm font-semibold mb-2 block">
+                    <label className="text-gray-700 dark:text-white text-sm font-semibold mb-2 block transition-all duration-300">
                       Subject *
                     </label>
                     <input
                       type="text"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full p-3 border border-gray-300 dark:border-white/20 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                       placeholder="Brief subject of your inquiry"
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
@@ -360,24 +361,24 @@ function ContactPage() {
                   </div>
 
                   <div>
-                    <label className="text-gray-700 text-sm font-semibold mb-2 block">
+                    <label className="text-gray-700 dark:text-white text-sm font-semibold mb-2 block transition-all duration-300">
                       Message *
                     </label>
                     <textarea
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                      className="w-full p-3 border border-gray-300 dark:border-white/20 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
                       rows={5}
                       placeholder="Please provide detailed information about your inquiry..."
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       required
                     ></textarea>
-                    <div className="text-right text-sm text-gray-500 mt-1">
+                    <div className="text-right text-sm text-gray-500 dark:text-gray-300 mt-1 transition-all duration-300">
                       {message.length}/1000 characters
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-gray-700 text-sm font-semibold mb-2 block">
+                    <label className="text-gray-700 dark:text-white text-sm font-semibold mb-2 block transition-all duration-300">
                       Preferred Contact Method
                     </label>
                     <div className="flex flex-wrap gap-3 md:gap-4">
@@ -393,7 +394,7 @@ function ContactPage() {
                             }
                             className="mr-2"
                           />
-                          <span className="text-sm text-gray-700">
+                          <span className="text-sm text-gray-700 dark:text-white transition-all duration-300">
                             {method}
                           </span>
                         </label>
@@ -415,7 +416,7 @@ function ContactPage() {
                         setPriority("Medium");
                         setPreferredContactMethod("Email");
                       }}
-                      className="w-full sm:w-auto px-6 md:px-8 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all text-center"
+                      className="w-full sm:w-auto px-6 md:px-8 py-3 border border-gray-300 dark:border-white/20 text-gray-700 dark:text-white dark:bg-gray-800 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-all text-center"
                     >
                       Reset Form
                     </button>

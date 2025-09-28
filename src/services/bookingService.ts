@@ -1,6 +1,7 @@
 import connectDB from '../lib/mongodb';
 import Appointment from '../models/Appointment';
 import Consultancy from '../models/Consultancy';
+import { clerkClient } from '@clerk/nextjs/server';
 
 export interface BookingRequest {
   consultancyId: string;
@@ -110,22 +111,26 @@ export class BookingService {
 
       await connectDB();
 
-      // Create appointment
+      // Get user data from Clerk
+      const user = await clerkClient.users.getUser(request.userId);
+      const consultancy = await Consultancy.findById(request.consultancyId);
+
+      // Create appointment with Clerk user data
       const appointment = new Appointment({
-        userId: request.userId,
         consultancyId: request.consultancyId,
-        date: request.date,
-        time: request.time,
-        duration: request.duration || 60,
-        type: request.type,
-        notes: request.notes,
-        status: 'pending',
-        createdAt: new Date()
+        clientId: request.userId,
+        clientName: (user as any).fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User',
+        clientEmail: user.emailAddresses[0]?.emailAddress || 'No email provided',
+        clientPhone: user.phoneNumbers[0]?.phoneNumber || 'No phone provided',
+        appointmentDate: new Date(request.date),
+        appointmentTime: request.time,
+        appointmentType: request.type,
+        message: request.notes,
+        consultancyName: consultancy?.name || 'Unknown Consultancy',
+        status: 'pending'
       });
 
       await appointment.save();
-
-      const consultancy = await Consultancy.findById(request.consultancyId);
 
       return {
         success: true,

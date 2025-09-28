@@ -1,10 +1,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
-import { SmartChatbot } from "../../../services/smartChatbot";
-import { BookingManager } from "../../../services/bookingManager";
+import { IntelligentChatbot } from "../../../services/intelligentChatbot";
+import { BookingFlowManager } from "../../../services/bookingFlowManager";
 
-const chatbot = new SmartChatbot();
-const bookingManager = new BookingManager();
+const chatbot = new IntelligentChatbot();
+const bookingManager = new BookingFlowManager();
 
 // Session storage for booking flows (TODO: Replace with Redis/DB in production)
 const bookingSessions = new Map<string, any>();
@@ -68,10 +68,10 @@ export async function POST(req: NextRequest) {
       try {
         // Handle payment processing completion
         if (bookingSession.step === 'processing') {
-          // Check if enough time has passed (5 seconds)
+          // Check if enough time has passed (4 seconds)
           const timeSinceStart = Date.now() - (bookingSession.lastActivity || Date.now());
           
-          if (timeSinceStart > 5000) {
+          if (timeSinceStart > 4000) {
             const completionResult = await bookingManager.completePaymentProcessing(bookingSession);
             bookingSessions.delete(sessionId);
             
@@ -84,21 +84,28 @@ export async function POST(req: NextRequest) {
                 actionType: 'book',
                 needsBooking: false,
                 bookingData: completionResult.bookingData,
+                paymentReceipt: completionResult.bookingData.receipt,
                 sessionId
               }
             });
           } else {
-            // Still processing, return processing status
+            // Still processing, return processing status with animation
             return NextResponse.json({
               success: true,
               error: null,
               data: {
-                reply: "Processing payment...",
+                reply: "",
                 consultancies: [],
                 actionType: 'book',
                 needsBooking: true,
                 bookingData: bookingSession,
                 processingPayment: true,
+                paymentSteps: [
+                  { step: 1, text: "Validating payment details", icon: "🔒", delay: 0 },
+                  { step: 2, text: "Processing secure transaction", icon: "💳", delay: 1000 },
+                  { step: 3, text: "Confirming appointment slot", icon: "📅", delay: 2000 },
+                  { step: 4, text: "Generating confirmation", icon: "✅", delay: 3000 }
+                ],
                 sessionId
               }
             });
@@ -108,6 +115,7 @@ export async function POST(req: NextRequest) {
         // Handle booking step  
         const bookingResult = await bookingManager.processBookingStep(userMessage, sessionId, {
           ...bookingSession,
+          userId: userId || bookingSession.userId,
           lastActivity: Date.now()
         });
         
@@ -115,11 +123,12 @@ export async function POST(req: NextRequest) {
         if (bookingResult.processingPayment) {
           const sessionData = {
             ...bookingResult.bookingData,
+            userId: userId || bookingResult.bookingData.userId,
             lastActivity: Date.now()
           };
           bookingSessions.set(sessionId, sessionData);
           
-          // Auto-complete payment processing after 5 seconds
+          // Auto-complete payment processing after 4 seconds
           setTimeout(async () => {
             try {
               const currentSession = bookingSessions.get(sessionId);
@@ -127,26 +136,29 @@ export async function POST(req: NextRequest) {
                 console.log('Auto-completing payment for session:', sessionId);
                 const completionResult = await bookingManager.completePaymentProcessing(currentSession);
                 bookingSessions.delete(sessionId);
-                
-                // Send completion message via WebSocket or polling mechanism
-                // For now, we'll rely on the client to poll for completion
               }
             } catch (error) {
               console.error('Auto-completion error for session', sessionId, ':', error);
               bookingSessions.delete(sessionId);
             }
-          }, 5000);
+          }, 4000);
           
           return NextResponse.json({
             success: true,
             error: null,
             data: {
-              reply: bookingResult.reply,
+              reply: "",
               consultancies: [],
               actionType: 'book',
               needsBooking: true,
               bookingData: bookingResult.bookingData,
               processingPayment: true,
+              paymentSteps: [
+                { step: 1, text: "Validating payment details", icon: "🔒", delay: 0 },
+                { step: 2, text: "Processing secure transaction", icon: "💳", delay: 1000 },
+                { step: 3, text: "Confirming appointment slot", icon: "📅", delay: 2000 },
+                { step: 4, text: "Generating confirmation", icon: "✅", delay: 3000 }
+              ],
               sessionId
             }
           });
@@ -157,6 +169,7 @@ export async function POST(req: NextRequest) {
         } else {
           bookingSessions.set(sessionId, {
             ...bookingResult.bookingData,
+            userId: userId || bookingResult.bookingData.userId,
             lastActivity: Date.now()
           });
         }
@@ -201,10 +214,11 @@ export async function POST(req: NextRequest) {
     if (result.needsBooking && result.bookingData) {
       const sessionData = {
         ...result.bookingData,
+        userId: userId || result.bookingData.userId,
         lastActivity: Date.now()
       };
       bookingSessions.set(sessionId, sessionData);
-      console.log('Booking session saved:', sessionId, sessionData.step);
+      console.log('Booking session saved:', sessionId, sessionData.step, 'userId:', sessionData.userId);
     }
 
     return NextResponse.json({

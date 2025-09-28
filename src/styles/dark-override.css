@@ -1,0 +1,126 @@
+/* COMPREHENSIVE DARK MODE OVERRIDE - PROPER VISIBILITY */
+
+/* Replace ALL white backgrounds with proper contrast */
+.dark .bg-white,
+.dark [class*="bg-white"] {
+  background-color: #1e1e1e !important;
+  border: 1px solid #404040 !important;
+  color: #ffffff !important;
+}
+
+/* Replace ALL gray backgrounds with proper dark alternatives */
+.dark .bg-gray-50 {
+  background-color: #0f0f0f !important;
+  color: #ffffff !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+.dark .bg-gray-200 {
+  background-color: #262626 !important;
+  color: #ffffff !important;
+}
+
+/* Ensure ALL text is visible */
+.dark .text-gray-900 {
+  color: #ffffff !important;
+}
+
+.dark .text-gray-800 {
+  color: #f1f5f9 !important;
+}
+
+.dark .text-gray-700 {
+  color: #e2e8f0 !important;
+}
+
+.dark .text-gray-600 {
+  color: #cbd5e1 !important;
+}
+
+.dark .text-gray-500 {
+  color: #94a3b8 !important;
+}
+
+.dark .text-gray-400 {
+  color: #64748b !important;
+}
+
+/* Premium button styles */
+.dark button[class*="bg-white"] {
+  background: linear-gradient(135deg, #00d4ff, #a855f7) !important;
+  color: #000000 !important;
+  border: none !important;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.4) !important;
+}
+
+.dark button[class*="bg-white"]:hover {
+  background: linear-gradient(135deg, #06b6d4, #8b5cf6) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 0 30px rgba(0, 212, 255, 0.6) !important;
+}
+
+/* Premium card backgrounds */
+.dark .rounded-xl,
+.dark .rounded-2xl,
+.dark .rounded-3xl,
+.dark .rounded-lg {
+  background-color: #1e1e1e !important;
+  border: 1px solid #404040 !important;
+  color: #ffffff !important;
+}
+
+/* Premium gradients */
+.dark .bg-gradient-to-r.from-indigo-500.via-purple-500.to-pink-500 {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
+  border: 1px solid #00d4ff !important;
+  box-shadow: 0 0 30px rgba(0, 212, 255, 0.3) !important;
+}
+
+/* Ensure content visibility */
+.dark * {
+  color: inherit !important;
+}
+
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: #ffffff !important;
+}
+
+.dark p {
+  color: #cbd5e1 !important;
+}
+
+.dark a {
+  color: #00d4ff !important;
+}
+
+.dark a:hover {
+  color: #06b6d4 !important;
+}
+
+/* Input visibility */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #262626 !important;
+  border: 1px solid #404040 !important;
+  color: #ffffff !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Premium shadows */
+.dark .shadow,
+.dark .shadow-sm,
+.dark .shadow-md,
+.dark .shadow-lg,
+.dark .shadow-xl,
+.dark .shadow-2xl {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 212, 255, 0.1) !important;
+}

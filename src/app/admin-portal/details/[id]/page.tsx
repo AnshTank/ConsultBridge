@@ -135,20 +135,20 @@ export default function ConsultancyDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex items-center justify-center transition-all duration-300">
+        <div className="text-xl text-gray-600 dark:text-gray-300 transition-all duration-300">Loading...</div>
       </div>
     );
   }
 
   if (!consultancy) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex items-center justify-center transition-all duration-300">
         <div className="text-center">
-          <div className="text-xl text-gray-600 mb-4">Consultancy not found</div>
+          <div className="text-xl text-gray-600 dark:text-gray-300 mb-4 transition-all duration-300">Consultancy not found</div>
           <button
             onClick={() => router.push('/admin-portal')}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+            className="bg-indigo-600 dark:bg-neon-blue text-white px-4 py-2 rounded-lg hover:bg-indigo-700 dark:hover:bg-neon-cyan transition-all duration-300"
           >
             Back to Admin Portal
           </button>
@@ -158,7 +158,7 @@ export default function ConsultancyDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-dark-bg dark:via-dark-bg dark:to-dark-bg transition-all duration-300">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="mb-6">
           <button
@@ -167,19 +167,19 @@ export default function ConsultancyDetailsPage() {
               localStorage.setItem('adminAuthenticated', 'true');
               router.push('/admin-portal');
             }}
-            className="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 transition-colors"
+            className="flex items-center gap-2 text-indigo-600 dark:text-neon-blue hover:text-indigo-800 dark:hover:text-neon-cyan transition-all duration-300"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Admin Portal
           </button>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+        <div className="bg-white dark:bg-dark-card dark:border dark:border-dark-border rounded-xl shadow-lg dark:shadow-neon-lg overflow-hidden transition-all duration-300">
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-800 dark:to-purple-800 p-6 text-white transition-all duration-300">
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-3xl font-bold">{consultancy.name}</h1>
-                <p className="text-indigo-100">{consultancy.category}</p>
+                <p className="text-indigo-100 dark:text-gray-300 transition-all duration-300">{consultancy.category}</p>
               </div>
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                 consultancy.status === 'verified' ? 'bg-green-100 text-green-800' :
@@ -194,32 +194,32 @@ export default function ConsultancyDetailsPage() {
           <div className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-6">
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-6 border border-blue-200">
-                  <h3 className="font-bold text-blue-800 mb-4 text-lg flex items-center gap-2">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-700 transition-all duration-300">
+                  <h3 className="font-bold text-blue-800 dark:text-blue-300 mb-4 text-lg flex items-center gap-2 transition-all duration-300">
                     📊 Basic Information
                   </h3>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-gray-600">
+                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 transition-all duration-300">
                       <MapPin className="w-4 h-4" />
                       <span className="font-semibold">Location:</span> {consultancy.location}
                     </div>
-                    <div className="flex items-center gap-2 text-gray-600">
+                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 transition-all duration-300">
                       <Star className="w-4 h-4" />
                       <span className="font-semibold">Rating:</span> {consultancy.rating}/5 ({consultancy.reviews} reviews)
                     </div>
-                    <p><span className="font-semibold text-gray-700">Price:</span> {consultancy.price || 'N/A'}</p>
-                    <p><span className="font-semibold text-gray-700">Registered:</span> {new Date(consultancy.createdAt).toLocaleDateString()}</p>
+                    <p className="text-gray-700 dark:text-gray-300 transition-all duration-300"><span className="font-semibold">Price:</span> {consultancy.price || 'N/A'}</p>
+                    <p className="text-gray-700 dark:text-gray-300 transition-all duration-300"><span className="font-semibold">Registered:</span> {new Date(consultancy.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
                 
-                <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl p-6 border border-green-200">
-                  <h3 className="font-bold text-green-800 mb-4 text-lg flex items-center gap-2">
+                <div className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-700 transition-all duration-300">
+                  <h3 className="font-bold text-green-800 dark:text-green-300 mb-4 text-lg flex items-center gap-2 transition-all duration-300">
                     📞 Contact Information
                   </h3>
                   <div className="space-y-3">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-gray-600">
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 transition-all duration-300">
                           <Mail className="w-4 h-4" />
                           <span className="font-semibold">Email:</span> {consultancy.contact?.email}
                           {consultancy.verification?.emailVerified ? (
@@ -231,14 +231,14 @@ export default function ConsultancyDetailsPage() {
                         {!consultancy.verification?.emailVerified && (
                           <button
                             onClick={() => handleSendVerificationNote('email')}
-                            className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                            className="text-xs bg-blue-500 dark:bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-600 dark:hover:bg-blue-700 transition-all duration-300"
                           >
                             📧 Verify
                           </button>
                         )}
                       </div>
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-gray-600">
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 transition-all duration-300">
                           <Phone className="w-4 h-4" />
                           <span className="font-semibold">Phone:</span> {consultancy.contact?.phone}
                           {consultancy.verification?.phoneVerified ? (
@@ -250,34 +250,34 @@ export default function ConsultancyDetailsPage() {
                         {!consultancy.verification?.phoneVerified && (
                           <button
                             onClick={() => handleSendVerificationNote('phone')}
-                            className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                            className="text-xs bg-blue-500 dark:bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-600 dark:hover:bg-blue-700 transition-all duration-300"
                           >
                             📱 Verify
                           </button>
                         )}
                       </div>
                     </div>
-                    <p><span className="font-semibold text-gray-700">Website:</span> {consultancy.contact?.website || 'N/A'}</p>
+                    <p className="text-gray-700 dark:text-gray-300 transition-all duration-300"><span className="font-semibold">Website:</span> {consultancy.contact?.website || 'N/A'}</p>
                   </div>
                 </div>
 
                 {consultancy.availability && (
-                  <div className="bg-gradient-to-br from-purple-50 to-pink-100 rounded-xl p-6 border border-purple-200">
-                    <h3 className="font-bold text-purple-800 mb-4 text-lg flex items-center gap-2">
+                  <div className="bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-700 transition-all duration-300">
+                    <h3 className="font-bold text-purple-800 dark:text-purple-300 mb-4 text-lg flex items-center gap-2 transition-all duration-300">
                       📅 Availability
                     </h3>
                     <div className="space-y-3">
                       <div>
-                        <span className="font-semibold text-gray-700">Days:</span>
+                        <span className="font-semibold text-gray-700 dark:text-gray-300 transition-all duration-300">Days:</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {consultancy.availability.days?.map((day, index) => (
-                            <span key={index} className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">
+                            <span key={index} className="bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-200 px-2 py-1 rounded text-xs transition-all duration-300">
                               {day}
                             </span>
                           ))}
                         </div>
                       </div>
-                      <p><span className="font-semibold text-gray-700">Hours:</span> {consultancy.availability.hours}</p>
+                      <p className="text-gray-700 dark:text-gray-300 transition-all duration-300"><span className="font-semibold">Hours:</span> {consultancy.availability.hours}</p>
                     </div>
                   </div>
                 )}
@@ -285,31 +285,31 @@ export default function ConsultancyDetailsPage() {
               
               <div className="space-y-6">
                 {consultancy.expertise && consultancy.expertise.length > 0 && (
-                  <div className="bg-gradient-to-br from-orange-50 to-red-100 rounded-xl p-6 border border-orange-200">
-                    <h3 className="font-bold text-orange-800 mb-4 text-lg flex items-center gap-2">
+                  <div className="bg-gradient-to-br from-orange-50 to-red-100 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl p-6 border border-orange-200 dark:border-orange-700 transition-all duration-300">
+                    <h3 className="font-bold text-orange-800 dark:text-orange-300 mb-4 text-lg flex items-center gap-2 transition-all duration-300">
                       🎯 Expertise
                     </h3>
                     <div className="space-y-2">
                       {consultancy.expertise.map((skill, index) => (
                         <div key={index} className="flex items-center gap-2">
                           <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                          <span className="text-gray-700">{skill}</span>
+                          <span className="text-gray-700 dark:text-gray-300 transition-all duration-300">{skill}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
 
-                <div className="bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl p-6 border border-gray-200">
-                  <h3 className="font-bold text-gray-800 mb-4 text-lg flex items-center gap-2">
+                <div className="bg-gradient-to-br from-gray-50 to-slate-100 dark:from-gray-800/20 dark:to-slate-800/20 rounded-xl p-6 border border-gray-200 dark:border-gray-700 transition-all duration-300">
+                  <h3 className="font-bold text-gray-800 dark:text-gray-200 mb-4 text-lg flex items-center gap-2 transition-all duration-300">
                     📝 Description
                   </h3>
-                  <p className="text-gray-700 leading-relaxed">{consultancy.description}</p>
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed transition-all duration-300">{consultancy.description}</p>
                 </div>
 
                 {consultancy.whyChooseUs && consultancy.whyChooseUs.length > 0 && (
-                  <div className="bg-gradient-to-br from-teal-50 to-cyan-100 rounded-xl p-6 border border-teal-200">
-                    <h3 className="font-bold text-teal-800 mb-4 text-lg flex items-center gap-2">
+                  <div className="bg-gradient-to-br from-teal-50 to-cyan-100 dark:from-teal-900/20 dark:to-cyan-900/20 rounded-xl p-6 border border-teal-200 dark:border-teal-700 transition-all duration-300">
+                    <h3 className="font-bold text-teal-800 dark:text-teal-300 mb-4 text-lg flex items-center gap-2 transition-all duration-300">
                       ✨ Why Choose Us
                     </h3>
                     <div className="space-y-2">
@@ -317,31 +317,31 @@ export default function ConsultancyDetailsPage() {
                         consultancy.whyChooseUs.map((reason, index) => (
                           <div key={index} className="flex items-start gap-2">
                             <span className="w-2 h-2 bg-teal-500 rounded-full mt-2 flex-shrink-0"></span>
-                            <span className="text-gray-700">{reason}</span>
+                            <span className="text-gray-700 dark:text-gray-300 transition-all duration-300">{reason}</span>
                           </div>
                         ))
                       ) : (
-                        <div className="text-gray-500 text-sm">No reasons provided</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-sm transition-all duration-300">No reasons provided</div>
                       )}
                     </div>
                   </div>
                 )}
 
                 {consultancy.status === 'rejected' && consultancy.rejectionReason && (
-                  <div className="bg-gradient-to-br from-red-50 to-pink-100 rounded-xl p-6 border border-red-200">
-                    <h3 className="font-bold text-red-800 mb-4 text-lg">❌ Rejection Reason</h3>
-                    <p className="text-red-700">{consultancy.rejectionReason}</p>
+                  <div className="bg-gradient-to-br from-red-50 to-pink-100 dark:from-red-900/20 dark:to-pink-900/20 rounded-xl p-6 border border-red-200 dark:border-red-700 transition-all duration-300">
+                    <h3 className="font-bold text-red-800 dark:text-red-300 mb-4 text-lg transition-all duration-300">❌ Rejection Reason</h3>
+                    <p className="text-red-700 dark:text-red-300 transition-all duration-300">{consultancy.rejectionReason}</p>
                   </div>
                 )}
               </div>
             </div>
             
-            <div className="mt-6 pt-4 border-t border-gray-200">
+            <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 transition-all duration-300">
               <div className="flex gap-4 justify-center flex-wrap">
                 {consultancy.image && (
                   <button
                     onClick={() => setShowImageModal(true)}
-                    className="bg-white border-2 border-purple-500 text-purple-600 px-6 py-3 rounded-xl hover:bg-purple-50 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                    className="bg-purple-500 dark:bg-purple-600 border-2 border-purple-500 dark:border-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-600 dark:hover:bg-purple-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                   >
                     <Eye className="w-5 h-5" />
                     🖼️ View Image
@@ -351,14 +351,14 @@ export default function ConsultancyDetailsPage() {
                   <>
                     <button
                       onClick={() => updateStatus('verified')}
-                      className="bg-white border-2 border-green-500 text-green-600 px-8 py-3 rounded-xl hover:bg-green-50 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg font-semibold"
+                      className="bg-green-500 dark:bg-green-600 border-2 border-green-500 dark:border-green-600 text-white px-8 py-3 rounded-xl hover:bg-green-600 dark:hover:bg-green-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg font-semibold"
                     >
                       <CheckCircle className="w-5 h-5" />
                       ✅ Approve Consultancy
                     </button>
                     <button
                       onClick={handleReject}
-                      className="bg-white border-2 border-red-500 text-red-600 px-8 py-3 rounded-xl hover:bg-red-50 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg font-semibold"
+                      className="bg-red-500 dark:bg-red-600 border-2 border-red-500 dark:border-red-600 text-white px-8 py-3 rounded-xl hover:bg-red-600 dark:hover:bg-red-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg font-semibold"
                     >
                       <XCircle className="w-5 h-5" />
                       ❌ Reject Consultancy
@@ -373,7 +373,7 @@ export default function ConsultancyDetailsPage() {
         {/* Image Modal */}
         {showImageModal && (
           <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/50 backdrop-blur-md z-50 flex items-center justify-center p-4"
             style={{
               position: 'fixed',
               top: 0,
@@ -381,15 +381,16 @@ export default function ConsultancyDetailsPage() {
               right: 0,
               bottom: 0,
               width: '100vw',
-              height: '100vh'
+              height: '100vh',
+              overflow: 'hidden'
             }}
             onClick={() => setShowImageModal(false)}
           >
             <div 
-              className="bg-white rounded-2xl shadow-2xl max-w-2xl w-[90vw] overflow-hidden"
+              className="bg-white dark:bg-dark-card dark:border dark:border-dark-border rounded-2xl shadow-2xl dark:shadow-neon-lg max-w-2xl w-[90vw] overflow-hidden transition-all duration-300"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 text-white">
+              <div className="bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-800 dark:to-pink-800 p-4 text-white transition-all duration-300">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-bold">🖼️ {consultancy.name} - Image</h3>
                   <button
@@ -402,7 +403,7 @@ export default function ConsultancyDetailsPage() {
               </div>
               
               <div className="p-6">
-                <div className="w-full h-96 bg-gray-100 rounded-lg overflow-hidden">
+                <div className="w-full h-96 bg-gray-100 dark:bg-dark-surface rounded-lg overflow-hidden transition-all duration-300">
                   <img
                     src={consultancy.image}
                     alt={consultancy.name}
@@ -415,10 +416,10 @@ export default function ConsultancyDetailsPage() {
                 </div>
               </div>
               
-              <div className="p-4 border-t border-gray-200">
+              <div className="p-4 border-t border-gray-200 dark:border-gray-700 transition-all duration-300">
                 <button
                   onClick={() => setShowImageModal(false)}
-                  className="w-full bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors"
+                  className="w-full bg-gray-500 dark:bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-600 dark:hover:bg-gray-700 transition-all duration-300"
                 >
                   Close
                 </button>

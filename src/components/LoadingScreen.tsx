@@ -128,11 +128,10 @@ const LoadingScreen = ({
   // Default variant - WOW factor
   return (
     <motion.div
-      className="fixed inset-0 flex items-center justify-center z-50"
+      className="fixed inset-0 flex items-center justify-center z-50 bg-gray-50 dark:bg-dark-bg"
       style={{ 
         width: "100vw", 
         height: "100vh",
-        backgroundColor: "white",
         overflow: "hidden"
       }}
       animate={{
@@ -146,9 +145,9 @@ const LoadingScreen = ({
       <div className="text-center relative">
         {/* Static Background Elements */}
         <div className="absolute inset-0 -z-10">
-          <div className="absolute w-32 h-32 rounded-full bg-gradient-to-r from-indigo-300/40 to-purple-300/40 blur-xl top-1/4 left-1/4"></div>
-          <div className="absolute w-24 h-24 rounded-full bg-gradient-to-r from-blue-300/35 to-pink-300/35 blur-xl top-3/4 right-1/4"></div>
-          <div className="absolute w-40 h-40 rounded-full bg-gradient-to-r from-purple-300/30 to-indigo-300/30 blur-xl bottom-1/4 left-1/3"></div>
+          <div className="absolute w-32 h-32 rounded-full bg-gradient-to-r from-indigo-300/40 to-purple-300/40 dark:from-indigo-900/20 dark:to-purple-900/20 blur-xl top-1/4 left-1/4"></div>
+          <div className="absolute w-24 h-24 rounded-full bg-gradient-to-r from-blue-300/35 to-pink-300/35 dark:from-blue-900/15 dark:to-pink-900/15 blur-xl top-3/4 right-1/4"></div>
+          <div className="absolute w-40 h-40 rounded-full bg-gradient-to-r from-purple-300/30 to-indigo-300/30 dark:from-purple-900/10 dark:to-indigo-900/10 blur-xl bottom-1/4 left-1/3"></div>
         </div>
 
         {/* Main Loading Animation */}
@@ -173,7 +172,7 @@ const LoadingScreen = ({
               }}
             />
             <motion.div
-              className="absolute inset-3 bg-white rounded-full flex items-center justify-center"
+              className="absolute inset-3 bg-white dark:bg-black rounded-full flex items-center justify-center"
               animate={{
                 scale: [1, 0.9, 1],
               }}
@@ -184,7 +183,7 @@ const LoadingScreen = ({
               }}
             >
               <motion.span
-                className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
+                className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-white dark:to-white bg-clip-text text-transparent dark:text-white"
                 animate={{
                   scale: [1, 1.1, 1],
                 }}
@@ -227,7 +226,7 @@ const LoadingScreen = ({
 
           {/* Loading Text */}
           <motion.p
-            className="text-xl font-medium bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
+            className="text-xl font-medium bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-white dark:to-white bg-clip-text text-transparent dark:text-white"
             animate={{
               opacity: [0.7, 1, 0.7],
             }}

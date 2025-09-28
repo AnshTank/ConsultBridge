@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Phone, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { usePopup } from '../contexts/PopupContext';
 
 interface VerificationModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ const VerificationModal: React.FC<VerificationModalProps> = ({
   email,
   phone
 }) => {
+  const { openPopup, closePopup } = usePopup();
   const [emailCode, setEmailCode] = useState('');
   const [phoneCode, setPhoneCode] = useState('');
   const [emailVerified, setEmailVerified] = useState(false);
@@ -26,6 +28,14 @@ const VerificationModal: React.FC<VerificationModalProps> = ({
   const [phoneSent, setPhoneSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      openPopup('verification-modal');
+    } else {
+      closePopup('verification-modal');
+    }
+  }, [isOpen, openPopup, closePopup]);
 
 
 

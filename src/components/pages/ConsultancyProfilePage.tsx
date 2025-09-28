@@ -46,14 +46,14 @@ function ConsultancyProfilePage({ id }: { id: string }) {
 
   if (!consultancy) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex items-center justify-center transition-all duration-300">
         <div className="text-center">
-          <div className="text-xl text-gray-600 mb-4">
+          <div className="text-xl text-gray-600 dark:text-gray-300 mb-4 transition-all duration-300">
             Consultancy not found
           </div>
           <button
             onClick={() => (window.location.href = "/")}
-            className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
+            className="px-4 py-2 bg-indigo-500 dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple text-white rounded-lg hover:bg-indigo-600 dark:hover:from-neon-cyan dark:hover:to-neon-pink transition-all duration-300"
           >
             Return to Home
           </button>
@@ -145,9 +145,12 @@ function ConsultancyProfilePage({ id }: { id: string }) {
 
   return (
     <SmartPageWrapper loadingMessage="💼 Loading consultancy profile...">
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
-          <Navbar />
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-all duration-300">
+        <header className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:bg-gradient-to-br dark:from-slate-900 dark:via-gray-900 dark:to-black text-white relative overflow-hidden">
+          <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-blue-900/30 dark:via-purple-900/40 dark:to-pink-900/30"></div>
+          <div className="relative z-10">
+            <Navbar />
+          </div>
         </header>
 
         <ConsultancyProfile

@@ -21,22 +21,40 @@ export default function FeaturedConsultancies() {
   useEffect(() => {
     const fetchFeaturedConsultancies = async () => {
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
         const response = await fetch(`/api/consultancies/top-rated?t=${Date.now()}`, {
           cache: "no-store",
           headers: {
             "Cache-Control": "no-cache",
           },
+          signal: controller.signal,
         });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const result = await response.json();
 
         if (result.success && result.data) {
           setConsultancies(result.data);
         } else {
-          setConsultancies([]);
+          console.warn('No consultancies data received, using fallback');
+          const { fallbackConsultancies } = await import('../data/fallback');
+          setConsultancies(fallbackConsultancies);
         }
-      } catch (error) {
-        console.error("Error fetching top-rated consultancies:", error);
-        setConsultancies([]);
+      } catch (error: any) {
+        if (error?.name === 'AbortError') {
+          console.error('Request timed out, using fallback data');
+        } else {
+          console.error("Error fetching top-rated consultancies, using fallback:", error);
+        }
+        const { fallbackConsultancies } = await import('../data/fallback');
+        setConsultancies(fallbackConsultancies);
       } finally {
         setLoading(false);
       }
@@ -47,9 +65,9 @@ export default function FeaturedConsultancies() {
 
   if (loading) {
     return (
-      <section className="bg-white py-16">
+      <section className="bg-white dark:bg-dark-bg py-16">
         <div className="container mx-auto px-6">
-          <h3 className="text-3xl font-bold mb-12 text-center">
+          <h3 className="text-3xl font-bold mb-12 text-center text-gray-900 dark:text-white">
             Top Rated Consultancies
           </h3>
           <LoadingScreen
@@ -62,9 +80,9 @@ export default function FeaturedConsultancies() {
   }
 
   return (
-    <section className="bg-white py-12 md:py-16">
+    <section className="bg-white dark:bg-dark-bg py-12 md:py-16">
       <div className="container mx-auto px-4 md:px-6">
-        <h3 className="text-2xl md:text-3xl font-bold mb-8 md:mb-12 text-center">
+        <h3 className="text-2xl md:text-3xl font-bold mb-8 md:mb-12 text-center text-gray-900 dark:text-white">
           Top Rated Consultancies
         </h3>
         {consultancies.length > 0 ? (
@@ -99,10 +117,10 @@ export default function FeaturedConsultancies() {
             <div className="text-gray-400 mb-3 md:mb-4">
               <span className="text-4xl md:text-6xl">🏆</span>
             </div>
-            <h3 className="text-lg md:text-xl font-semibold text-gray-600 mb-2">
+            <h3 className="text-lg md:text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
               No Top-Rated Consultancies Yet
             </h3>
-            <p className="text-sm md:text-base text-gray-500 px-4">
+            <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 px-4">
               We're working on bringing you the best consultancy services. Check
               back soon!
             </p>

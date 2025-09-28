@@ -16,6 +16,7 @@ import Link from "next/link";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { appointmentManager } from "../utils/appointmentManager";
 import { useScrollLock } from "../hooks/useScrollLock";
+import Modal from "./Modal";
 
 interface ConsultancyProfileProps {
   id: string;
@@ -83,8 +84,8 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
     date: string;
   } | null>(null);
 
-  // Lock scroll when modals are open
-  useScrollLock(showWhyChooseUsModal || !!conflictModal);
+  // Lock scroll when conflict modal is open (Modal component handles its own scroll lock)
+  useScrollLock(!!conflictModal);
 
 
 
@@ -196,50 +197,50 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
       {/* Header Section */}
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+      <div className="bg-white dark:bg-dark-card dark:border dark:border-dark-border rounded-xl shadow-lg dark:shadow-neon-sm overflow-hidden mb-8 transition-all duration-300">
         <div className="h-48 md:h-64 w-full relative">
           <img src={image} alt={name} className="w-full h-full object-cover" />
         </div>
         <div className="p-4 md:p-8">
           <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
             <div className="flex-1">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{name}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2 transition-all duration-300">{name}</h1>
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 md:w-5 md:h-5 text-yellow-400 fill-current" />
-                  <span className="font-semibold text-sm md:text-base">{realRating}</span>
-                  <span className="text-gray-500 text-sm md:text-base">
+                  <span className="font-semibold text-sm md:text-base dark:text-white transition-all duration-300">{realRating}</span>
+                  <span className="text-gray-500 dark:text-gray-400 text-sm md:text-base transition-all duration-300">
                     ({realReviewCount} reviews)
                   </span>
                 </div>
-                <span className="text-blue-600 text-sm md:text-base">{category}</span>
+                <span className="text-blue-600 dark:text-neon-blue text-sm md:text-base transition-all duration-300">{category}</span>
               </div>
-              <div className="flex items-center text-gray-600 mb-4">
+              <div className="flex items-center text-gray-600 dark:text-gray-300 mb-4 transition-all duration-300">
                 <MapPin className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                 <span className="text-sm md:text-base">{location}</span>
               </div>
             </div>
             <div className="text-center md:text-right flex-shrink-0">
-              <p className="text-xl md:text-2xl font-bold text-blue-600">
+              <p className="text-xl md:text-2xl font-bold text-blue-600 dark:text-neon-blue transition-all duration-300">
                 {price.startsWith("$") ? price : `$${price}`}
               </p>
-              <p className="text-gray-500 text-sm md:text-base">per session</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base transition-all duration-300">per session</p>
             </div>
           </div>
 
           <div className="space-y-4 md:space-y-6">
             <div>
-              <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3">About Us</h3>
-              <p className="text-gray-700 text-sm md:text-base leading-relaxed">{description}</p>
+              <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3 dark:text-white transition-all duration-300">About Us</h3>
+              <p className="text-gray-700 dark:text-gray-300 text-sm md:text-base leading-relaxed transition-all duration-300">{description}</p>
             </div>
 
-            <div className="border-t pt-4 md:pt-6">
-              <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Areas of Expertise</h3>
+            <div className="border-t dark:border-dark-border pt-4 md:pt-6 transition-all duration-300">
+              <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4 dark:text-white transition-all duration-300">Areas of Expertise</h3>
               <div className="flex flex-wrap gap-2">
                 {(expertise || []).map((skill, index) => (
                   <span
                     key={index}
-                    className="bg-blue-50 text-blue-700 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm"
+                    className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm transition-all duration-300"
                   >
                     {skill}
                   </span>
@@ -252,27 +253,27 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
 
       {/* Appointment Booking Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-        <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
-          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Schedule an Appointment</h2>
+        <div className="bg-white dark:bg-dark-card dark:border dark:border-dark-border rounded-xl shadow-lg dark:shadow-neon-sm p-4 md:p-8 transition-all duration-300">
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 dark:text-white transition-all duration-300">Schedule an Appointment</h2>
 
           <div className="mb-4 md:mb-6">
-            <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3">Appointment Type</h3>
+            <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3 dark:text-white transition-all duration-300">Appointment Type</h3>
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
               <button
-                className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg border text-sm md:text-base ${
+                className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg border text-sm md:text-base transition-all duration-300 ${
                   appointmentType === "online"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-blue-500"
+                    ? "bg-blue-600 dark:bg-neon-blue text-white border-blue-600 dark:border-neon-blue"
+                    : "bg-white dark:bg-dark-surface text-gray-700 dark:text-gray-300 border-gray-300 dark:border-dark-border hover:border-blue-500 dark:hover:border-neon-blue"
                 }`}
                 onClick={() => setAppointmentType("online")}
               >
                 Online Meeting
               </button>
               <button
-                className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg border text-sm md:text-base ${
+                className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg border text-sm md:text-base transition-all duration-300 ${
                   appointmentType === "offline"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-blue-500"
+                    ? "bg-blue-600 dark:bg-neon-blue text-white border-blue-600 dark:border-neon-blue"
+                    : "bg-white dark:bg-dark-surface text-gray-700 dark:text-gray-300 border-gray-300 dark:border-dark-border hover:border-blue-500 dark:hover:border-neon-blue"
                 }`}
                 onClick={() => setAppointmentType("offline")}
               >
@@ -282,7 +283,7 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
           </div>
 
           <div className="mb-4 md:mb-6">
-            <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3">Select Date</h3>
+            <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3 dark:text-white transition-all duration-300">Select Date</h3>
             <div className="relative">
               <div
                 className={`relative cursor-pointer transition-all duration-300 select-none ${
@@ -295,14 +296,14 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
                 <div
                   className={`w-full p-3 border rounded-lg transition-all duration-300 cursor-pointer flex items-center justify-between ${
                     dateError
-                      ? "border-red-300 bg-red-50 animate-pulse"
+                      ? "border-red-300 dark:border-red-500 bg-red-50 dark:bg-red-900/20 animate-pulse"
                       : selectedDate
-                        ? "border-green-300 bg-green-50"
-                        : "border-gray-300 bg-white hover:border-blue-400"
+                        ? "border-green-300 dark:border-neon-green bg-green-50 dark:bg-green-900/20"
+                        : "border-gray-300 dark:border-dark-border bg-white dark:bg-dark-surface hover:border-blue-400 dark:hover:border-neon-blue"
                   }`}
                 >
                   <span
-                    className={selectedDate ? "text-gray-900" : "text-gray-500"}
+                    className={selectedDate ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"}
                   >
                     {selectedDate
                       ? new Date(selectedDate).toLocaleDateString("en-GB", {
@@ -318,7 +319,7 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
                     transition={{ duration: 0.2 }}
                   >
                     <svg
-                      className="w-5 h-5 text-gray-400"
+                      className="w-5 h-5 text-gray-400 dark:text-gray-500"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -337,7 +338,7 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
               {/* Custom Calendar */}
               {showCalendar && (
                 <motion.div
-                  className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden"
+                  className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-lg dark:shadow-neon-md z-50 overflow-hidden transition-all duration-300"
                   initial={{ opacity: 0, y: -10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -376,17 +377,17 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
               </p> */}
               {dateError && (
                 <motion.div
-                  className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2"
+                  className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500 rounded-lg flex items-center gap-2 transition-all duration-300"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                 >
                   <span className="text-red-500 text-lg">⚠️</span>
                   <div>
-                    <p className="text-red-700 font-medium text-sm">
+                    <p className="text-red-700 dark:text-red-400 font-medium text-sm transition-all duration-300">
                       {dateError}
                     </p>
-                    <p className="text-red-600 text-xs mt-1">
+                    <p className="text-red-600 dark:text-red-300 text-xs mt-1 transition-all duration-300">
                       Please choose: {(availability?.days || []).join(", ")}
                     </p>
                   </div>
@@ -396,7 +397,7 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
           </div>
 
           <div className="mb-4 md:mb-6">
-            <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3">Select Time</h3>
+            <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3 dark:text-white transition-all duration-300">Select Time</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {timeSlots.map((time) => {
                 const isAvailable =
@@ -406,12 +407,12 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
                 return (
                   <button
                     key={time}
-                    className={`p-2 text-xs md:text-sm border rounded-lg ${
+                    className={`p-2 text-xs md:text-sm border rounded-lg transition-all duration-300 ${
                       selectedTime === time
-                        ? "bg-blue-600 text-white border-blue-600"
+                        ? "bg-blue-600 dark:bg-neon-blue text-white border-blue-600 dark:border-neon-blue"
                         : isAvailable
-                          ? "bg-white text-gray-700 border-gray-300 hover:border-blue-500"
-                          : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                          ? "bg-white dark:bg-dark-surface text-gray-700 dark:text-gray-300 border-gray-300 dark:border-dark-border hover:border-blue-500 dark:hover:border-neon-blue"
+                          : "bg-gray-100 dark:bg-dark-bg text-gray-400 dark:text-gray-500 border-gray-200 dark:border-dark-border cursor-not-allowed"
                     }`}
                     onClick={() => {
                       if (isAvailable) {
@@ -426,12 +427,12 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
               })}
             </div>
             {!selectedDate && (
-              <p className="text-gray-500 text-sm mt-2">
+              <p className="text-gray-500 dark:text-gray-400 text-sm mt-2 transition-all duration-300">
                 Please select a date first to see available time slots
               </p>
             )}
             {availableSlots.length === 0 && selectedDate && (
-              <p className="text-gray-500 text-sm mt-2">
+              <p className="text-gray-500 dark:text-gray-400 text-sm mt-2 transition-all duration-300">
                 No available slots for selected date
               </p>
             )}
@@ -498,10 +499,10 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
                 }
               }}
               disabled={isCheckingConflict}
-              className={`book-button w-full py-3 rounded-lg font-semibold transition-all ${
+              className={`book-button w-full py-3 rounded-lg font-semibold transition-all duration-300 ${
                 selectedDate && selectedTime && !isCheckingConflict
-                  ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600 cursor-pointer"
-                  : "bg-gray-400 text-gray-600 cursor-not-allowed"
+                  ? "bg-gradient-to-r from-indigo-500 to-purple-500 dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple text-white hover:from-indigo-600 hover:to-purple-600 dark:hover:from-neon-cyan dark:hover:to-neon-pink cursor-pointer shadow-lg dark:shadow-neon-lg"
+                  : "bg-gray-400 dark:bg-dark-border text-gray-600 dark:text-gray-500 cursor-not-allowed"
               }`}
             >
               {isCheckingConflict
@@ -510,30 +511,30 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
             </button>
           ) : (
             <SignInButton>
-              <button className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-3 rounded-lg font-semibold hover:from-indigo-600 hover:to-purple-600 transition-all">
+              <button className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 dark:bg-gradient-to-r dark:from-neon-blue dark:to-neon-purple text-white py-3 rounded-lg font-semibold hover:from-indigo-600 hover:to-purple-600 dark:hover:from-neon-cyan dark:hover:to-neon-pink transition-all duration-300 shadow-lg dark:shadow-neon-lg">
                 Sign In to Book Appointment
               </button>
             </SignInButton>
           )}
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
-          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Contact Information</h2>
+        <div className="bg-white dark:bg-dark-card dark:border dark:border-dark-border rounded-xl shadow-lg dark:shadow-neon-sm p-4 md:p-8 transition-all duration-300">
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 dark:text-white transition-all duration-300">Contact Information</h2>
 
           <div className="space-y-3 md:space-y-4">
             <div className="flex items-center">
-              <Phone className="w-4 h-4 md:w-5 md:h-5 text-gray-500 mr-2 md:mr-3 flex-shrink-0" />
-              <span className="text-sm md:text-base break-all">{contact?.phone || "Not provided"}</span>
+              <Phone className="w-4 h-4 md:w-5 md:h-5 text-gray-500 dark:text-gray-400 mr-2 md:mr-3 flex-shrink-0 transition-all duration-300" />
+              <span className="text-sm md:text-base break-all dark:text-gray-300 transition-all duration-300">{contact?.phone || "Not provided"}</span>
             </div>
             <div className="flex items-center">
-              <Mail className="w-4 h-4 md:w-5 md:h-5 text-gray-500 mr-2 md:mr-3 flex-shrink-0" />
-              <span className="text-sm md:text-base break-all">{contact?.email || "Not provided"}</span>
+              <Mail className="w-4 h-4 md:w-5 md:h-5 text-gray-500 dark:text-gray-400 mr-2 md:mr-3 flex-shrink-0 transition-all duration-300" />
+              <span className="text-sm md:text-base break-all dark:text-gray-300 transition-all duration-300">{contact?.email || "Not provided"}</span>
             </div>
             <div className="flex items-center">
-              <Globe className="w-4 h-4 md:w-5 md:h-5 text-gray-500 mr-2 md:mr-3 flex-shrink-0" />
+              <Globe className="w-4 h-4 md:w-5 md:h-5 text-gray-500 dark:text-gray-400 mr-2 md:mr-3 flex-shrink-0 transition-all duration-300" />
               <a
                 href={contact?.website || "#"}
-                className="text-blue-600 hover:underline text-sm md:text-base break-all"
+                className="text-blue-600 dark:text-neon-blue hover:underline text-sm md:text-base break-all transition-all duration-300"
               >
                 {contact?.website || "Not provided"}
               </a>
@@ -541,18 +542,18 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
           </div>
 
           <div className="mt-6 md:mt-8">
-            <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Availability</h3>
+            <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4 dark:text-white transition-all duration-300">Availability</h3>
             <div className="flex items-center mb-2 md:mb-3">
-              <Calendar className="w-4 h-4 md:w-5 md:h-5 text-gray-500 mr-2 md:mr-3 flex-shrink-0" />
-              <span className="text-sm md:text-base">{(availability?.days || []).join(", ")}</span>
+              <Calendar className="w-4 h-4 md:w-5 md:h-5 text-gray-500 dark:text-gray-400 mr-2 md:mr-3 flex-shrink-0 transition-all duration-300" />
+              <span className="text-sm md:text-base dark:text-gray-300 transition-all duration-300">{(availability?.days || []).join(", ")}</span>
             </div>
             <div className="flex items-center">
-              <Clock className="w-4 h-4 md:w-5 md:h-5 text-gray-500 mr-2 md:mr-3 flex-shrink-0" />
-              <span className="text-sm md:text-base">{availability?.hours || "Not specified"}</span>
+              <Clock className="w-4 h-4 md:w-5 md:h-5 text-gray-500 dark:text-gray-400 mr-2 md:mr-3 flex-shrink-0 transition-all duration-300" />
+              <span className="text-sm md:text-base dark:text-gray-300 transition-all duration-300">{availability?.hours || "Not specified"}</span>
             </div>
           </div>
           <div className="mt-6 md:mt-8">
-            <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Why Choose Us</h3>
+            <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4 dark:text-white transition-all duration-300">Why Choose Us</h3>
             {(() => {
               const items = Array.isArray(whyChooseUs)
                 ? whyChooseUs
@@ -572,15 +573,15 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
                 <ul className="space-y-3">
                   {visibleItems.map((item, index) => (
                     <li key={index} className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                      <span>{item}</span>
+                      <CheckCircle className="w-5 h-5 text-green-500 dark:text-neon-green mr-3 transition-all duration-300" />
+                      <span className="dark:text-gray-300 transition-all duration-300">{item}</span>
                     </li>
                   ))}
                   {hasMore && (
                     <li className="flex items-center">
                       <button
                         onClick={() => setShowWhyChooseUsModal(true)}
-                        className="flex items-center bg-white border border-black text-black px-3 py-1 rounded-full text-sm hover:bg-gray-50"
+                        className="flex items-center bg-white dark:bg-dark-surface border border-black dark:border-dark-border text-black dark:text-white px-3 py-1 rounded-full text-sm hover:bg-gray-50 dark:hover:bg-dark-card transition-all duration-300"
                       >
                         <Plus className="w-4 h-4 mr-1" />
                         {items.length - 3} more
@@ -705,67 +706,31 @@ const ConsultancyProfile: React.FC<ConsultancyProfileProps> = ({
       )}
 
       {/* Why Choose Us Modal */}
-      {showWhyChooseUsModal && (
-        <motion.div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={() => setShowWhyChooseUsModal(false)}
-          onWheel={(e) => e.preventDefault()}
-          onTouchMove={(e) => e.preventDefault()}
-        >
-          <motion.div
-            className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <motion.h3
-              className="text-lg font-semibold mb-4"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-            >
-              Why Choose Us
-            </motion.h3>
-            <motion.ul
-              className="space-y-3"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            >
-              {(Array.isArray(whyChooseUs)
-                ? whyChooseUs
-                : whyChooseUs
-                  ? whyChooseUs.split(",").map((item) => item.trim())
-                  : [
-                      "Experienced professionals",
-                      "Flexible scheduling",
-                      "Personalized approach",
-                      "Proven track record",
-                    ]
-              ).map((item, index) => (
-                <li key={index} className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </motion.ul>
-            <motion.button
-              onClick={() => setShowWhyChooseUsModal(false)}
-              className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors mt-4"
-              initial={{ y: 30, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-            >
-              Close
-            </motion.button>
-          </motion.div>
-        </motion.div>
-      )}
+      <Modal
+        isOpen={showWhyChooseUsModal}
+        onClose={() => setShowWhyChooseUsModal(false)}
+        title="Why Choose Us"
+        maxWidth="max-w-md"
+      >
+        <ul className="space-y-3">
+          {(Array.isArray(whyChooseUs)
+            ? whyChooseUs
+            : whyChooseUs
+              ? whyChooseUs.split(",").map((item) => item.trim())
+              : [
+                  "Experienced professionals",
+                  "Flexible scheduling",
+                  "Personalized approach",
+                  "Proven track record",
+                ]
+          ).map((item, index) => (
+            <li key={index} className="flex items-center">
+              <CheckCircle className="w-5 h-5 text-green-500 dark:text-neon-green mr-3 transition-all duration-300" />
+              <span className="dark:text-gray-300 transition-all duration-300">{item}</span>
+            </li>
+          ))}
+        </ul>
+      </Modal>
     </motion.div>
   );
 };
@@ -853,7 +818,7 @@ const CustomCalendar = ({
   };
 
   return (
-    <div className="p-4 bg-white">
+    <div className="p-4 bg-white dark:bg-dark-card transition-all duration-300">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <button
@@ -862,10 +827,10 @@ const CustomCalendar = ({
               new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1)
             )
           }
-          className="p-2 hover:bg-blue-50 rounded-lg transition-colors"
+          className="p-2 hover:bg-blue-50 dark:hover:bg-dark-surface rounded-lg transition-colors"
         >
           <svg
-            className="w-4 h-4 text-blue-600"
+            className="w-4 h-4 text-blue-600 dark:text-neon-blue"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -880,7 +845,7 @@ const CustomCalendar = ({
         </button>
 
         <div className="text-center">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white transition-all duration-300">
             {currentMonth.toLocaleDateString("en-US", {
               month: "long",
               year: "numeric",
@@ -894,10 +859,10 @@ const CustomCalendar = ({
               new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1)
             )
           }
-          className="p-2 hover:bg-blue-50 rounded-lg transition-colors"
+          className="p-2 hover:bg-blue-50 dark:hover:bg-dark-surface rounded-lg transition-colors"
         >
           <svg
-            className="w-4 h-4 text-blue-600"
+            className="w-4 h-4 text-blue-600 dark:text-neon-blue"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -917,7 +882,7 @@ const CustomCalendar = ({
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
           <div
             key={day}
-            className="text-center text-xs font-medium text-gray-500 py-2"
+            className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 py-2 transition-all duration-300"
           >
             {day}
           </div>
@@ -949,16 +914,16 @@ const CustomCalendar = ({
                 h-9 w-9 rounded-lg text-sm font-medium transition-all duration-200
                 ${
                   !currentMonth
-                    ? "text-gray-300"
+                    ? "text-gray-300 dark:text-gray-600"
                     : available
-                      ? "text-gray-900 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
-                      : "text-gray-400 cursor-not-allowed"
+                      ? "text-gray-900 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-200 cursor-pointer"
+                      : "text-gray-400 dark:text-gray-500 cursor-not-allowed"
                 }
                 ${
                   selected
-                    ? "bg-blue-500 text-white shadow-md"
+                    ? "bg-blue-500 dark:bg-blue-600 text-white shadow-md dark:shadow-lg"
                     : today && available
-                      ? "bg-blue-100 text-blue-700 ring-2 ring-blue-200"
+                      ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-200 ring-2 ring-blue-200 dark:ring-blue-400"
                       : ""
                 }
               `}

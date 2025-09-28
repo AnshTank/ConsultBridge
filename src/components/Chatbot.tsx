@@ -6,17 +6,22 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import { useScrollLock } from "../hooks/useScrollLock";
+import { usePopup } from "../contexts/PopupContext";
 import "../styles/chatbot.css";
 
 // Payment Step Animation Component
-function PaymentStep({ step }: { step: { step: number; text: string; icon: string; delay: number } }) {
+function PaymentStep({
+  step,
+}: {
+  step: { step: number; text: string; icon: string; delay: number };
+}) {
   const [isActive, setIsActive] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
     const timer1 = setTimeout(() => setIsActive(true), step.delay);
     const timer2 = setTimeout(() => setIsComplete(true), step.delay + 1000);
-    
+
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
@@ -24,21 +29,31 @@ function PaymentStep({ step }: { step: { step: number; text: string; icon: strin
   }, [step.delay]);
 
   return (
-    <div className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-500 ${
-      isActive ? 'bg-blue-100 border-l-4 border-blue-500' : 'bg-gray-50 opacity-50'
-    }`}>
-      <div className={`text-lg transition-all duration-300 ${
-        isActive ? 'scale-110' : 'scale-100 opacity-50'
-      }`}>
-        {isComplete ? '✅' : isActive ? step.icon : '⏳'}
+    <div
+      className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-500 ${
+        isActive
+          ? "bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500 dark:border-blue-400"
+          : "bg-gray-50 dark:bg-gray-700 opacity-50"
+      }`}
+    >
+      <div
+        className={`text-lg transition-all duration-300 ${
+          isActive ? "scale-110" : "scale-100 opacity-50"
+        }`}
+      >
+        {isComplete ? "✅" : isActive ? step.icon : "⏳"}
       </div>
-      <div className={`flex-1 transition-all duration-300 ${
-        isActive ? 'text-blue-700 font-medium' : 'text-gray-500'
-      }`}>
+      <div
+        className={`flex-1 transition-all duration-300 ${
+          isActive
+            ? "text-blue-700 dark:text-blue-300 font-medium"
+            : "text-gray-500 dark:text-gray-400"
+        }`}
+      >
         {step.text}
       </div>
       {isActive && !isComplete && (
-        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-4 h-4 border-2 border-blue-500 dark:border-blue-400 border-t-transparent rounded-full animate-spin"></div>
       )}
     </div>
   );
@@ -47,6 +62,7 @@ function PaymentStep({ step }: { step: { step: number; text: string; icon: strin
 export default function Chatbot() {
   const router = useRouter();
   const { isSignedIn, userId, isLoaded } = useAuth();
+  const { isAnyPopupOpen } = usePopup();
   const [isOpen, setIsOpen] = useState(false);
   const [showEntrance, setShowEntrance] = useState(false);
   const [entranceComplete, setEntranceComplete] = useState(false);
@@ -63,7 +79,12 @@ export default function Chatbot() {
       requiresAuth?: boolean;
       authMessage?: string;
       processingPayment?: boolean;
-      paymentSteps?: Array<{step: number; text: string; icon: string; delay: number}>;
+      paymentSteps?: Array<{
+        step: number;
+        text: string;
+        icon: string;
+        delay: number;
+      }>;
       bookings?: any[];
       actionType?: string;
       categoryNavigation?: {
@@ -121,9 +142,29 @@ export default function Chatbot() {
       // Don't crash the app, just log the error
     };
 
-    window.addEventListener("unhandledrejection", handleClerkError);
-    return () =>
-      window.removeEventListener("unhandledrejection", handleClerkError);
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      if (
+        event.reason?.message?.includes("ClerkJS") ||
+        event.reason?.message?.includes("Token refresh failed")
+      ) {
+        console.warn(
+          "Clerk authentication error handled:",
+          event.reason.message
+        );
+        event.preventDefault(); // Prevent the error from crashing the app
+      }
+    };
+
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+    window.addEventListener("error", handleClerkError);
+
+    return () => {
+      window.removeEventListener(
+        "unhandledrejection",
+        handleUnhandledRejection
+      );
+      window.removeEventListener("error", handleClerkError);
+    };
   }, []);
 
   // Check if page is fully loaded
@@ -150,10 +191,11 @@ export default function Chatbot() {
 
       setSessionId(savedSessionId);
 
-      // Load chat history from database
+      // Load chat history from database with error handling
       try {
+        const safeUserId = userId || "";
         const response = await fetch(
-          `/api/chat-history?sessionId=${savedSessionId}&userId=${userId || ""}`
+          `/api/chat-history?sessionId=${savedSessionId}&userId=${safeUserId}`
         );
         const data = await response.json();
 
@@ -162,10 +204,13 @@ export default function Chatbot() {
         }
       } catch (error) {
         console.error("Error loading chat history:", error);
+        // Continue without chat history if there's an error
       }
     };
 
-    loadChatHistory();
+    // Add delay to ensure Clerk is fully loaded
+    const timer = setTimeout(loadChatHistory, 500);
+    return () => clearTimeout(timer);
   }, [isLoaded, isSignedIn, userId, pageLoaded]);
 
   // Messages are now saved automatically via API calls
@@ -246,12 +291,22 @@ export default function Chatbot() {
     }, 200);
 
     try {
+      // Safely get userId with fallback
+      const safeUserId = (() => {
+        try {
+          return userId || null;
+        } catch (error) {
+          console.warn("Error accessing userId:", error);
+          return null;
+        }
+      })();
+
       const res = await fetch("/api/chatbot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: input,
-          userId: userId || null,
+          userId: safeUserId,
           sessionId: sessionId,
         }),
       });
@@ -261,6 +316,7 @@ export default function Chatbot() {
       }
 
       const data = await res.json();
+      console.log("Chatbot response:", data);
 
       // Handle consultancy redirect
       if (data.redirectToConsultancy) {
@@ -281,7 +337,8 @@ export default function Chatbot() {
       let reply = data?.data?.reply ?? data.reply;
       if (typeof reply !== "string") {
         console.error("Invalid reply format:", reply);
-        reply = "Sorry, there was an issue processing your request. Please try again.";
+        reply =
+          "Sorry, there was an issue processing your request. Please try again.";
       }
 
       // If search is processing, show search animation
@@ -326,55 +383,129 @@ export default function Chatbot() {
             },
           ]);
         }, 4000);
-      } else if (data.processingPayment) {
-        // Show unique processing animation
+      } else if (data.processingPayment || data?.data?.processingPayment) {
+        // Show processing animation
         setMessages((prev) => [
           ...prev,
-          { 
-            sender: "bot", 
-            text: "", 
+          {
+            sender: "bot",
+            text: "🔄 Processing your booking and payment...",
             processingPayment: true,
             paymentSteps: [
-              { step: 1, text: "Initializing secure payment gateway", icon: "🔒", delay: 0 },
-              { step: 2, text: "Validating payment credentials", icon: "🔍", delay: 1500 },
-              { step: 3, text: "Processing transaction securely", icon: "💳", delay: 3000 },
-              { step: 4, text: "Confirming appointment slot", icon: "📅", delay: 4500 },
-              { step: 5, text: "Generating confirmation receipt", icon: "📧", delay: 6000 },
-              { step: 6, text: "Finalizing booking details", icon: "✅", delay: 7000 }
-            ]
+              {
+                step: 1,
+                text: "Validating payment details",
+                icon: "🔒",
+                delay: 0,
+              },
+              {
+                step: 2,
+                text: "Processing secure transaction",
+                icon: "💳",
+                delay: 1000,
+              },
+              {
+                step: 3,
+                text: "Confirming appointment slot",
+                icon: "📅",
+                delay: 2000,
+              },
+              {
+                step: 4,
+                text: "Generating confirmation",
+                icon: "✅",
+                delay: 3000,
+              },
+            ],
           },
         ]);
 
-        // Final: Show success message with receipt only
-        setTimeout(() => {
-          setMessages((prev) => [
-            ...prev.slice(0, -1),
-            {
-              sender: "bot",
-              text: reply,
-              paymentReceipt: data?.data?.bookingData?.receipt || data?.bookingData?.receipt,
-            },
-          ]);
-        }, 8000);
+        // Complete payment after 4 seconds
+        setTimeout(async () => {
+          try {
+            console.log("Completing payment for session:", sessionId);
+            const completionRes = await fetch("/api/chatbot", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                message: "complete_payment",
+                userId: userId || null,
+                sessionId: sessionId,
+              }),
+            });
+            const completionData = await completionRes.json();
+            console.log("Payment completion response:", completionData);
+
+            const receipt = {
+              id: `CB-${Date.now().toString().slice(-8)}`,
+              clientName: "User",
+              consultancyName:
+                data?.data?.bookingData?.consultantName || "Consultant",
+              date: data?.data?.bookingData?.selectedDate || "29/09/2025",
+              time: data?.data?.bookingData?.selectedTime || "11:00 AM",
+              appointmentType:
+                data?.data?.bookingData?.appointmentType || "online",
+              amount: "2149",
+              paymentMethod:
+                data?.data?.bookingData?.paymentMethod || "Credit Card",
+            };
+
+            setMessages((prev) => [
+              ...prev.slice(0, -1),
+              {
+                sender: "bot",
+                text:
+                  completionData?.data?.reply ||
+                  "✅ Payment Successful!\n\nBooking Confirmed!\nYour appointment has been saved to database.",
+                paymentReceipt: completionData?.data?.paymentReceipt || receipt,
+              },
+            ]);
+          } catch (error) {
+            console.error("Payment completion error:", error);
+            setMessages((prev) => [
+              ...prev.slice(0, -1),
+              {
+                sender: "bot",
+                text: "❌ Payment processing failed. Please try again.",
+              },
+            ]);
+          }
+        }, 4000);
       } else {
         // Format the reply first, then type it
         const replyText = typeof reply === "string" ? reply : String(reply);
         const formattedText = replyText
-          .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-800">$1</strong>')
-          .replace(/\*(.*?)\*/g, '<em class="italic text-gray-600">$1</em>')
-          .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono">$1</code>')
-          .replace(/#{1,6}\s*(.*)/g, '<strong class="font-semibold text-gray-800">$1</strong>');
-        
+          .replace(
+            /\*\*(.*?)\*\*/g,
+            '<strong class="font-semibold text-gray-800 dark:text-gray-100">$1</strong>'
+          )
+          .replace(
+            /\*(.*?)\*/g,
+            '<em class="italic text-gray-600 dark:text-gray-300">$1</em>'
+          )
+          .replace(
+            /`(.*?)`/g,
+            '<code class="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded text-sm font-mono text-gray-800 dark:text-gray-200">$1</code>'
+          )
+          .replace(
+            /#{1,6}\s*(.*)/g,
+            '<strong class="font-semibold text-gray-800 dark:text-gray-100">$1</strong>'
+          );
+
         typeMessage(formattedText, () => {
           const botMessage = {
             sender: "bot" as const,
             text: formattedText,
-            consultancies: data?.data?.consultancies || data.consultancies || null,
+            consultancies:
+              data?.data?.consultancies || data.consultancies || null,
             paymentReceipt: data?.data?.bookingData?.receipt || null,
-            requiresAuth: data?.data?.requiresAuth || data.requiresAuth || false,
+            requiresAuth:
+              data?.data?.requiresAuth || data.requiresAuth || false,
             authMessage: data?.data?.authMessage || data.authMessage || null,
-            categoryNavigation: data?.data?.categoryNavigation || data.categoryNavigation || null,
-            allCategories: data?.data?.allCategories || data.allCategories || null,
+            categoryNavigation:
+              data?.data?.categoryNavigation || data.categoryNavigation || null,
+            allCategories:
+              data?.data?.allCategories || data.allCategories || null,
             bookings: data?.data?.bookings || data.bookings || null,
             processingPayment: false,
           };
@@ -514,47 +645,52 @@ export default function Chatbot() {
     <>
       {/* Simple Unique Chatbot Button */}
       <div className="fixed bottom-6 right-6 z-[9999] pointer-events-none">
-        {!isOpen && !showEntrance && isLoaded && pageLoaded && (
-          <motion.div
-            className="relative group pointer-events-auto"
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{
-              duration: 0.8,
-              ease: "easeOut",
-              type: "spring",
-              stiffness: 200,
-              damping: 20,
-            }}
-          >
-            {/* Notification Badge */}
-            <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center animate-bounce shadow-md border-2 border-white z-10">
-              💬
-            </div>
-
-            {/* Main Button */}
-            <button
-              onClick={startBotEntrance}
-              className="relative bg-gradient-to-br from-blue-500 to-purple-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 border-2 border-white/20"
+        {!isOpen &&
+          !showEntrance &&
+          isLoaded &&
+          pageLoaded &&
+          !showConfirmModal &&
+          !isAnyPopupOpen && (
+            <motion.div
+              className="relative group pointer-events-auto"
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{
+                duration: 0.8,
+                ease: "easeOut",
+                type: "spring",
+                stiffness: 200,
+                damping: 20,
+              }}
             >
-              {/* Subtle Inner Border */}
-              <div className="absolute inset-1 rounded-full border border-white/10"></div>
+              {/* Notification Badge */}
+              <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center animate-bounce shadow-md border-2 border-white z-10">
+                💬
+              </div>
 
-              {/* Bot Icon */}
-              <Bot size={24} className="relative z-10" />
+              {/* Main Button */}
+              <button
+                onClick={startBotEntrance}
+                className="relative bg-gradient-to-br from-blue-500 to-purple-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 border-2 border-white/20"
+              >
+                {/* Subtle Inner Border */}
+                <div className="absolute inset-1 rounded-full border border-white/10"></div>
 
-              {/* Corner Dots */}
-              <div className="absolute top-1 right-1 w-1 h-1 bg-white/60 rounded-full"></div>
-              <div className="absolute bottom-1 left-1 w-1 h-1 bg-white/60 rounded-full"></div>
-            </button>
+                {/* Bot Icon */}
+                <Bot size={24} className="relative z-10" />
 
-            {/* Simple Tooltip */}
-            <div className="absolute bottom-full right-0 mb-3 px-3 py-1 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap shadow-lg">
-              Chat with Shaan AI 🤖
-              <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
-            </div>
-          </motion.div>
-        )}
+                {/* Corner Dots */}
+                <div className="absolute top-1 right-1 w-1 h-1 bg-white/60 rounded-full"></div>
+                <div className="absolute bottom-1 left-1 w-1 h-1 bg-white/60 rounded-full"></div>
+              </button>
+
+              {/* Simple Tooltip */}
+              <div className="absolute bottom-full right-0 mb-3 px-3 py-1 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap shadow-lg">
+                Chat with Shaan AI 🤖
+                <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+              </div>
+            </motion.div>
+          )}
 
         {/* Simple Loading State */}
         {!isLoaded && (
@@ -607,136 +743,692 @@ export default function Chatbot() {
       {/* Chat Panel */}
       {isOpen && (
         <div
-          className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[95vw] sm:w-[90vw] md:w-[85vw] max-w-[800px] h-[85vh] sm:h-[90vh] max-h-[750px] bg-white rounded-xl md:rounded-2xl shadow-2xl border border-gray-300 flex flex-col transition-all duration-700 ease-out ${
+          className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[95vw] sm:w-[90vw] md:w-[85vw] max-w-[800px] h-[85vh] sm:h-[90vh] max-h-[750px] bg-white dark:bg-dark-card rounded-xl md:rounded-2xl shadow-2xl dark:shadow-neon-lg border border-gray-300 dark:border-dark-border flex flex-col transition-all duration-700 ease-out ${
             showChatbox ? "scale-100 opacity-100" : "scale-75 opacity-0"
           }`}
         >
-          {/* SHAAN AI - Same Bot, Better Eyes */}
+          {/* SHAAN AI - Ultra Advanced Animated Bot */}
           <div className="absolute top-2 left-2 z-[60] pointer-events-none hidden md:block">
-            <div className={`transform transition-all duration-800 ease-out ${
-              input.trim() ? 'translate-x-1 -translate-y-1 rotate-2 scale-105' : 
-              isLoading ? 'translate-y-0.5 rotate-1 scale-102' : 
-              isTyping ? 'translate-x-0.5 translate-y-0.5 rotate-1 scale-108' :
-              'translate-x-0 translate-y-0 rotate-0 scale-100'
-            }`}>
-              <div className="relative w-10 h-10 md:w-16 md:h-16">
-                
-                {/* Subtle Aura */}
-                <div className={`absolute inset-3 rounded-full transition-all duration-600 blur-sm ${
-                  input.trim() ? 'bg-emerald-200/25' : 
-                  isLoading ? 'bg-blue-200/25 animate-pulse' : 
-                  isTyping ? 'bg-orange-200/25' :
-                  'bg-purple-200/20'
-                }`}></div>
-                
-                {/* Main Robot Head */}
-                <div className="relative w-8 h-7 md:w-12 md:h-10 bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 rounded-lg md:rounded-xl border border-slate-400 shadow-lg mx-auto overflow-hidden">
-                  
-                  {/* Digital Face Display */}
-                  <div className="absolute inset-1.5 bg-gradient-to-br from-slate-900 via-black to-slate-800 rounded-xl overflow-hidden">
-                    
-                    {/* Smooth Living Eyes */}
-                    <div className="absolute inset-0 flex items-center justify-center space-x-2.5">
-                      {/* Left Eye */}
-                      <div className={`relative w-3 h-3 transition-all duration-600 ${
-                        input.trim() ? 'bg-emerald-400 scale-125 shadow-emerald-400/60 shadow-lg' :
-                        isLoading ? 'bg-blue-400 scale-110 shadow-blue-400/60 shadow-lg' :
-                        isTyping ? 'bg-orange-400 scale-115 shadow-orange-400/60 shadow-lg' :
-                        'bg-slate-400 scale-100'
-                      } rounded-full`}>
-                        {/* Eye Iris */}
-                        <div className={`absolute inset-0.5 bg-white rounded-full transition-all duration-400 ${
-                          input.trim() ? 'scale-80' : isLoading ? 'scale-60' : isTyping ? 'scale-70' : 'scale-90'
-                        }`}></div>
-                        {/* Smooth Eye Ball */}
-                        <div className={`absolute w-1.5 h-1.5 bg-black rounded-full top-1 left-1 ${
-                          input.trim() ? 'transition-all duration-1000 ease-out transform translate-x-0.5 -translate-y-0.5' : ''
-                        }`} style={{
-                          animation: isLoading ? 'thinking 3s ease-in-out infinite' : 
-                                   isTyping ? 'writing 2s ease-in-out infinite' : 
-                                   (!input.trim() && !isLoading) ? 'randomLook 8s ease-in-out infinite' : undefined
-                        }}></div>
-                        {/* Eye Shine */}
-                        <div className="absolute top-0.5 left-0.5 w-1 h-1 bg-white rounded-full opacity-90"></div>
+            <style jsx>{`
+              @keyframes randomLook {
+                0%,
+                100% {
+                  transform: translate(1px, 1px);
+                }
+                10% {
+                  transform: translate(2px, 0px);
+                }
+                20% {
+                  transform: translate(-1px, 2px);
+                }
+                30% {
+                  transform: translate(0px, -1px);
+                }
+                40% {
+                  transform: translate(2px, 1px);
+                }
+                50% {
+                  transform: translate(-1px, -1px);
+                }
+                60% {
+                  transform: translate(1px, 0px);
+                }
+                70% {
+                  transform: translate(0px, 2px);
+                }
+                80% {
+                  transform: translate(-2px, 0px);
+                }
+                90% {
+                  transform: translate(1px, -1px);
+                }
+              }
+
+              @keyframes blinkEyes {
+                0%,
+                90%,
+                100% {
+                  height: 12px;
+                  opacity: 1;
+                }
+                95% {
+                  height: 2px;
+                  opacity: 0.8;
+                }
+              }
+
+              @keyframes thinkingEyes {
+                0%,
+                100% {
+                  transform: translate(0px, 1px) rotate(-5deg);
+                }
+                25% {
+                  transform: translate(-1px, 0px) rotate(0deg);
+                }
+                50% {
+                  transform: translate(1px, -1px) rotate(5deg);
+                }
+                75% {
+                  transform: translate(0px, 1px) rotate(-2deg);
+                }
+              }
+
+              @keyframes listeningEyes {
+                0%,
+                100% {
+                  transform: translate(0px, 0px) scale(1.1);
+                }
+                50% {
+                  transform: translate(1px, -1px) scale(1.2);
+                }
+              }
+
+              @keyframes typingEyes {
+                0% {
+                  transform: translate(-1px, 0px);
+                }
+                25% {
+                  transform: translate(0px, -1px);
+                }
+                50% {
+                  transform: translate(1px, 0px);
+                }
+                75% {
+                  transform: translate(0px, 1px);
+                }
+                100% {
+                  transform: translate(-1px, 0px);
+                }
+              }
+
+              @keyframes mouthTalk {
+                0%,
+                100% {
+                  transform: scaleY(1) scaleX(1);
+                }
+                25% {
+                  transform: scaleY(1.5) scaleX(0.8);
+                }
+                50% {
+                  transform: scaleY(0.7) scaleX(1.3);
+                }
+                75% {
+                  transform: scaleY(1.2) scaleX(0.9);
+                }
+              }
+
+              @keyframes headBobThinking {
+                0%,
+                100% {
+                  transform: translateY(0px) rotate(0deg);
+                }
+                50% {
+                  transform: translateY(-2px) rotate(1deg);
+                }
+              }
+
+              @keyframes headNodListening {
+                0%,
+                100% {
+                  transform: translateY(0px);
+                }
+                50% {
+                  transform: translateY(-1px);
+                }
+              }
+
+              @keyframes antennaSignal {
+                0%,
+                100% {
+                  transform: scale(1);
+                }
+                50% {
+                  transform: scale(1.3);
+                  box-shadow: 0 0 15px currentColor;
+                }
+              }
+
+              @keyframes eyeShineFloat {
+                0%,
+                100% {
+                  opacity: 0.7;
+                  transform: scale(1);
+                }
+                50% {
+                  opacity: 1;
+                  transform: scale(1.2);
+                }
+              }
+
+              @keyframes audioWave {
+                0%,
+                100% {
+                  height: 32px;
+                }
+                50% {
+                  height: 24px;
+                }
+              }
+
+              @keyframes processingGlow {
+                0%,
+                100% {
+                  box-shadow: 0 0 5px currentColor;
+                }
+                50% {
+                  box-shadow:
+                    0 0 20px currentColor,
+                    0 0 30px currentColor;
+                }
+              }
+            `}</style>
+
+            <div
+              className={`transform transition-all duration-500 ease-out ${
+                input.trim()
+                  ? "scale-105 rotate-1"
+                  : isLoading
+                    ? "scale-102 -rotate-1"
+                    : isTyping
+                      ? "scale-108 rotate-2"
+                      : "scale-100 rotate-0"
+              }`}
+              style={{
+                animation: isLoading
+                  ? "headBobThinking 2s ease-in-out infinite"
+                  : input.trim()
+                    ? "headNodListening 1.5s ease-in-out infinite"
+                    : undefined,
+              }}
+            >
+              <div className="relative w-14 h-14 md:w-16 md:h-16">
+                {/* Ultra Enhanced Aura with Multiple Layers */}
+                <div
+                  className={`absolute inset-1 rounded-full transition-all duration-700 blur-lg ${
+                    input.trim()
+                      ? "bg-emerald-300/50 shadow-emerald-400/60 shadow-xl"
+                      : isLoading
+                        ? "bg-blue-300/50 shadow-blue-400/60 shadow-xl"
+                        : isTyping
+                          ? "bg-orange-300/60 shadow-orange-400/70 shadow-2xl"
+                          : "bg-purple-200/40 shadow-purple-300/40 shadow-lg"
+                  }`}
+                  style={{
+                    animation: isTyping
+                      ? "processingGlow 0.8s ease-in-out infinite"
+                      : isLoading
+                        ? "processingGlow 1.5s ease-in-out infinite"
+                        : input.trim()
+                          ? "processingGlow 2s ease-in-out infinite"
+                          : "processingGlow 3s ease-in-out infinite",
+                  }}
+                ></div>
+
+                {/* Outer Ring Effect */}
+                <div
+                  className={`absolute inset-3 rounded-full border-2 transition-all duration-500 ${
+                    input.trim()
+                      ? "border-emerald-300/60 animate-spin"
+                      : isLoading
+                        ? "border-blue-300/60 animate-spin"
+                        : isTyping
+                          ? "border-orange-300/70 animate-spin"
+                          : "border-purple-200/40"
+                  }`}
+                  style={{
+                    animationDuration: isTyping
+                      ? "3s"
+                      : isLoading
+                        ? "4s"
+                        : input.trim()
+                          ? "5s"
+                          : undefined,
+                  }}
+                ></div>
+
+                {/* Main Robot Head with Enhanced Design */}
+                <div className="relative w-12 h-10 md:w-14 md:h-12 bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 rounded-lg border border-slate-400 shadow-lg mx-auto overflow-hidden">
+                  {/* Metallic Shine Effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-lg"></div>
+
+                  {/* Digital Face Display with Enhanced Lighting */}
+                  <div className="absolute inset-1 bg-gradient-to-br from-slate-900 via-black to-slate-800 rounded-md overflow-hidden shadow-inner">
+                    {/* Advanced Eye System */}
+                    <div className="absolute inset-0 flex items-center justify-center space-x-2">
+                      {/* Left Eye with Advanced Animations */}
+                      <div
+                        className={`relative w-3 h-3 md:w-4 md:h-4 transition-all duration-400 ${
+                          input.trim()
+                            ? "bg-emerald-400 scale-125 shadow-emerald-400/70 shadow-lg"
+                            : isLoading
+                              ? "bg-blue-400 scale-115 shadow-blue-400/70 shadow-lg"
+                              : isTyping
+                                ? "bg-orange-400 scale-130 shadow-orange-400/80 shadow-xl"
+                                : "bg-slate-400 scale-100"
+                        } rounded-full`}
+                        style={{
+                          animation: input.trim()
+                            ? "blinkEyes 5s ease-in-out infinite"
+                            : isLoading
+                              ? "blinkEyes 3s ease-in-out infinite"
+                              : "blinkEyes 8s ease-in-out infinite",
+                        }}
+                      >
+                        {/* Eye White */}
+                        <div
+                          className={`absolute inset-0.5 bg-white rounded-full transition-all duration-300 ${
+                            input.trim()
+                              ? "scale-90"
+                              : isLoading
+                                ? "scale-85"
+                                : isTyping
+                                  ? "scale-88"
+                                  : "scale-95"
+                          }`}
+                        ></div>
+
+                        {/* Pupil with Advanced Tracking */}
+                        <div
+                          className={`absolute w-1 h-1 bg-black rounded-full transition-all duration-300`}
+                          style={{
+                            top: input.trim()
+                              ? "4px"
+                              : isLoading
+                                ? "2px"
+                                : isTyping
+                                  ? "6px"
+                                  : "4px",
+                            left: input.trim()
+                              ? "6px"
+                              : isLoading
+                                ? "2px"
+                                : isTyping
+                                  ? "4px"
+                                  : "4px",
+                            animation:
+                              !input.trim() && !isLoading && !isTyping
+                                ? "randomLook 10s ease-in-out infinite"
+                                : isLoading
+                                  ? "thinkingEyes 2s ease-in-out infinite"
+                                  : input.trim()
+                                    ? "listeningEyes 1.5s ease-in-out infinite"
+                                    : isTyping
+                                      ? "typingEyes 1s ease-in-out infinite"
+                                      : undefined,
+                          }}
+                        ></div>
+
+                        {/* Multiple Eye Shines */}
+                        <div
+                          className={`absolute top-1 left-1 w-0.5 h-0.5 bg-white rounded-full transition-all duration-300`}
+                          style={{
+                            animation: "eyeShineFloat 2s ease-in-out infinite",
+                          }}
+                        ></div>
+                        <div
+                          className={`absolute top-2 right-1 w-0.5 h-0.5 bg-white/60 rounded-full transition-all duration-300 ${
+                            isTyping ? "opacity-100" : "opacity-40"
+                          }`}
+                        ></div>
+
+                        {/* Iris Detail */}
+                        <div
+                          className={`absolute inset-1 rounded-full border border-gray-300/30 ${
+                            isTyping ? "animate-pulse" : ""
+                          }`}
+                        ></div>
                       </div>
-                      
-                      {/* Right Eye */}
-                      <div className={`relative w-3 h-3 transition-all duration-600 ${
-                        input.trim() ? 'bg-emerald-400 scale-125 shadow-emerald-400/60 shadow-lg' :
-                        isLoading ? 'bg-blue-400 scale-110 shadow-blue-400/60 shadow-lg' :
-                        isTyping ? 'bg-orange-400 scale-115 shadow-orange-400/60 shadow-lg' :
-                        'bg-slate-400 scale-100'
-                      } rounded-full`}>
-                        {/* Eye Iris */}
-                        <div className={`absolute inset-0.5 bg-white rounded-full transition-all duration-400 ${
-                          input.trim() ? 'scale-80' : isLoading ? 'scale-60' : isTyping ? 'scale-70' : 'scale-90'
-                        }`}></div>
-                        {/* Smooth Eye Ball */}
-                        <div className={`absolute w-1.5 h-1.5 bg-black rounded-full top-1 left-1 ${
-                          input.trim() ? 'transition-all duration-1000 ease-out transform translate-x-0.5 -translate-y-0.5' : ''
-                        }`} style={{
-                          animation: isLoading ? 'thinking 3s ease-in-out infinite' : 
-                                   isTyping ? 'writing 2s ease-in-out infinite' : 
-                                   (!input.trim() && !isLoading) ? 'randomLook 8s ease-in-out infinite' : undefined
-                        }}></div>
-                        {/* Eye Shine */}
-                        <div className="absolute top-0.5 left-0.5 w-1 h-1 bg-white rounded-full opacity-90"></div>
+
+                      {/* Right Eye (Mirror of Left) */}
+                      <div
+                        className={`relative w-3 h-3 md:w-4 md:h-4 transition-all duration-400 ${
+                          input.trim()
+                            ? "bg-emerald-400 scale-125 shadow-emerald-400/70 shadow-lg"
+                            : isLoading
+                              ? "bg-blue-400 scale-115 shadow-blue-400/70 shadow-lg"
+                              : isTyping
+                                ? "bg-orange-400 scale-130 shadow-orange-400/80 shadow-xl"
+                                : "bg-slate-400 scale-100"
+                        } rounded-full`}
+                        style={{
+                          animation: input.trim()
+                            ? "blinkEyes 5s ease-in-out infinite 0.1s"
+                            : isLoading
+                              ? "blinkEyes 3s ease-in-out infinite 0.1s"
+                              : "blinkEyes 8s ease-in-out infinite 0.1s",
+                        }}
+                      >
+                        <div
+                          className={`absolute inset-0.5 bg-white rounded-full transition-all duration-300 ${
+                            input.trim()
+                              ? "scale-90"
+                              : isLoading
+                                ? "scale-85"
+                                : isTyping
+                                  ? "scale-88"
+                                  : "scale-95"
+                          }`}
+                        ></div>
+                        <div
+                          className={`absolute w-1 h-1 bg-black rounded-full transition-all duration-300`}
+                          style={{
+                            top: input.trim()
+                              ? "4px"
+                              : isLoading
+                                ? "2px"
+                                : isTyping
+                                  ? "6px"
+                                  : "4px",
+                            left: input.trim()
+                              ? "6px"
+                              : isLoading
+                                ? "2px"
+                                : isTyping
+                                  ? "4px"
+                                  : "4px",
+                            animation:
+                              !input.trim() && !isLoading && !isTyping
+                                ? "randomLook 10s ease-in-out infinite 0.5s"
+                                : isLoading
+                                  ? "thinkingEyes 2s ease-in-out infinite 0.2s"
+                                  : input.trim()
+                                    ? "listeningEyes 1.5s ease-in-out infinite 0.1s"
+                                    : isTyping
+                                      ? "typingEyes 1s ease-in-out infinite 0.3s"
+                                      : undefined,
+                          }}
+                        ></div>
+                        <div
+                          className={`absolute top-1 left-1 w-0.5 h-0.5 bg-white rounded-full transition-all duration-300`}
+                          style={{
+                            animation:
+                              "eyeShineFloat 2s ease-in-out infinite 0.5s",
+                          }}
+                        ></div>
+                        <div
+                          className={`absolute top-2 right-1 w-0.5 h-0.5 bg-white/60 rounded-full transition-all duration-300 ${
+                            isTyping ? "opacity-100" : "opacity-40"
+                          }`}
+                        ></div>
+                        <div
+                          className={`absolute inset-1 rounded-full border border-gray-300/30 ${
+                            isTyping ? "animate-pulse" : ""
+                          }`}
+                        ></div>
                       </div>
                     </div>
-                    
-                    {/* Dynamic Mouth Expression */}
-                    <div className={`absolute bottom-1.5 left-1/2 transform -translate-x-1/2 transition-all duration-500 ${
-                      input.trim() ? 'w-4 h-0.5 bg-emerald-400 rounded-full shadow-emerald-400/50 shadow-md' :
-                      isLoading ? 'w-3 h-3 border-2 border-blue-400 rounded-full animate-spin' :
-                      isTyping ? 'w-5 h-1 bg-orange-400 rounded-full animate-pulse shadow-orange-400/50 shadow-md' :
-                      'w-3 h-0.5 bg-slate-400 rounded-full'
-                    }`}></div>
-                    
-                    {/* Status LED Strip */}
-                    <div className={`absolute top-0.5 left-1 right-1 h-0.5 rounded-full transition-all duration-800 ${
-                      input.trim() ? 'bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-80' :
-                      isLoading ? 'bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-90 animate-pulse' :
-                      isTyping ? 'bg-gradient-to-r from-transparent via-orange-400 to-transparent opacity-85' :
-                      'bg-gradient-to-r from-transparent via-slate-400 to-transparent opacity-40'
-                    }`}></div>
-                    
-                    {/* Breathing Effect */}
-                    <div className="absolute inset-0 rounded-xl animate-pulse opacity-10 bg-gradient-to-br from-white to-transparent" style={{animationDuration: '3s'}}></div>
+
+                    {/* Advanced Mouth Expressions */}
+                    <div
+                      className={`absolute bottom-1 left-1/2 transform -translate-x-1/2 transition-all duration-400`}
+                    >
+                      {/* Idle/Happy Mouth */}
+                      {!input.trim() && !isLoading && !isTyping && (
+                        <div className="w-2 h-0.5 bg-slate-400 rounded-full"></div>
+                      )}
+
+                      {/* Listening Mouth */}
+                      {input.trim() && (
+                        <div
+                          className="w-3 h-0.5 bg-emerald-400 rounded-full animate-pulse shadow-emerald-400/50 shadow-md"
+                          style={{
+                            animation: "mouthTalk 0.8s ease-in-out infinite",
+                          }}
+                        ></div>
+                      )}
+
+                      {/* Thinking Mouth */}
+                      {isLoading && (
+                        <div className="w-2 h-2 border-2 border-blue-400 rounded-full animate-spin shadow-blue-400/50 shadow-md"></div>
+                      )}
+
+                      {/* Speaking Mouth */}
+                      {isTyping && (
+                        <div className="flex space-x-0.5">
+                          <div
+                            className="w-1 h-1 bg-orange-400 rounded-full"
+                            style={{
+                              animation: "mouthTalk 0.6s ease-in-out infinite",
+                            }}
+                          ></div>
+                          <div
+                            className="w-1 h-1 bg-orange-400 rounded-full"
+                            style={{
+                              animation:
+                                "mouthTalk 0.6s ease-in-out infinite 0.2s",
+                            }}
+                          ></div>
+                          <div
+                            className="w-1 h-1 bg-orange-400 rounded-full"
+                            style={{
+                              animation:
+                                "mouthTalk 0.6s ease-in-out infinite 0.4s",
+                            }}
+                          ></div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Enhanced Status LED Strip */}
+                    <div
+                      className={`absolute top-0.5 left-1 right-1 h-0.5 rounded-full transition-all duration-800 ${
+                        input.trim()
+                          ? "bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-90"
+                          : isLoading
+                            ? "bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-95"
+                            : isTyping
+                              ? "bg-gradient-to-r from-transparent via-orange-400 to-transparent opacity-90"
+                              : "bg-gradient-to-r from-transparent via-slate-400 to-transparent opacity-50"
+                      }`}
+                      style={{
+                        animation: input.trim()
+                          ? "processingGlow 2s ease-in-out infinite"
+                          : isLoading
+                            ? "processingGlow 1.5s ease-in-out infinite"
+                            : isTyping
+                              ? "processingGlow 1s ease-in-out infinite"
+                              : "processingGlow 4s ease-in-out infinite",
+                      }}
+                    ></div>
+
+                    {/* Additional LED Indicators */}
+                    <div className="absolute top-1 right-1 flex space-x-0.5">
+                      <div
+                        className={`w-0.5 h-0.5 rounded-full transition-all duration-500 ${
+                          input.trim()
+                            ? "bg-emerald-400 opacity-100"
+                            : isLoading
+                              ? "bg-blue-400 opacity-100"
+                              : isTyping
+                                ? "bg-orange-400 opacity-100"
+                                : "bg-slate-400 opacity-60"
+                        }`}
+                        style={{
+                          animation: isTyping
+                            ? "processingGlow 0.5s ease-in-out infinite"
+                            : isLoading
+                              ? "processingGlow 1s ease-in-out infinite"
+                              : undefined,
+                        }}
+                      ></div>
+                      <div
+                        className={`w-0.5 h-0.5 rounded-full transition-all duration-500 ${
+                          isLoading
+                            ? "bg-blue-400 opacity-100"
+                            : isTyping
+                              ? "bg-orange-400 opacity-100"
+                              : "bg-slate-400 opacity-40"
+                        }`}
+                        style={{
+                          animation: isTyping
+                            ? "processingGlow 0.5s ease-in-out infinite 0.2s"
+                            : isLoading
+                              ? "processingGlow 1s ease-in-out infinite 0.5s"
+                              : undefined,
+                        }}
+                      ></div>
+                    </div>
+
+                    {/* Enhanced Breathing Effect */}
+                    <div
+                      className="absolute inset-0 rounded-md opacity-5 bg-gradient-to-br from-white to-transparent"
+                      style={{
+                        animation: "processingGlow 4s ease-in-out infinite",
+                      }}
+                    ></div>
                   </div>
-                  
-                  {/* Side Audio Panels */}
-                  <div className={`absolute -left-1 top-2 w-1.5 h-8 rounded-l-full transition-all duration-500 ${
-                    input.trim() ? 'bg-gradient-to-b from-emerald-300 to-emerald-500 shadow-emerald-400/40 shadow-md' :
-                    isLoading ? 'bg-gradient-to-b from-blue-300 to-blue-500 shadow-blue-400/40 shadow-md' :
-                    isTyping ? 'bg-gradient-to-b from-orange-300 to-orange-500 shadow-orange-400/40 shadow-md' :
-                    'bg-gradient-to-b from-slate-300 to-slate-500'
-                  }`}></div>
-                  <div className={`absolute -right-1 top-2 w-1.5 h-8 rounded-l-full transition-all duration-500 ${
-                    input.trim() ? 'bg-gradient-to-b from-emerald-300 to-emerald-500 shadow-emerald-400/40 shadow-md' :
-                    isLoading ? 'bg-gradient-to-b from-blue-300 to-blue-500 shadow-blue-400/40 shadow-md' :
-                    isTyping ? 'bg-gradient-to-b from-orange-300 to-orange-500 shadow-orange-400/40 shadow-md' :
-                    'bg-gradient-to-b from-slate-300 to-slate-500'
-                  }`}></div>
+
+                  {/* Enhanced Side Audio Panels with Wave Effect */}
+                  <div
+                    className={`absolute -left-1 top-2 w-1.5 rounded-l-full transition-all duration-500 ${
+                      input.trim()
+                        ? "bg-gradient-to-b from-emerald-300 to-emerald-500 shadow-emerald-400/50 shadow-md h-8"
+                        : isLoading
+                          ? "bg-gradient-to-b from-blue-300 to-blue-500 shadow-blue-400/50 shadow-md h-8"
+                          : isTyping
+                            ? "bg-gradient-to-b from-orange-300 to-orange-500 shadow-orange-400/50 shadow-md h-8"
+                            : "bg-gradient-to-b from-slate-300 to-slate-500 h-8"
+                    }`}
+                    style={{
+                      animation: isTyping
+                        ? "audioWave 0.8s ease-in-out infinite"
+                        : input.trim()
+                          ? "audioWave 0.8s ease-in-out infinite"
+                          : isLoading
+                            ? "audioWave 1.2s ease-in-out infinite"
+                            : undefined,
+                    }}
+                  ></div>
+                  <div
+                    className={`absolute -right-1 top-2 w-1.5 rounded-r-full transition-all duration-500 ${
+                      input.trim()
+                        ? "bg-gradient-to-b from-emerald-300 to-emerald-500 shadow-emerald-400/50 shadow-md h-8"
+                        : isLoading
+                          ? "bg-gradient-to-b from-blue-300 to-blue-500 shadow-blue-400/50 shadow-md h-8"
+                          : isTyping
+                            ? "bg-gradient-to-b from-orange-300 to-orange-500 shadow-orange-400/50 shadow-md h-8"
+                            : "bg-gradient-to-b from-slate-300 to-slate-500 h-8"
+                    }`}
+                    style={{
+                      animation: isTyping
+                        ? "audioWave 0.8s ease-in-out infinite 0.2s"
+                        : input.trim()
+                          ? "audioWave 0.8s ease-in-out infinite 0.2s"
+                          : isLoading
+                            ? "audioWave 1.2s ease-in-out infinite 0.3s"
+                            : undefined,
+                    }}
+                  ></div>
+
+                  {/* Additional Visual Elements */}
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-3 h-0.5 bg-gradient-to-r from-transparent via-slate-300 to-transparent rounded-full"></div>
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-4 h-0.5 bg-gradient-to-r from-transparent via-slate-300 to-transparent rounded-full"></div>
                 </div>
-                
-                {/* Communication Antenna */}
+
+                {/* Enhanced Antenna System */}
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <div className="w-0.5 h-4 bg-slate-600 rounded-full"></div>
-                  <div className={`w-2.5 h-2.5 rounded-full -mt-1 mx-auto transition-all duration-600 ${
-                    input.trim() ? 'bg-emerald-400 animate-pulse shadow-emerald-400/70 shadow-lg scale-110' :
-                    isLoading ? 'bg-blue-400 animate-ping shadow-blue-400/70 shadow-lg scale-105' :
-                    isTyping ? 'bg-orange-400 animate-bounce shadow-orange-400/70 shadow-lg scale-108' :
-                    'bg-slate-400 scale-100'
-                  }`}>
-                    <div className="absolute inset-0.5 bg-white rounded-full opacity-70"></div>
+                  {/* Main Antenna Rod */}
+                  <div
+                    className={`w-0.5 h-4 bg-gradient-to-t from-slate-600 to-slate-400 rounded-full transition-all duration-300 ${
+                      isTyping ? "animate-pulse shadow-lg" : ""
+                    }`}
+                  ></div>
+
+                  {/* Antenna Signal Ball */}
+                  <div
+                    className={`w-2.5 h-2.5 rounded-full -mt-1 mx-auto transition-all duration-400 border border-white/30 ${
+                      input.trim()
+                        ? "bg-emerald-400 scale-110 shadow-emerald-400/80 shadow-xl"
+                        : isLoading
+                          ? "bg-blue-400 scale-105 shadow-blue-400/80 shadow-xl"
+                          : isTyping
+                            ? "bg-orange-400 scale-125 shadow-orange-400/90 shadow-2xl"
+                            : "bg-slate-400 scale-100 shadow-slate-400/50 shadow-md"
+                    }`}
+                    style={{
+                      animation: isTyping
+                        ? "antennaSignal 0.8s ease-in-out infinite"
+                        : input.trim()
+                          ? "processingGlow 2s ease-in-out infinite"
+                          : isLoading
+                            ? "processingGlow 1.5s ease-in-out infinite"
+                            : "processingGlow 4s ease-in-out infinite",
+                    }}
+                  >
+                    {/* Inner Core */}
+                    <div
+                      className={`absolute inset-1 bg-white rounded-full transition-all duration-300 ${
+                        isTyping ? "opacity-90 animate-pulse" : "opacity-80"
+                      }`}
+                    ></div>
+
+                    {/* Signal Waves */}
+                    {(isTyping || isLoading || input.trim()) && (
+                      <>
+                        <div
+                          className="absolute -inset-2 rounded-full border border-current opacity-40 animate-ping"
+                          style={{ animationDuration: "2s" }}
+                        ></div>
+                        <div
+                          className="absolute -inset-3 rounded-full border border-current opacity-20 animate-ping"
+                          style={{
+                            animationDuration: "2.5s",
+                            animationDelay: "0.5s",
+                          }}
+                        ></div>
+                      </>
+                    )}
                   </div>
+
+                  {/* Secondary Antenna Elements */}
+                  <div className="absolute -left-1 top-1 w-0.5 h-2 bg-slate-500 rounded-full transform rotate-45 opacity-60"></div>
+                  <div className="absolute -right-1 top-1 w-0.5 h-2 bg-slate-500 rounded-full transform -rotate-45 opacity-60"></div>
                 </div>
+
+                {/* Dynamic Background Particles */}
+                {(isTyping || isLoading) && (
+                  <div className="absolute inset-0 overflow-hidden rounded-full opacity-30">
+                    <div
+                      className={`absolute w-1 h-1 bg-current rounded-full ${
+                        isTyping ? "animate-bounce" : "animate-pulse"
+                      }`}
+                      style={{
+                        top: "20%",
+                        left: "15%",
+                        animationDelay: "0s",
+                        animationDuration: "2s",
+                      }}
+                    ></div>
+                    <div
+                      className={`absolute w-1 h-1 bg-current rounded-full ${
+                        isTyping ? "animate-bounce" : "animate-pulse"
+                      }`}
+                      style={{
+                        top: "60%",
+                        right: "20%",
+                        animationDelay: "0.7s",
+                        animationDuration: "2.2s",
+                      }}
+                    ></div>
+                    <div
+                      className={`absolute w-1 h-1 bg-current rounded-full ${
+                        isTyping ? "animate-bounce" : "animate-pulse"
+                      }`}
+                      style={{
+                        bottom: "30%",
+                        left: "70%",
+                        animationDelay: "1.4s",
+                        animationDuration: "1.8s",
+                      }}
+                    ></div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           {/* Header */}
-          <div className="p-2 md:p-3 pl-3 md:pl-16 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-t-xl md:rounded-t-2xl flex justify-between items-center relative overflow-hidden">
+          <div className="p-2 md:p-3 pl-3 md:pl-20 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 dark:from-indigo-800 dark:via-purple-800 dark:to-pink-800 text-white rounded-t-xl md:rounded-t-2xl flex justify-between items-center relative overflow-hidden transition-all duration-300">
             {/* Animated background pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 left-0 w-20 h-20 bg-white rounded-full -translate-x-10 -translate-y-10 animate-float-slow"></div>
@@ -746,8 +1438,8 @@ export default function Chatbot() {
               ></div>
             </div>
             <div className="font-semibold flex items-center gap-2 relative z-10">
-              <div className="animate-pulse">
-                <Bot size={16} className="md:w-5 md:h-5" />
+              <div className="md:hidden animate-pulse">
+                <Bot size={16} className="w-5 h-5" />
               </div>
               <div>
                 <div className="text-sm md:text-base">Shaan AI</div>
@@ -792,52 +1484,60 @@ export default function Chatbot() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto bg-gray-50" data-chat-container>
+          <div
+            className="flex-1 overflow-y-auto bg-gray-50 dark:bg-dark-surface"
+            data-chat-container
+          >
             <div className="p-3 md:p-4 space-y-3">
               {messages.map((msg, idx) => (
-              <div key={idx} className="flex flex-col">
-                <div
-                  className={`p-2 md:p-3 px-3 md:px-4 max-w-[90%] md:max-w-[85%] rounded-lg md:rounded-xl text-xs md:text-sm whitespace-pre-wrap leading-relaxed ${
-                    msg.sender === "user"
-                      ? "ml-auto bg-indigo-100"
-                      : "mr-auto bg-white border"
-                  }`}
-                >
-                  {msg.sender === "bot" ? (
-                    <div className="whitespace-pre-line leading-relaxed" dangerouslySetInnerHTML={{
-                      __html: typeof msg.text === "string" ? msg.text : JSON.stringify(msg.text)
-                    }}></div>
-                  ) : (
-                    typeof msg.text === "string" ? msg.text : JSON.stringify(msg.text)
-                  )}
-                </div>
-
-
-
-
-                {/* Payment Processing Animation */}
-                {msg.processingPayment && msg.paymentSteps && (
-                  <div className="mt-3 mr-auto bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg md:rounded-xl p-3 md:p-4 w-[95%] md:w-[90%] text-xs md:text-sm shadow">
-                    <div className="font-semibold text-blue-700 mb-3 flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                      Processing Payment
-                    </div>
-                    <div className="space-y-2">
-                      {msg.paymentSteps.map((step, i) => (
-                        <PaymentStep key={i} step={step} />
-                      ))}
-                    </div>
+                <div key={idx} className="flex flex-col">
+                  <div
+                    className={`p-2 md:p-3 px-3 md:px-4 max-w-[90%] md:max-w-[85%] rounded-lg md:rounded-xl text-xs md:text-sm whitespace-pre-wrap leading-relaxed ${
+                      msg.sender === "user"
+                        ? "ml-auto bg-indigo-100 dark:bg-indigo-900/30 text-gray-800 dark:text-gray-200"
+                        : "mr-auto bg-white dark:bg-dark-card border dark:border-dark-border text-gray-800 dark:text-gray-200"
+                    } transition-all duration-300`}
+                  >
+                    {msg.sender === "bot" ? (
+                      <div
+                        className="whitespace-pre-line leading-relaxed"
+                        dangerouslySetInnerHTML={{
+                          __html:
+                            typeof msg.text === "string"
+                              ? msg.text
+                              : JSON.stringify(msg.text),
+                        }}
+                      ></div>
+                    ) : typeof msg.text === "string" ? (
+                      msg.text
+                    ) : (
+                      JSON.stringify(msg.text)
+                    )}
                   </div>
-                )}
 
-                {/* Enhanced Payment Receipt */}
-                {msg.paymentReceipt && (
-                  <div className="mt-3 mr-auto bg-green-50 border border-green-200 rounded-lg md:rounded-xl p-3 md:p-4 w-[95%] md:w-[90%] text-xs md:text-sm shadow">
-                    <div className="font-semibold text-green-700 mb-2 flex items-center justify-between">
-                      <span>💳 Payment Receipt</span>
-                      <button
-                        onClick={() => {
-                          const printContent = `
+                  {/* Payment Processing Animation */}
+                  {msg.processingPayment && msg.paymentSteps && (
+                    <div className="mt-3 mr-auto bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-700 rounded-lg md:rounded-xl p-3 md:p-4 w-[95%] md:w-[90%] text-xs md:text-sm shadow transition-all duration-300">
+                      <div className="font-semibold text-blue-700 dark:text-blue-300 mb-3 flex items-center gap-2 transition-colors duration-300">
+                        <div className="w-4 h-4 border-2 border-blue-500 dark:border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                        Processing Payment
+                      </div>
+                      <div className="space-y-2">
+                        {msg.paymentSteps.map((step, i) => (
+                          <PaymentStep key={i} step={step} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Enhanced Payment Receipt */}
+                  {msg.paymentReceipt && (
+                    <div className="mt-3 mr-auto bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg md:rounded-xl p-3 md:p-4 w-[95%] md:w-[90%] text-xs md:text-sm shadow transition-all duration-300">
+                      <div className="font-semibold text-green-700 dark:text-green-300 mb-2 flex items-center justify-between transition-colors duration-300">
+                        <span>💳 Payment Receipt</span>
+                        <button
+                          onClick={() => {
+                            const printContent = `
                             CONSULTBRIDGE PAYMENT RECEIPT\n\n
                             Receipt ID: ${msg.paymentReceipt.id}\n
                             Client: ${msg.paymentReceipt.clientName}\n
@@ -856,9 +1556,9 @@ export default function Chatbot() {
                             Status: CONFIRMED\n\n
                             Thank you for using ConsultBridge!
                           `;
-                          const printWindow = window.open("", "_blank");
-                          if (printWindow) {
-                            printWindow.document.write(`
+                            const printWindow = window.open("", "_blank");
+                            if (printWindow) {
+                              printWindow.document.write(`
                               <html>
                                 <head><title>Payment Receipt</title></head>
                                 <body style="font-family: monospace; white-space: pre-line; padding: 20px;">
@@ -866,331 +1566,390 @@ export default function Chatbot() {
                                 </body>
                               </html>
                             `);
-                            printWindow.document.close();
-                            printWindow.print();
-                          }
-                        }}
-                        className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition flex items-center gap-1"
-                      >
-                        🖨️ Print
-                      </button>
-                    </div>
-                    <div className="space-y-1 text-green-600">
-                      <p>
-                        <strong>Receipt ID:</strong> {msg.paymentReceipt.id}
-                      </p>
-                      <p>
-                        <strong>Amount:</strong> ₹{msg.paymentReceipt.amount}
-                      </p>
-                      <p>
-                        <strong>Payment Method:</strong>{" "}
-                        {msg.paymentReceipt.paymentMethod?.toUpperCase() ||
-                          "CARD"}
-                      </p>
-                      <p>
-                        <strong>Client:</strong> {msg.paymentReceipt.clientName}
-                      </p>
-                      <p>
-                        <strong>Consultancy:</strong>{" "}
-                        {msg.paymentReceipt.consultancyName}
-                      </p>
-                      <p>
-                        <strong>Meeting Type:</strong>{" "}
-                        {msg.paymentReceipt.appointmentType?.toUpperCase() ||
-                          "ONLINE"}
-                      </p>
-                      <p>
-                        <strong>Date:</strong> {msg.paymentReceipt.date}
-                      </p>
-                      <p>
-                        <strong>Time:</strong> {msg.paymentReceipt.time}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Category Navigation Card */}
-                {msg.categoryNavigation && (
-                  <div className="mt-3 mr-auto bg-blue-50 border border-blue-200 rounded-xl p-3 w-[85%] text-sm shadow">
-                    <div className="font-semibold text-blue-700 flex items-center gap-2">
-                      📁 Browse {msg.categoryNavigation.categoryName}{" "}
-                      Consultancies
-                    </div>
-                    <p className="text-blue-600 mt-1">
-                      Explore all available consultants in this category
-                    </p>
-                    <button
-                      onClick={() => {
-                        window.open(msg.categoryNavigation?.url, "_blank");
-                      }}
-                      className="mt-2 text-xs bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition flex items-center gap-1"
-                    >
-                      🔍 Navigates
-                    </button>
-                  </div>
-                )}
-
-                {/* All Categories Card */}
-                {msg.allCategories && (
-                  <div className="mt-3 mr-auto bg-purple-50 border border-purple-200 rounded-xl p-3 w-[85%] text-sm shadow">
-                    <div className="font-semibold text-purple-700 flex items-center gap-2">
-                      📂 Browse All Categories
-                    </div>
-                    <p className="text-purple-600 mt-1">
-                      Explore all 10 consultation categories available
-                    </p>
-                    <button
-                      onClick={() => {
-                        window.open(msg.allCategories?.url, "_blank");
-                      }}
-                      className="mt-2 text-xs bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-600 transition flex items-center gap-1"
-                    >
-                      🔍 Browse All
-                    </button>
-                  </div>
-                )}
-
-                {/* Bookings Display Card */}
-                {msg.bookings && msg.bookings.length > 0 && (
-                  <div className="mt-3 mr-auto bg-blue-50 border border-blue-200 rounded-xl p-3 w-[90%] text-sm shadow">
-                    <div className="font-semibold text-blue-700 mb-3 flex items-center gap-2">
-                      📅 Your Bookings ({msg.bookings.length})
-                    </div>
-                    <div className="space-y-3">
-                      {msg.bookings.map((booking: any, i: number) => (
-                        <div key={i} className="bg-white p-3 rounded-lg border border-blue-100">
-                          <div className="font-medium text-gray-800">{booking.consultancyName}</div>
-                          <div className="text-xs text-gray-600 mt-1">
-                            📅 {booking.date} at {booking.time}
-                          </div>
-                          <div className="text-xs text-gray-600">
-                            📍 {booking.type} consultation
-                          </div>
-                          <div className="text-xs mt-1 flex items-center gap-1">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              booking.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
-                              booking.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-gray-100 text-gray-700'
-                            }`}>
-                              {booking.status === 'Confirmed' ? '✅' : '⏳'} {booking.status}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Authentication Required Card */}
-                {msg.requiresAuth && (
-                  <div className="mt-3 mr-auto bg-yellow-50 border border-yellow-200 rounded-xl p-3 w-[85%] text-sm shadow">
-                    <div className="font-semibold text-yellow-700 flex items-center gap-2">
-                      <LogIn size={16} /> Authentication Required
-                    </div>
-                    <p className="text-yellow-600 mt-1">{msg.authMessage}</p>
-                    <button
-                      onClick={() => {
-                        closeChatbot();
-                        router.push("/sign-in");
-                      }}
-                      className="mt-2 text-xs bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition flex items-center gap-1"
-                    >
-                      <LogIn size={12} /> Sign In Now
-                    </button>
-                  </div>
-                )}
-
-                {/* Consultancy Action Buttons - Hide during booking flow */}
-                {msg.consultancies && msg.consultancies.length > 0 && (!msg.actionType || msg.actionType !== 'book') && 
-                 !msg.text.includes('Please provide your preferred date') && 
-                 !msg.text.includes('what time would you prefer') && 
-                 !msg.text.includes('How would you prefer to meet') && 
-                 !msg.text.includes('How would you like to pay') && 
-                 !msg.text.includes('Available Days: Monday to Friday') && (
-                  <div className="mt-3 space-y-1">
-                    {msg.consultancies.map((consultancy: any) => (
-                      <div
-                        key={consultancy._id}
-                        className="flex gap-2 items-center p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex-1">
-                          <div className="text-sm font-semibold text-gray-800">
-                            {consultancy.name}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            ⭐ {consultancy.rating || 4.5}/5 • {consultancy.category} • {consultancy.price || '₹1,500/hr'}
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => {
-                            console.log(
-                              "Chat Summary clicked for:",
-                              consultancy.name
-                            );
-                            handleQuickAction(
-                              `show summary of ${consultancy.name}`
-                            );
-                          }}
-                          className="text-xs bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition"
-                        >
-                          Summary
-                        </button>
-                        <button
-                          onClick={() => {
-                            closeChatbot();
-                            router.push(`/consultancy/${consultancy._id}`);
-                          }}
-                          className="text-xs bg-indigo-500 text-white px-3 py-1 rounded hover:bg-indigo-600 transition"
-                        >
-                          View on Website
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (isLoading || isTyping) return;
-                            if (!isSignedIn) {
-                              const authMessage = {
-                                sender: "bot" as const,
-                                text: "To book appointments, please sign in first. It's quick and secure! 🔒",
-                                requiresAuth: true,
-                                authMessage: "Sign in required to book appointments",
-                              };
-                              setMessages((prev) => [...prev, authMessage]);
-                            } else {
-                              handleQuickAction(`book ${consultancy.name}`);
+                              printWindow.document.close();
+                              printWindow.print();
                             }
                           }}
-                          className="text-xs bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition flex items-center gap-1"
+                          className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition flex items-center gap-1"
                         >
-                          {!isSignedIn && <LogIn size={10} />}
-                          Book Now
+                          🖨️ Print
                         </button>
                       </div>
-                    ))}
-                    {/* More button */}
-                    <div className="flex justify-center mt-3">
+                      <div className="space-y-1 text-green-600 dark:text-green-400 transition-colors duration-300">
+                        <p>
+                          <strong className="text-green-700 dark:text-green-300">
+                            Receipt ID:
+                          </strong>{" "}
+                          {msg.paymentReceipt.id}
+                        </p>
+                        <p>
+                          <strong className="text-green-700 dark:text-green-300">
+                            Amount:
+                          </strong>{" "}
+                          ₹{msg.paymentReceipt.amount}
+                        </p>
+                        <p>
+                          <strong className="text-green-700 dark:text-green-300">
+                            Payment Method:
+                          </strong>{" "}
+                          {msg.paymentReceipt.paymentMethod?.toUpperCase() ||
+                            "CARD"}
+                        </p>
+                        <p>
+                          <strong className="text-green-700 dark:text-green-300">
+                            Client:
+                          </strong>{" "}
+                          {msg.paymentReceipt.clientName}
+                        </p>
+                        <p>
+                          <strong className="text-green-700 dark:text-green-300">
+                            Consultancy:
+                          </strong>{" "}
+                          {msg.paymentReceipt.consultancyName}
+                        </p>
+                        <p>
+                          <strong className="text-green-700 dark:text-green-300">
+                            Meeting Type:
+                          </strong>{" "}
+                          {msg.paymentReceipt.appointmentType?.toUpperCase() ||
+                            "ONLINE"}
+                        </p>
+                        <p>
+                          <strong className="text-green-700 dark:text-green-300">
+                            Date:
+                          </strong>{" "}
+                          {msg.paymentReceipt.date}
+                        </p>
+                        <p>
+                          <strong className="text-green-700 dark:text-green-300">
+                            Time:
+                          </strong>{" "}
+                          {msg.paymentReceipt.time}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Category Navigation Card */}
+                  {msg.categoryNavigation && (
+                    <div className="mt-3 mr-auto bg-blue-50 border border-blue-200 rounded-xl p-3 w-[85%] text-sm shadow">
+                      <div className="font-semibold text-blue-700 flex items-center gap-2">
+                        📁 Browse {msg.categoryNavigation.categoryName}{" "}
+                        Consultancies
+                      </div>
+                      <p className="text-blue-600 mt-1">
+                        Explore all available consultants in this category
+                      </p>
                       <button
                         onClick={() => {
-                          const category = msg.consultancies?.[0]?.category;
-                          if (category) {
-                            const categorySlug = category
-                              .toLowerCase()
-                              .replace(/\s+/g, "-")
-                              .replace(/&/g, "%26");
-                            closeChatbot();
-                            // Use window.location for reliable navigation
-                            setTimeout(() => {
-                              window.location.href = `/category/${categorySlug}`;
-                            }, 300);
-                          }
+                          window.open(msg.categoryNavigation?.url, "_blank");
                         }}
-                        className="text-xs bg-purple-500 text-white px-4 py-2 rounded-full hover:bg-purple-600 transition flex items-center gap-1"
+                        className="mt-2 text-xs bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition flex items-center gap-1"
                       >
-                        🔍 More in this category
+                        🔍 Navigates
                       </button>
                     </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                  )}
 
-            {/* Enhanced Typing Indicator with Tips */}
-            {isLoading && (
-              <div className="mr-auto max-w-[90%] space-y-3">
-                <div className="flex items-center gap-3 p-3 px-4 text-sm rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 shadow-sm">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce"></div>
-                    <div
-                      className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce"
-                      style={{ animationDelay: "0.1s" }}
-                    ></div>
-                    <div
-                      className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce"
-                      style={{ animationDelay: "0.2s" }}
-                    ></div>
-                  </div>
-                  <span className="text-indigo-700 font-medium">
-                    Shaan is analyzing your request...
-                  </span>
+                  {/* All Categories Card */}
+                  {msg.allCategories && (
+                    <div className="mt-3 mr-auto bg-purple-50 border border-purple-200 rounded-xl p-3 w-[85%] text-sm shadow">
+                      <div className="font-semibold text-purple-700 flex items-center gap-2">
+                        📂 Browse All Categories
+                      </div>
+                      <p className="text-purple-600 mt-1">
+                        Explore all 10 consultation categories available
+                      </p>
+                      <button
+                        onClick={() => {
+                          window.open(msg.allCategories?.url, "_blank");
+                        }}
+                        className="mt-2 text-xs bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-600 transition flex items-center gap-1"
+                      >
+                        🔍 Browse All
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Bookings Display Card */}
+                  {msg.bookings && msg.bookings.length > 0 && (
+                    <div className="mt-3 mr-auto bg-blue-50 border border-blue-200 rounded-xl p-3 w-[90%] text-sm shadow">
+                      <div className="font-semibold text-blue-700 mb-3 flex items-center gap-2">
+                        📅 Your Bookings ({msg.bookings.length})
+                      </div>
+                      <div className="space-y-3">
+                        {msg.bookings.map((booking: any, i: number) => (
+                          <div
+                            key={i}
+                            className="bg-white p-3 rounded-lg border border-blue-100"
+                          >
+                            <div className="font-medium text-gray-800">
+                              {booking.consultancyName}
+                            </div>
+                            <div className="text-xs text-gray-600 mt-1">
+                              📅 {booking.date} at {booking.time}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              📍 {booking.type} consultation
+                            </div>
+                            <div className="text-xs mt-1 flex items-center gap-1">
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  booking.status === "Confirmed"
+                                    ? "bg-green-100 text-green-700"
+                                    : booking.status === "Pending"
+                                      ? "bg-yellow-100 text-yellow-700"
+                                      : "bg-gray-100 text-gray-700"
+                                }`}
+                              >
+                                {booking.status === "Confirmed" ? "✅" : "⏳"}{" "}
+                                {booking.status}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Authentication Required Card */}
+                  {msg.requiresAuth && (
+                    <div className="mt-3 mr-auto bg-yellow-50 border border-yellow-200 rounded-xl p-3 w-[85%] text-sm shadow">
+                      <div className="font-semibold text-yellow-700 flex items-center gap-2">
+                        <LogIn size={16} /> Authentication Required
+                      </div>
+                      <p className="text-yellow-600 mt-1">{msg.authMessage}</p>
+                      <button
+                        onClick={() => {
+                          closeChatbot();
+                          router.push("/sign-in");
+                        }}
+                        className="mt-2 text-xs bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition flex items-center gap-1"
+                      >
+                        <LogIn size={12} /> Sign In Now
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Consultancy Action Buttons - Hide during booking flow */}
+                  {msg.consultancies &&
+                    msg.consultancies.length > 0 &&
+                    (!msg.actionType || msg.actionType !== "book") &&
+                    !msg.text.includes("Please provide your preferred date") &&
+                    !msg.text.includes("what time would you prefer") &&
+                    !msg.text.includes("How would you prefer to meet") &&
+                    !msg.text.includes("How would you like to pay") &&
+                    !msg.text.includes("Available Days: Monday to Friday") && (
+                      <div className="mt-3 space-y-1">
+                        {msg.consultancies.map((consultancy: any) => (
+                          <div
+                            key={consultancy._id}
+                            className="flex gap-2 items-center p-3 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+                          >
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold text-gray-800 dark:text-gray-100 transition-colors duration-300">
+                                {consultancy.name}
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-300">
+                                ⭐ {consultancy.rating || 4.5}/5 •{" "}
+                                {consultancy.category} •{" "}
+                                {consultancy.price || "₹1,500/hr"}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => {
+                                console.log(
+                                  "Chat Summary clicked for:",
+                                  consultancy.name
+                                );
+                                handleQuickAction(
+                                  `show summary of ${consultancy.name}`
+                                );
+                              }}
+                              className="text-xs bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition"
+                            >
+                              Summary
+                            </button>
+                            <button
+                              onClick={() => {
+                                closeChatbot();
+                                router.push(`/consultancy/${consultancy._id}`);
+                              }}
+                              className="text-xs bg-indigo-500 text-white px-3 py-1 rounded hover:bg-indigo-600 transition"
+                            >
+                              View on Website
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (isLoading || isTyping) return;
+                                // Safely check authentication status
+                                const checkAuthStatus = () => {
+                                  try {
+                                    return isSignedIn && userId;
+                                  } catch (error) {
+                                    console.warn(
+                                      "Error checking auth status:",
+                                      error
+                                    );
+                                    return false;
+                                  }
+                                };
+
+                                if (!checkAuthStatus()) {
+                                  const authMessage = {
+                                    sender: "bot" as const,
+                                    text: "To book appointments, please sign in first. It's quick and secure! 🔒",
+                                    requiresAuth: true,
+                                    authMessage:
+                                      "Sign in required to book appointments",
+                                  };
+                                  setMessages((prev) => [...prev, authMessage]);
+                                } else {
+                                  handleQuickAction(`book ${consultancy.name}`);
+                                }
+                              }}
+                              className="text-xs bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition flex items-center gap-1"
+                            >
+                              {!isSignedIn && <LogIn size={10} />}
+                              Book Now
+                            </button>
+                          </div>
+                        ))}
+                        {/* More button */}
+                        <div className="flex justify-center mt-3">
+                          <button
+                            onClick={() => {
+                              const category = msg.consultancies?.[0]?.category;
+                              if (category) {
+                                const categorySlug = category
+                                  .toLowerCase()
+                                  .replace(/\s+/g, "-")
+                                  .replace(/&/g, "%26");
+                                closeChatbot();
+                                // Use window.location for reliable navigation
+                                setTimeout(() => {
+                                  window.location.href = `/category/${categorySlug}`;
+                                }, 300);
+                              }
+                            }}
+                            className="text-xs bg-purple-500 text-white px-4 py-2 rounded-full hover:bg-purple-600 transition flex items-center gap-1"
+                          >
+                            🔍 More in this category
+                          </button>
+                        </div>
+                      </div>
+                    )}
                 </div>
+              ))}
 
-                {/* Progress Bar */}
-                <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
+              {/* Enhanced Typing Indicator with Tips */}
+              {isLoading && (
+                <div className="mr-auto max-w-[90%] space-y-3">
+                  <div className="flex items-center gap-3 p-3 px-4 text-sm rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 shadow-sm">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce"></div>
+                      <div
+                        className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce"
+                        style={{ animationDelay: "0.1s" }}
+                      ></div>
+                      <div
+                        className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce"
+                        style={{ animationDelay: "0.2s" }}
+                      ></div>
+                    </div>
+                    <span className="text-indigo-700 font-medium">
+                      Shaan is analyzing your request...
+                    </span>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden transition-all duration-300">
+                    <div
+                      className="bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-blue-400 dark:to-purple-400 h-full transition-all duration-300 ease-out"
+                      style={{ width: `${loadingProgress}%` }}
+                    ></div>
+                  </div>
+
+                  {/* Random Tip */}
+                  {waitingTip && (
+                    <div className="p-3 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl text-sm animate-fade-in transition-all duration-300">
+                      <div className="flex items-start gap-2">
+                        <span className="text-lg">💭</span>
+                        <span className="text-gray-700 dark:text-gray-300 transition-colors duration-300">
+                          {waitingTip}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Real-time Typing Message */}
+              {isTyping && (
+                <div className="mr-auto max-w-[85%] rounded-xl text-sm bg-white dark:bg-dark-card border dark:border-dark-border p-3 px-4 transition-all duration-300">
                   <div
-                    className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full transition-all duration-300 ease-out"
-                    style={{ width: `${loadingProgress}%` }}
+                    className="whitespace-pre-line leading-relaxed text-gray-800 dark:text-gray-200 transition-all duration-300"
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        (typeof typingMessage === "string"
+                          ? typingMessage
+                          : "") +
+                        '<span class="inline-block w-3 h-5 bg-gradient-to-r from-blue-500 to-purple-500 dark:from-neon-blue dark:to-neon-purple ml-1 rounded animate-pulse shadow-lg" style="animation-duration: 0.8s;"></span>',
+                    }}
                   ></div>
                 </div>
+              )}
 
-                {/* Random Tip */}
-                {waitingTip && (
-                  <div className="p-3 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl text-sm animate-fade-in">
-                    <div className="flex items-start gap-2">
-                      <span className="text-lg">💭</span>
-                      <span className="text-gray-700">{waitingTip}</span>
-                    </div>
+              {/* Quick Action Buttons */}
+              {showQuickActions && messages.length === 1 && (
+                <div className="mr-auto space-y-2 mt-2">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 transition-all duration-300">
+                    Quick actions:
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* Real-time Typing Message */}
-            {isTyping && (
-              <div className="mr-auto max-w-[85%] rounded-xl text-sm bg-white border p-3 px-4">
-                <div className="whitespace-pre-line leading-relaxed" dangerouslySetInnerHTML={{
-                  __html: (typeof typingMessage === "string" ? typingMessage : "") + 
-                    '<span class="inline-block w-3 h-5 bg-gradient-to-r from-blue-500 to-purple-500 ml-1 rounded animate-pulse shadow-lg" style="animation-duration: 0.8s;"></span>'
-                }}></div>
-              </div>
-            )}
-
-            {/* Quick Action Buttons */}
-            {showQuickActions && messages.length === 1 && (
-              <div className="mr-auto space-y-2 mt-2">
-                <div className="text-xs text-gray-500 mb-2">Quick actions:</div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => handleQuickAction("Show my bookings")}
-                    className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition"
-                  >
-                    📅 My Bookings
-                  </button>
-                  <button
-                    onClick={() =>
-                      handleQuickAction("I need business consulting")
-                    }
-                    className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full hover:bg-green-200 transition"
-                  >
-                    💼 Business Help
-                  </button>
-                  <button
-                    onClick={() => handleQuickAction("I need legal advice")}
-                    className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200 transition"
-                  >
-                    ⚖️ Legal Advice
-                  </button>
-                  <button
-                    onClick={() => handleQuickAction("Reschedule appointment")}
-                    className="text-xs bg-orange-100 text-orange-700 px-3 py-1 rounded-full hover:bg-orange-200 transition"
-                  >
-                    🔄 Reschedule
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => handleQuickAction("Show my bookings")}
+                      className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800/40 transition-all duration-300"
+                    >
+                      📅 My Bookings
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleQuickAction("I need business consulting")
+                      }
+                      className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-3 py-1 rounded-full hover:bg-green-200 dark:hover:bg-green-800/40 transition-all duration-300"
+                    >
+                      💼 Business Help
+                    </button>
+                    <button
+                      onClick={() => handleQuickAction("I need legal advice")}
+                      className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full hover:bg-purple-200 dark:hover:bg-purple-800/40 transition-all duration-300"
+                    >
+                      ⚖️ Legal Advice
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleQuickAction("Reschedule appointment")
+                      }
+                      className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-3 py-1 rounded-full hover:bg-orange-200 dark:hover:bg-orange-800/40 transition-all duration-300"
+                    >
+                      🔄 Reschedule
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
               <div ref={chatEndRef} />
             </div>
           </div>
 
           {/* Input */}
-          <div className="p-2 md:p-3 bg-gradient-to-r from-gray-50 to-white flex items-center gap-2">
+          <div className="p-2 md:p-3 bg-gradient-to-r from-gray-50 to-white dark:from-dark-surface dark:to-dark-card flex items-center gap-2 transition-all duration-300">
             <input
               type="text"
-              className="flex-1 border border-gray-300 rounded-full px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all hover:border-indigo-300"
+              className="flex-1 border border-gray-300 dark:border-dark-border rounded-full px-3 md:px-4 py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-neon-blue focus:border-indigo-500 dark:focus:border-neon-blue transition-all hover:border-indigo-300 dark:hover:border-neon-cyan bg-white dark:bg-dark-surface text-gray-800 dark:text-gray-200"
               placeholder={
-                isLoading
-                  ? "Please wait..."
-                  : "Ask me anything... 🚀"
+                isLoading ? "Please wait..." : "Ask me anything... 🚀"
               }
               value={input}
               onChange={(e) => setInput(e.target.value)}
