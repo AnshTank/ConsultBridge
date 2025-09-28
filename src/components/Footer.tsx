@@ -188,7 +188,7 @@ const Footer = () => {
         isOpen={showSocialLinks}
         onClose={() => setShowSocialLinks(false)}
         title="Follow Us"
-        size="sm"
+        maxWidth="max-w-sm"
       >
         <div className="space-y-3">
           {[
