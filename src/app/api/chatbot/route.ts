@@ -56,11 +56,121 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
+    // Check if user is signed in for booking operations
+    if (!userId) {
+      // Check if this is a booking-related message
+      const bookingKeywords = ['book', 'appointment', 'schedule', 'reserve', 'confirm booking', 'payment'];
+      const isBookingIntent = bookingKeywords.some(keyword => 
+        userMessage.toLowerCase().includes(keyword)
+      );
+      
+      if (isBookingIntent) {
+        return NextResponse.json({
+          success: true,
+          error: null,
+          data: {
+            reply: "I'd be happy to help you book an appointment! However, you'll need to sign in first to complete your booking. Please sign in and then let me know which consultancy you'd like to book with.",
+            consultancies: [],
+            actionType: 'auth_required',
+            needsBooking: false,
+            sessionId
+          }
+        });
+      }
+    }
+
+    // Check if user is signed in for booking operations
+    if (!userId) {
+      const bookingKeywords = ['book', 'appointment', 'schedule', 'reserve', 'confirm booking', 'payment'];
+      const isBookingIntent = bookingKeywords.some(keyword => 
+        userMessage.toLowerCase().includes(keyword)
+      );
+      
+      if (isBookingIntent) {
+        return NextResponse.json({
+          success: true,
+          error: null,
+          data: {
+            reply: "Please sign in first to complete your booking.",
+            consultancies: [],
+            actionType: 'auth_required',
+            needsBooking: false,
+            sessionId
+          }
+        });
+      }
+    }
+
+    // Check if user is signed in for booking operations
+    if (!userId) {
+      const bookingKeywords = ['book', 'appointment', 'schedule', 'reserve', 'confirm booking', 'payment'];
+      const isBookingIntent = bookingKeywords.some(keyword => 
+        userMessage.toLowerCase().includes(keyword)
+      );
+      
+      if (isBookingIntent) {
+        return NextResponse.json({
+          success: true,
+          error: null,
+          data: {
+            reply: "Please sign in first to complete your booking.",
+            consultancies: [],
+            actionType: 'auth_required',
+            needsBooking: false,
+            sessionId
+          }
+        });
+      }
+    }
+
     // Check if user is in booking flow
     const bookingSession = bookingSessions.get(sessionId);
     console.log('Checking booking session:', sessionId, bookingSession?.step);
     
     if (bookingSession && bookingSession.step && bookingSession.step !== 'complete') {
+      if (!userId) {
+        bookingSessions.delete(sessionId);
+        return NextResponse.json({
+          success: true,
+          error: null,
+          data: {
+            reply: "Please sign in again to continue with your booking.",
+            consultancies: [],
+            actionType: 'auth_required',
+            needsBooking: false,
+            sessionId
+          }
+        });
+      }
+      if (!userId) {
+        bookingSessions.delete(sessionId);
+        return NextResponse.json({
+          success: true,
+          error: null,
+          data: {
+            reply: "Please sign in again to continue with your booking.",
+            consultancies: [],
+            actionType: 'auth_required',
+            needsBooking: false,
+            sessionId
+          }
+        });
+      }
+      // Ensure user is still signed in during booking flow
+      if (!userId) {
+        bookingSessions.delete(sessionId);
+        return NextResponse.json({
+          success: true,
+          error: null,
+          data: {
+            reply: "Your session has expired. Please sign in again to continue with your booking.",
+            consultancies: [],
+            actionType: 'auth_required',
+            needsBooking: false,
+            sessionId
+          }
+        });
+      }
       console.log('Continuing booking flow, step:', bookingSession.step);
       // Update last activity
       bookingSession.lastActivity = Date.now();

@@ -9,6 +9,7 @@ import {
 } from "@clerk/nextjs";
 import { Menu, X } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import ButtonSkeleton from "./ButtonSkeleton";
 
 const Navbar: React.FC = () => {
   const { user, isLoaded } = useUser();
@@ -107,7 +108,7 @@ const Navbar: React.FC = () => {
           <ThemeToggle />
           <div className="flex items-center justify-end">
             {!isClient || !isLoaded || !showButtons ? (
-              <div className="h-10 bg-white/20 rounded-lg w-20 animate-pulse"></div>
+              <ButtonSkeleton width="w-20" height="h-10" />
             ) : (
               <div style={{ opacity: buttonOpacity, transition: 'opacity 0.8s ease-out' }}>
                 <SignedOut>
@@ -132,7 +133,7 @@ const Navbar: React.FC = () => {
           
           <div className="w-8 h-8 flex items-center justify-center">
             {!isClient || !isLoaded || !showButtons ? (
-              <div className="w-8 h-8 bg-white/20 rounded-full animate-pulse"></div>
+              <ButtonSkeleton width="w-8" height="h-8" className="rounded-full" />
             ) : (
               <SignedIn>
                 <div style={{ opacity: buttonOpacity, transition: 'opacity 0.8s ease-out' }}>
@@ -157,7 +158,7 @@ const Navbar: React.FC = () => {
           <SignedIn>
             <div className="w-8 h-8 flex items-center justify-center">
               {!isClient || !isLoaded || !showButtons ? (
-                <div className="w-8 h-8 bg-white/20 rounded-full animate-pulse"></div>
+                <ButtonSkeleton width="w-8" height="h-8" className="rounded-full" />
               ) : (
                 <div style={{ opacity: buttonOpacity, transition: 'opacity 0.8s ease-out' }}>
                   <UserButton 
@@ -209,7 +210,7 @@ const Navbar: React.FC = () => {
             
             <div className="pt-2 border-t border-white/20">
               {!isClient || !isLoaded || !showButtons ? (
-                <div className="h-10 bg-white/20 rounded-lg animate-pulse"></div>
+                <ButtonSkeleton width="w-full" height="h-10" />
               ) : (
                 <div style={{ opacity: buttonOpacity, transition: 'opacity 0.8s ease-out' }}>
                   <SignedOut>

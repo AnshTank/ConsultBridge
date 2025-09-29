@@ -21,7 +21,7 @@ body {
 *,
 *::before,
 *::after {
-  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
   transition-duration: var(--transition-duration);
   transition-timing-function: var(--transition-timing);
 }
@@ -31,9 +31,17 @@ body {
 .dark *,
 .dark *::before,
 .dark *::after {
-  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
   transition-duration: var(--transition-duration);
   transition-timing-function: var(--transition-timing);
+}
+
+/* Exclude loading screen from global transitions */
+.loading-screen,
+.loading-screen *,
+.loading-screen *::before,
+.loading-screen *::after {
+  transition: none !important;
 }
 
 /* Prevent transitions on page load */
@@ -55,6 +63,16 @@ html {
 body {
   overflow-x: hidden;
   background-color: #f9fafb; /* Prevent white flash */
+}
+
+/* Prevent white flash on dark mode */
+.dark body {
+  background-color: #0f0f23 !important;
+}
+
+/* Force dark background immediately */
+html.dark {
+  background-color: #0f0f23 !important;
 }
 
 /* Prevent content shift when scroll is locked */

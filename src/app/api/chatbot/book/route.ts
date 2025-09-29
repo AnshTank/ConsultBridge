@@ -22,10 +22,20 @@ export async function POST(req: NextRequest) {
     const sessionId = sanitizeInput(body.sessionId || '');
     const appointmentDetails = body.appointmentDetails || {};
 
-    if (!consultancyId || !userId || !appointmentDetails) {
+    // Check if user is signed in
+    if (!userId) {
       return new Response(JSON.stringify({
         success: false,
-        error: "Consultancy ID, User ID, and appointment details are required",
+        error: "SIGN_IN_REQUIRED",
+        message: "Please sign in to complete your booking",
+        data: null
+      }), { status: 401 });
+    }
+
+    if (!consultancyId || !appointmentDetails) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: "Consultancy ID and appointment details are required",
         data: null
       }), { status: 400 });
     }

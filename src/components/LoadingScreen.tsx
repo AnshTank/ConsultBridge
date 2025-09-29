@@ -128,7 +128,7 @@ const LoadingScreen = ({
   // Default variant - WOW factor
   return (
     <motion.div
-      className="fixed inset-0 flex items-center justify-center z-50 bg-gray-50 dark:bg-dark-bg"
+      className="loading-screen fixed inset-0 flex items-center justify-center z-50 bg-gray-50 dark:bg-dark-bg"
       style={{ 
         width: "100vw", 
         height: "100vh",
@@ -183,7 +183,7 @@ const LoadingScreen = ({
               }}
             >
               <motion.span
-                className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-white dark:to-white bg-clip-text text-transparent dark:text-white"
+                className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-white dark:to-white bg-clip-text text-transparent"
                 animate={{
                   scale: [1, 1.1, 1],
                 }}
