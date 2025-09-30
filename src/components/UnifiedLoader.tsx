@@ -7,44 +7,64 @@ interface UnifiedLoaderProps {
   children: ReactNode;
   message?: string;
   isHomePage?: boolean;
+  contentReady?: boolean;
 }
 
 export default function UnifiedLoader({ 
   children, 
   message = "Loading ConsultBridge...",
-  isHomePage = false
+  isHomePage = false,
+  contentReady = true
 }: UnifiedLoaderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
+  const [spiralCount, setSpiralCount] = useState(0);
+  const [minLoadingComplete, setMinLoadingComplete] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
     
-    // Home page: 2x time (4000ms), Other pages: x time (2000ms)
-    const loadingDuration = isHomePage ? 4000 : 2000;
+    // Minimum loading time based on spiral rotations
+    const spiralDuration = 2000; // 2 seconds per spiral
+    const requiredSpirals = isHomePage ? 2 : 1;
+    const minLoadingTime = spiralDuration * requiredSpirals;
     
-    const timer = setTimeout(() => {
+    // Set minimum loading complete after exact time
+    const minTimer = setTimeout(() => {
+      setMinLoadingComplete(true);
+      setSpiralCount(requiredSpirals);
+    }, minLoadingTime);
+    
+    return () => {
+      clearTimeout(minTimer);
+    };
+  }, [isHomePage]);
+  
+  // Check if we can finish loading
+  useEffect(() => {
+    if (minLoadingComplete && contentReady) {
       setIsFadingOut(true);
       setTimeout(() => {
         setIsLoading(false);
-      }, 800); // 800ms fade out
-    }, loadingDuration);
-
-    return () => clearTimeout(timer);
-  }, [isHomePage]);
+      }, 500);
+    }
+  }, [minLoadingComplete, contentReady]);
 
   return (
     <>
       <LoadingStateController isLoading={!isClient || isLoading} />
       {(!isClient || isLoading) ? (
-        <LoadingScreen message={message} isHomePage={isHomePage} isFadingOut={isFadingOut} />
+        <LoadingScreen 
+          message={message} 
+          isHomePage={isHomePage} 
+          isFadingOut={isFadingOut}
+          spiralCount={spiralCount}
+        />
       ) : (
         <div 
-          className="animate-in fade-in duration-1000 ease-out"
-          style={{
-            animation: 'fadeInUp 1s ease-out forwards'
-          }}
+          className="animate-in fade-in duration-500 ease-out min-h-screen"
+          style={{ minHeight: "100vh" }}
         >
           {children}
         </div>

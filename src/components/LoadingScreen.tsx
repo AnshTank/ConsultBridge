@@ -6,6 +6,7 @@ interface LoadingScreenProps {
   variant?: "default" | "minimal" | "dots" | "pulse";
   isHomePage?: boolean;
   isFadingOut?: boolean;
+  spiralCount?: number;
 }
 
 const LoadingScreen = ({
@@ -13,6 +14,7 @@ const LoadingScreen = ({
   variant = "default",
   isHomePage = false,
   isFadingOut = false,
+  spiralCount = 0,
 }: LoadingScreenProps) => {
   if (variant === "minimal") {
     return (
@@ -132,7 +134,10 @@ const LoadingScreen = ({
       style={{ 
         width: "100vw", 
         height: "100vh",
-        overflow: "hidden"
+        overflow: "hidden",
+        position: "fixed",
+        top: 0,
+        left: 0
       }}
       animate={{
         opacity: isFadingOut ? 0 : 1
@@ -166,7 +171,7 @@ const LoadingScreen = ({
                 rotate: [0, 180, 360],
               }}
               transition={{
-                duration: 3,
+                duration: 2,
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
@@ -224,20 +229,23 @@ const LoadingScreen = ({
             ))}
           </div>
 
-          {/* Loading Text */}
-          <motion.p
-            className="text-xl font-medium bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-white dark:to-white bg-clip-text text-transparent dark:text-white"
-            animate={{
-              opacity: [0.7, 1, 0.7],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          >
-            {message}
-          </motion.p>
+          {/* Loading Text with Spiral Counter */}
+          <motion.div className="text-center">
+            <motion.p
+              className="text-xl font-medium bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-white dark:to-white bg-clip-text text-transparent dark:text-white"
+              animate={{
+                opacity: [0.7, 1, 0.7],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              {message}
+            </motion.p>
+
+          </motion.div>
         </motion.div>
       </div>
     </motion.div>

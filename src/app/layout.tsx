@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import "../styles/globals.css";
 import "../styles/dark-mode.css";
+import "../styles/instant-theme.css";
 import Chatbot from "@/components/Chatbot";
 import FloatingParticles from "../components/FloatingParticles";
 import FloatingDhaba from "../components/FloatingDhaba";
@@ -28,7 +29,7 @@ export default function RootLayout({
       publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
     >
       <html lang="en">
-        <body suppressHydrationWarning={true} className="preload bg-white dark:bg-dark-bg text-gray-900 dark:text-gray-100 transition-all duration-500 antialiased">
+        <body suppressHydrationWarning={true} className="preload bg-white dark:bg-dark-bg text-gray-900 dark:text-gray-100 antialiased">
           <script
             dangerouslySetInnerHTML={{
               __html: `

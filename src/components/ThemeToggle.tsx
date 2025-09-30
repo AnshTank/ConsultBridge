@@ -8,7 +8,7 @@ const ThemeToggle: React.FC = () => {
   const { isDarkMode, toggleTheme } = useTheme();
 
   return (
-    <div className="relative inline-block w-14 h-7 rounded-full overflow-hidden transition-all duration-500 ease-out" 
+    <div className="relative inline-block w-14 h-7 rounded-full overflow-hidden theme-toggle" 
          style={{
            backgroundColor: isDarkMode ? '#2a2a2a' : 'linear-gradient(to right, #60a5fa, #a855f7)',
            background: isDarkMode ? '#2a2a2a' : 'linear-gradient(to right, #60a5fa, #a855f7)',
@@ -23,7 +23,7 @@ const ThemeToggle: React.FC = () => {
       
       {/* Toggle Circle */}
       <div 
-        className="absolute top-0.5 w-5 h-5 rounded-full transition-all duration-500 ease-out flex items-center justify-center"
+        className="absolute top-0.5 w-5 h-5 rounded-full theme-toggle flex items-center justify-center"
         style={{
           backgroundColor: isDarkMode ? '#f1f5f9' : '#fbbf24',
           transform: isDarkMode ? 'translateX(2px)' : 'translateX(30px)',

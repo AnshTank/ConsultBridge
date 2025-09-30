@@ -1,0 +1,42 @@
+/* Instant Theme Switching - No Transitions except for specific elements */
+html,
+body,
+*:not(.swiper):not(.swiper *):not(.theme-toggle):not(.theme-toggle *):not(.hover-transition):not(button:hover):not(a:hover) {
+  transition: none !important;
+}
+
+/* Only allow transitions for specific interactive elements */
+button:hover,
+a:hover,
+.hover-transition,
+.theme-toggle {
+  transition: all 0.3s ease !important;
+}
+
+/* Smooth theme toggle button animation */
+.theme-toggle svg {
+  transition: transform 0.3s ease !important;
+}
+
+/* Category card animations only - exclude swiper mechanics */
+.swiper-slide .transition-all {
+  transition: all 0.5s ease-out !important;
+}
+
+.swiper-slide .transition-transform {
+  transition: transform 0.5s ease-out !important;
+}
+
+.swiper-button-prev-custom,
+.swiper-button-next-custom {
+  transition: all 0.3s ease !important;
+}
+
+/* Instant dark mode switching */
+.dark {
+  color-scheme: dark;
+}
+
+html:not(.dark) {
+  color-scheme: light;
+}

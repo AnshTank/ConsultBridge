@@ -33,7 +33,7 @@
 .route-transition-enter-active {
   opacity: 1;
   transform: translateX(0) scale(1);
-  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: all 0.2s ease-out;
 }
 
 .route-transition-exit {
@@ -44,7 +44,7 @@
 .route-transition-exit-active {
   opacity: 0;
   transform: translateX(-30px) scale(0.95);
-  transition: all 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53);
+  transition: all 0.15s ease-in;
 }
 
 .stagger-container > * {
