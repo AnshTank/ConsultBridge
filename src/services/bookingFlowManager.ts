@@ -92,7 +92,17 @@ export class BookingFlowManager {
     }
     
     const consultant = await this.getConsultant(session.consultantId);
-    const timeSlots = this.generateTimeSlots(consultant);
+    const timeSlots = this.generateTimeSlots(consultant, selectedDate);
+    
+    // Check if no slots are available
+    if (timeSlots.length === 1 && timeSlots[0] === 'No slots available for today') {
+      return {
+        reply: `Sorry, no time slots are available for ${selectedDate} (too late in the day). Please select tomorrow or a future date:`,
+        isComplete: false,
+        bookingData: session
+      };
+    }
+    
     const updatedSession = {
       ...session,
       selectedDate,
@@ -109,7 +119,7 @@ export class BookingFlowManager {
 
   private async handleTimeSelection(message: string, sessionId: string, session: BookingSession): Promise<BookingResponse> {
     const consultant = await this.getConsultant(session.consultantId);
-    const timeSlots = this.generateTimeSlots(consultant);
+    const timeSlots = this.generateTimeSlots(consultant, session.selectedDate);
     
     const slotNumber = parseInt(message.trim());
     if (slotNumber >= 1 && slotNumber <= timeSlots.length) {
@@ -288,17 +298,32 @@ export class BookingFlowManager {
     }
   }
 
-  private generateTimeSlots(consultant: any): string[] {
+  private generateTimeSlots(consultant: any, selectedDate?: string): string[] {
     const hours = consultant?.availability?.hours || '9:00 AM - 6:00 PM';
     const [startTime, endTime] = hours.split(' - ');
     const slots = [];
-    const start = this.parseTime(startTime);
+    let start = this.parseTime(startTime);
     const end = this.parseTime(endTime);
+    
+    // If booking for today, only show slots after current time + 1 hour buffer
+    if (selectedDate) {
+      const [day, month, year] = selectedDate.split('/');
+      const selectedDateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      const today = new Date();
+      const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const selectedDateOnly = new Date(selectedDateObj.getFullYear(), selectedDateObj.getMonth(), selectedDateObj.getDate());
+      
+      if (selectedDateOnly.getTime() === todayDateOnly.getTime()) {
+        const currentHour = today.getHours();
+        const minAvailableHour = currentHour + 1; // 1 hour buffer
+        start = Math.max(start, minAvailableHour);
+      }
+    }
     
     for (let hour = start; hour < end; hour++) {
       slots.push(this.formatHour(hour));
     }
-    return slots;
+    return slots.length > 0 ? slots : ['No slots available for today'];
   }
 
   private parseTime(timeStr: string): number {

@@ -9,15 +9,21 @@ const bookingManager = new BookingFlowManager();
 // Session storage for booking flows (TODO: Replace with Redis/DB in production)
 const bookingSessions = new Map<string, any>();
 
-// Cleanup old sessions every 30 minutes
+// Cleanup old sessions every 5 minutes
 setInterval(() => {
   const now = Date.now();
   bookingSessions.forEach((session, sessionId) => {
-    if (session.lastActivity && (now - session.lastActivity) > 30 * 60 * 1000) {
+    // Clean up sessions older than 30 minutes or corrupted sessions
+    if (!session.lastActivity || 
+        (now - session.lastActivity) > 30 * 60 * 1000 ||
+        !session.step || 
+        !session.consultantId) {
+      console.log('Cleaning up session:', sessionId, 'reason:', !session.lastActivity ? 'no activity' : 
+                  (now - session.lastActivity) > 30 * 60 * 1000 ? 'expired' : 'corrupted');
       bookingSessions.delete(sessionId);
     }
   });
-}, 30 * 60 * 1000);
+}, 5 * 60 * 1000); // Check every 5 minutes
 
 // Periodic payment processing completion check
 setInterval(async () => {
@@ -127,7 +133,24 @@ export async function POST(req: NextRequest) {
     const bookingSession = bookingSessions.get(sessionId);
     console.log('Checking booking session:', sessionId, bookingSession?.step);
     
-    if (bookingSession && bookingSession.step && bookingSession.step !== 'complete') {
+    // Check if user wants to exit booking flow or start fresh
+    const exitKeywords = ['hi', 'hello', 'hey', 'start over', 'new chat', 'help', 'categories', 'show my bookings', 'cancel booking', 'exit', 'stop', 'reset', 'clear'];
+    const isExitIntent = exitKeywords.some(keyword => 
+      userMessage.toLowerCase().includes(keyword.toLowerCase())
+    );
+    
+    // Also check for corrupted booking sessions
+    const isCorruptedSession = bookingSession && (!bookingSession.consultantId || !bookingSession.step || !bookingSession.consultantName);
+    
+    // If user wants to exit booking flow or session is corrupted, clear the session
+    if (bookingSession && (isExitIntent || isCorruptedSession) && bookingSession.step !== 'complete') {
+      console.log('Clearing booking session:', sessionId, 'reason:', isExitIntent ? 'user exit intent' : 'corrupted session');
+      bookingSessions.delete(sessionId);
+      // Continue with normal chatbot processing
+    }
+    
+    // Only continue booking flow if session exists, is valid, and user is not trying to exit
+    else if (bookingSession && bookingSession.step && bookingSession.step !== 'complete' && !isExitIntent && !isCorruptedSession) {
       if (!userId) {
         bookingSessions.delete(sessionId);
         return NextResponse.json({
@@ -171,55 +194,30 @@ export async function POST(req: NextRequest) {
           }
         });
       }
-      console.log('Continuing booking flow, step:', bookingSession.step);
+      console.log('Continuing booking flow, step:', bookingSession.step, 'for message:', userMessage);
       // Update last activity
       bookingSession.lastActivity = Date.now();
       bookingSessions.set(sessionId, bookingSession);
       try {
         // Handle payment processing completion
         if (bookingSession.step === 'processing') {
-          // Check if enough time has passed (4 seconds)
-          const timeSinceStart = Date.now() - (bookingSession.lastActivity || Date.now());
+          // If user sends any message during processing, complete it immediately
+          const completionResult = await bookingManager.completePaymentProcessing(bookingSession);
+          bookingSessions.delete(sessionId);
           
-          if (timeSinceStart > 4000) {
-            const completionResult = await bookingManager.completePaymentProcessing(bookingSession);
-            bookingSessions.delete(sessionId);
-            
-            return NextResponse.json({
-              success: true,
-              error: null,
-              data: {
-                reply: completionResult.reply,
-                consultancies: [],
-                actionType: 'book',
-                needsBooking: false,
-                bookingData: completionResult.bookingData,
-                paymentReceipt: completionResult.bookingData.receipt,
-                sessionId
-              }
-            });
-          } else {
-            // Still processing, return processing status with animation
-            return NextResponse.json({
-              success: true,
-              error: null,
-              data: {
-                reply: "",
-                consultancies: [],
-                actionType: 'book',
-                needsBooking: true,
-                bookingData: bookingSession,
-                processingPayment: true,
-                paymentSteps: [
-                  { step: 1, text: "Validating payment details", icon: "🔒", delay: 0 },
-                  { step: 2, text: "Processing secure transaction", icon: "💳", delay: 1000 },
-                  { step: 3, text: "Confirming appointment slot", icon: "📅", delay: 2000 },
-                  { step: 4, text: "Generating confirmation", icon: "✅", delay: 3000 }
-                ],
-                sessionId
-              }
-            });
-          }
+          return NextResponse.json({
+            success: true,
+            error: null,
+            data: {
+              reply: completionResult.reply,
+              consultancies: [],
+              actionType: 'book',
+              needsBooking: false,
+              bookingData: completionResult.bookingData,
+              paymentReceipt: completionResult.bookingData.receipt,
+              sessionId
+            }
+          });
         }
         
         // Handle booking step  
@@ -275,8 +273,10 @@ export async function POST(req: NextRequest) {
         }
         
         if (bookingResult.isComplete) {
+          console.log('Booking flow completed, clearing session:', sessionId);
           bookingSessions.delete(sessionId);
         } else {
+          console.log('Booking flow continuing, updating session:', sessionId, 'step:', bookingResult.bookingData.step);
           bookingSessions.set(sessionId, {
             ...bookingResult.bookingData,
             userId: userId || bookingResult.bookingData.userId,
@@ -300,10 +300,14 @@ export async function POST(req: NextRequest) {
         console.error("Booking process error:", bookingError);
         bookingSessions.delete(sessionId); // Clear corrupted session
         return NextResponse.json({
-          success: false,
-          error: "Booking process failed. Please start over.",
-          data: null
-        }, { status: 500 });
+          success: true,
+          error: null,
+          data: {
+            reply: "Something went wrong with your booking. Let me help you start fresh! What can I assist you with today?",
+            consultancies: [],
+            sessionId
+          }
+        });
       }
     }
     

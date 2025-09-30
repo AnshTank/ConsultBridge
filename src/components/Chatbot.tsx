@@ -1537,32 +1537,182 @@ export default function Chatbot() {
                         <span>💳 Payment Receipt</span>
                         <button
                           onClick={() => {
-                            const printContent = `
-                            CONSULTBRIDGE PAYMENT RECEIPT\n\n
-                            Receipt ID: ${msg.paymentReceipt.id}\n
-                            Client: ${msg.paymentReceipt.clientName}\n
-                            Consultancy: ${msg.paymentReceipt.consultancyName}\n
-                            Meeting Type: ${
-                              msg.paymentReceipt.appointmentType?.toUpperCase() ||
-                              "ONLINE"
-                            }\n
-                            Date: ${msg.paymentReceipt.date}\n
-                            Time: ${msg.paymentReceipt.time}\n
-                            Amount: ₹${msg.paymentReceipt.amount}\n
-                            Payment Method: ${
-                              msg.paymentReceipt.paymentMethod?.toUpperCase() ||
-                              "CARD"
-                            }\n
-                            Status: CONFIRMED\n\n
-                            Thank you for using ConsultBridge!
-                          `;
                             const printWindow = window.open("", "_blank");
                             if (printWindow) {
                               printWindow.document.write(`
                               <html>
-                                <head><title>Payment Receipt</title></head>
-                                <body style="font-family: monospace; white-space: pre-line; padding: 20px;">
-                                  ${printContent}
+                                <head>
+                                  <title>ConsultBridge Payment Receipt</title>
+                                  <style>
+                                    body {
+                                      font-family: 'Arial', sans-serif;
+                                      max-width: 400px;
+                                      margin: 20px auto;
+                                      padding: 30px;
+                                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                      color: white;
+                                      border-radius: 15px;
+                                      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                                    }
+                                    .header {
+                                      text-align: center;
+                                      margin-bottom: 30px;
+                                      border-bottom: 2px dashed rgba(255,255,255,0.3);
+                                      padding-bottom: 20px;
+                                    }
+                                    .logo {
+                                      font-size: 32px;
+                                      font-weight: bold;
+                                      margin-bottom: 5px;
+                                      background: linear-gradient(45deg, #FFD700, #FFA500);
+                                      -webkit-background-clip: text;
+                                      -webkit-text-fill-color: transparent;
+                                      background-clip: text;
+                                    }
+                                    .tagline {
+                                      font-size: 12px;
+                                      opacity: 0.8;
+                                      margin-bottom: 10px;
+                                    }
+                                    .receipt-title {
+                                      font-size: 18px;
+                                      font-weight: bold;
+                                      margin-bottom: 5px;
+                                    }
+                                    .receipt-id {
+                                      font-size: 14px;
+                                      opacity: 0.9;
+                                      font-family: monospace;
+                                      background: rgba(255,255,255,0.1);
+                                      padding: 5px 10px;
+                                      border-radius: 5px;
+                                      display: inline-block;
+                                    }
+                                    .details {
+                                      margin: 25px 0;
+                                    }
+                                    .detail-row {
+                                      display: flex;
+                                      justify-content: space-between;
+                                      margin: 12px 0;
+                                      padding: 8px 0;
+                                      border-bottom: 1px solid rgba(255,255,255,0.1);
+                                    }
+                                    .detail-label {
+                                      font-weight: 600;
+                                      opacity: 0.9;
+                                    }
+                                    .detail-value {
+                                      font-weight: bold;
+                                    }
+                                    .amount-row {
+                                      background: rgba(255,255,255,0.1);
+                                      margin: 20px -15px;
+                                      padding: 15px;
+                                      border-radius: 10px;
+                                      font-size: 18px;
+                                    }
+                                    .status {
+                                      text-align: center;
+                                      margin: 25px 0;
+                                      padding: 15px;
+                                      background: rgba(34, 197, 94, 0.2);
+                                      border: 2px solid #22c55e;
+                                      border-radius: 10px;
+                                      font-weight: bold;
+                                      font-size: 16px;
+                                    }
+                                    .footer {
+                                      text-align: center;
+                                      margin-top: 30px;
+                                      padding-top: 20px;
+                                      border-top: 2px dashed rgba(255,255,255,0.3);
+                                      font-size: 12px;
+                                      opacity: 0.8;
+                                    }
+                                    .qr-placeholder {
+                                      width: 80px;
+                                      height: 80px;
+                                      background: rgba(255,255,255,0.9);
+                                      margin: 15px auto;
+                                      border-radius: 10px;
+                                      display: flex;
+                                      align-items: center;
+                                      justify-content: center;
+                                      color: #333;
+                                      font-size: 10px;
+                                      text-align: center;
+                                      font-weight: bold;
+                                    }
+                                    @media print {
+                                      body {
+                                        background: white !important;
+                                        color: black !important;
+                                        box-shadow: none !important;
+                                      }
+                                      .logo {
+                                        color: #4f46e5 !important;
+                                        -webkit-text-fill-color: #4f46e5 !important;
+                                      }
+                                    }
+                                  </style>
+                                </head>
+                                <body>
+                                  <div class="header">
+                                    <div class="logo">🌉 ConsultBridge</div>
+                                    <div class="tagline">Bridging You to the Right Consultancy</div>
+                                    <div class="receipt-title">💳 PAYMENT RECEIPT</div>
+                                    <div class="receipt-id">${msg.paymentReceipt.id}</div>
+                                  </div>
+                                  
+                                  <div class="details">
+                                    <div class="detail-row">
+                                      <span class="detail-label">👤 Client:</span>
+                                      <span class="detail-value">${msg.paymentReceipt.clientName}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                      <span class="detail-label">🏢 Consultancy:</span>
+                                      <span class="detail-value">${msg.paymentReceipt.consultancyName}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                      <span class="detail-label">📅 Date:</span>
+                                      <span class="detail-value">${msg.paymentReceipt.date}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                      <span class="detail-label">🕐 Time:</span>
+                                      <span class="detail-value">${msg.paymentReceipt.time}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                      <span class="detail-label">📍 Meeting Type:</span>
+                                      <span class="detail-value">${msg.paymentReceipt.appointmentType?.toUpperCase() || "ONLINE"}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                      <span class="detail-label">💳 Payment Method:</span>
+                                      <span class="detail-value">${msg.paymentReceipt.paymentMethod?.toUpperCase() || "CARD"}</span>
+                                    </div>
+                                  </div>
+                                  
+                                  <div class="detail-row amount-row">
+                                    <span class="detail-label">💰 Total Amount:</span>
+                                    <span class="detail-value">₹${msg.paymentReceipt.amount}</span>
+                                  </div>
+                                  
+                                  <div class="status">
+                                    ✅ PAYMENT CONFIRMED
+                                  </div>
+                                  
+                                  <div class="footer">
+                                    <div class="qr-placeholder">
+                                      📱<br>QR CODE<br>PLACEHOLDER
+                                    </div>
+                                    <div>Thank you for choosing ConsultBridge!</div>
+                                    <div style="margin-top: 10px; font-size: 10px;">
+                                      📧 support@consultbridge.com | 📞 +91-XXXX-XXXX-XX
+                                    </div>
+                                    <div style="margin-top: 5px; font-size: 10px;">
+                                      Generated on ${new Date().toLocaleString()}
+                                    </div>
+                                  </div>
                                 </body>
                               </html>
                             `);
@@ -1570,7 +1720,7 @@ export default function Chatbot() {
                               printWindow.print();
                             }
                           }}
-                          className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition flex items-center gap-1"
+                          className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1.5 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 flex items-center gap-1 shadow-md hover:shadow-lg transform hover:scale-105"
                         >
                           🖨️ Print
                         </button>
