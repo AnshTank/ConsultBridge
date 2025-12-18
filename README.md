@@ -1,259 +1,206 @@
-# 🚀 ConsultBridge
+# 🌉 ConsultBridge
 
-<!-- ![ConsultBridge Logo](./public/logo.png) -->
+**AI-Powered Consultancy Discovery Platform**
 
-**ConsultBridge** is a modern AI-powered consultancy discovery platform that bridges the gap between users and verified consultancy agencies.  
-Whether you need help with law, finance, healthcare, or IT, we help you find the right expert—fast, transparent, and tailored to your needs.
+ConsultBridge is a modern, enterprise-grade platform that connects users with verified consultants across multiple industries. Built with Next.js 14, featuring an intelligent AI chatbot, real-time booking management, and comprehensive user experience optimization.
 
----
-
-## 📚 Table of Contents
-
-1. [Demo](#demo)
-2. [Features](#-features)
-3. [Tech Stack](#-tech-stack)
-4. [Folder Structure](#-folder-structure)
-5. [Getting Started](#-getting-started)
-6. [How to Use](#-how-to-use)
-7. [Core Components](#-core-components)
-8. [API Overview](#-api-overview)
-9. [Deployment Guide](#-deployment-guide)
-10. [Contributing](#-contributing)
-11. [License](#-license)
-12. [Contact](#-contact)
-
----
-
-## 🎬 Demo
-
-> ⚠️ Coming Soon! (Link to walkthrough video or site preview)
-
----
+[![Next.js](https://img.shields.io/badge/Next.js-14.2.32-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-18.3.1-blue?style=flat-square&logo=react)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6.3-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-8.8.3-green?style=flat-square&logo=mongodb)](https://www.mongodb.com/)
+[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=flat-square&logo=vercel)](https://vercel.com/)
 
 ## ✨ Features
 
-- 🔎 **Category-Based Discovery**: Filter consultancies based on domain (Legal, Finance, Tech, etc.).
-- 🤖 **Smart AI Chatbot**: Get matched with consultancies based on your inputs using natural language.
-- 🧾 **Comprehensive Profiles**: View agency credentials, pricing, availability, and more.
-- 📆 **Book Easily**: Choose between online or in-person consultations with real-time scheduling.
-- ⭐ **Ratings & Reviews**: Trust community feedback when choosing the right consultant.
-- 📂 **User Dashboard**: Manage appointments, track history, and export session details.
-- 📱 **Mobile Friendly**: 100% responsive, optimized for phones and tablets.
-- 🔐 **Secure & Scalable**: JWT-based authentication, MongoDB Atlas, and best practices in deployment.
+- 🤖 **AI-Powered Chatbot** - Intelligent consultant matching with Gemini 2.5 Flash
+- 📅 **Smart Booking System** - Real-time appointment scheduling with conflict detection
+- 🔐 **Multi-Role Authentication** - Secure user, consultant, and admin portals
+- 🎨 **Modern UI/UX** - Responsive design with dark/light mode support
+- ⚡ **Performance Optimized** - Fast loading with advanced caching strategies
+- 📱 **Mobile-First** - Optimized for all devices and screen sizes
+- 🔍 **Advanced Search** - Category-based filtering and intelligent recommendations
+- ⭐ **Review System** - Authentic feedback and rating system
 
----
+## 🚀 Quick Start
 
-## 🛠 Tech Stack
+### Prerequisites
 
-| Layer          | Technologies                                |
-| -------------- | ------------------------------------------- |
-| **Frontend**   | Next.js, React, Tailwind CSS, Framer Motion |
-| **Backend**    | Node.js, Express.js, MongoDB (Mongoose ORM) |
-| **Chatbot**    | Ollama (Mistral), OpenAI API                |
-| **Validation** | Zod                                         |
-| **Other**      | Axios, Docker, PDF Generator                |
-| **Deployment** | Vercel, MongoDB Atlas                       |
+- Node.js 18.17.0 or higher
+- npm 9 or higher
+- MongoDB Atlas account
+- Clerk account for authentication
+- Google AI API key for chatbot
 
----
+### Installation
 
-## 📁 Folder Structure
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/AnshTank/ConsultBridge.git
+   cd ConsultBridge
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Setup**
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Configure your environment variables:
+   ```env
+   MONGODB_URI=your_mongodb_connection_string
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+   CLERK_SECRET_KEY=your_clerk_secret_key
+   GEMINI_API_KEY=your_google_ai_api_key
+   ```
+
+4. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+5. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## 🏗️ Architecture
+
+### Tech Stack
+
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| **Frontend** | Next.js 14, React 18, TypeScript | Modern web application framework |
+| **Styling** | Tailwind CSS, Framer Motion | Responsive design and animations |
+| **Backend** | Next.js API Routes, Node.js | Serverless API endpoints |
+| **Database** | MongoDB Atlas, Mongoose | Document-based data storage |
+| **Authentication** | Clerk | User management and security |
+| **AI/ML** | Google Gemini 2.5 Flash | Conversational AI and NLP |
+| **Deployment** | Vercel | Serverless hosting platform |
+
+### Key Components
 
 ```
 src/
-│
-├── app/                        # App Router (Next.js 13+)
-│   ├── about/
-│   ├── admin-portal/
-│   ├── api/
-│   ├── book-appointment/
-│   ├── categories/
-│   ├── category/
-│   ├── coming-soon/
-│   ├── consultancies/
-│   ├── consultancy/
-│   ├── consultancy-admin/
-│   ├── consultancy-calendar/
-│   ├── consultancy-dashboard/
-│   ├── consultancy-edit/
-│   ├── consultancy-setup/
-│   ├── consultancy-status/
-│   ├── consultancy-verify/
-│   ├── contact/
-│   ├── dashboard/
-│   ├── feedback/
-│   ├── onboarding/
-│   ├── privacy/
-│   ├── seed-categories/
-│   ├── sign-in/
-│   ├── sign-up/
-│   ├── terms/
-│   ├── verification/
-│   ├── verify/
-│   ├── layout.tsx              # Global layout
-│   └── page.tsx                # Root homepage
-│
-├── components/                 # Reusable UI components
-├── data/                       # Static/local data
-├── lib/                        # Utility functions (helpers, db, etc.)
-├── models/                     # Database models (MongoDB/Prisma/Mongoose)
-├── scripts/                    # Utility scripts (migrations, batch, etc.)
-├── styles/                     # Global styles
-│   └── index.css
-│
-├── .env.example                # Example environment variables
-├── .env.local                  # Local environment variables
-├── .gitignore
-├── .hintrc                     # Linting config
-├── eslint.config.js            # ESLint configuration
-├── LICENSE.md                  # License
-├── middleware.ts               # Next.js middleware
-├── migrate.js                  # Migration script
-├── next-env.d.ts               # Next.js type definitions
-├── next.config.js              # Next.js configuration
-├── package.json
-├── package-lock.json
-├── postcss.config.js           # PostCSS config
-├── push-to-github.bat          # GitHub push automation script
-├── README.md                   # Project documentation
-├── tailwind.config.js          # TailwindCSS configuration
-├── tsconfig.json               # TypeScript configuration
-├── update-dependencies.bat     # Batch script for updating deps
-└── vercel.json                 # Vercel deployment config
+├── app/                    # Next.js App Router
+│   ├── api/               # API endpoints
+│   ├── (auth)/            # Authentication pages
+│   └── (dashboard)/       # Dashboard pages
+├── components/            # Reusable UI components
+├── services/              # Business logic services
+├── models/                # Database schemas
+├── lib/                   # Utility libraries
+└── styles/                # Global styles
 ```
 
----
+## 📊 Database Schema
 
-## ⚙️ Getting Started
+### Core Collections
 
-> **Minimum Requirements:** Node.js v16+, npm/Yarn, MongoDB Atlas or local instance
+- **Consultancies** - Verified consultant profiles and services
+- **Appointments** - Booking and scheduling data
+- **Categories** - Service categories and classifications
+- **Reviews** - User feedback and ratings
+- **Chat Sessions** - AI chatbot conversation history
 
-### 1. Clone the Repository
+## 🔌 API Endpoints
+
+### Authentication
+- `POST /api/auth/sign-up` - User registration
+- `POST /api/auth/sign-in` - User login
+
+### Consultancies
+- `GET /api/consultancies` - List consultancies
+- `GET /api/consultancies/[id]` - Get consultancy details
+- `POST /api/consultancies` - Create consultancy
+
+### Appointments
+- `GET /api/appointments` - Get appointments
+- `POST /api/appointments` - Book appointment
+- `PUT /api/appointments/[id]` - Update appointment
+
+### AI Chatbot
+- `POST /api/chatbot` - Process chat message
+- `GET /api/chat-history` - Get conversation history
+
+## 🤖 AI Chatbot Features
+
+- **Intent Recognition** - Natural language understanding
+- **Context Awareness** - Maintains conversation memory
+- **Smart Recommendations** - AI-powered consultant matching
+- **Booking Automation** - End-to-end appointment scheduling
+- **Multi-language Support** - Handles various communication styles
+
+## 🔐 Security
+
+- **Authentication** - Clerk-based secure user management
+- **Authorization** - Role-based access control (RBAC)
+- **Data Protection** - Input sanitization and validation
+- **Rate Limiting** - API endpoint protection
+- **HTTPS/TLS** - Encrypted data transmission
+
+## 📈 Performance
+
+- **Core Web Vitals** - Optimized for Google's performance metrics
+- **Lazy Loading** - Component and image optimization
+- **Caching** - Multi-layer caching strategy
+- **Code Splitting** - Optimized bundle sizes
+- **Mobile Optimization** - Device-aware performance tuning
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+
+1. **Connect your repository** to Vercel
+2. **Configure environment variables** in Vercel dashboard
+3. **Deploy** - Automatic deployments on push to main
+
+### Manual Deployment
 
 ```bash
-git clone https://github.com/AnshTank/ConsultBridge.git
-cd ConsultBridge
+npm run build
+npm run start
 ```
 
-### 2. Install Dependencies
+## 📝 Scripts
 
-```bash
-npm install # or yarn install
-```
-
-### 3. Setup Environment Variables
-
-```bash
-cp .env.example .env
-# Then edit `.env` with:
-# MONGODB_URI=
-# JWT_SECRET=
-# OLLAMA_API_URL=
-```
-
-### 4. Start the Development Server
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to see the app in your browser.
-
----
-
-## 🧠 How to Use
-
-1. 🔍 Browse or search consultancies by category.
-2. 💬 Chat with the AI chatbot to describe your needs.
-3. 📄 View profile details: expertise, pricing, reviews, and availability.
-4. 📅 Book an online or offline appointment.
-5. 📊 Manage your history and bookings via the dashboard.
-
----
-
-## 🧱 Core Components
-
-| Component                | Path                                | Role                                |
-| ------------------------ | ----------------------------------- | ----------------------------------- |
-| `Chatbot.tsx`            | `components/Chatbot.tsx`            | Interactive chatbot using Ollama AI |
-| `ConsultancyCard.tsx`    | `components/ConsultancyCard.tsx`    | Cards for listing consultancies     |
-| `AppointmentBooking.tsx` | `components/AppointmentBooking.tsx` | Booking form with calendar picker   |
-| `ConsultancyProfile.tsx` | `components/ConsultancyProfile.tsx` | Full profile page of consultancy    |
-
----
-
-## 🔌 API Overview
-
-| Method | Endpoint                     | Description                         |
-| ------ | ---------------------------- | ----------------------------------- |
-| GET    | `/api/consultancies`         | Fetch all consultancies             |
-| GET    | `/api/consultancies/:id`     | Get details of one consultancy      |
-| POST   | `/api/consultancies`         | Add new consultancy (Admin only)    |
-| PUT    | `/api/consultancies/:id`     | Update consultancy details          |
-| DELETE | `/api/consultancies/:id`     | Delete a consultancy                |
-| POST   | `/api/bookings`              | Create a booking                    |
-| GET    | `/api/bookings/user/:userId` | Retrieve bookings for specific user |
-
----
-
-## 🚢 Deployment Guide
-
-### Frontend
-
-- Hosted on **Vercel**
-- GitHub → Vercel auto-deployment enabled
-
-### Backend
-
-- Deployed using **Docker** or **Serverless Functions**
-- API routes are scalable and secure
-
-### Database
-
-- **MongoDB Atlas** (Cloud-hosted, replica-set enabled)
-- Can be switched to local DB for testing
-
----
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run format` | Format code with Prettier |
 
 ## 🤝 Contributing
 
-We welcome contributions from the community!
-
-### Steps:
-
-1. Fork this repository
-2. Create your feature branch:
-   ```bash
-   git checkout -b feature/AmazingFeature
-   ```
-3. Commit your changes:
-   ```bash
-   git commit -m "feat: Add AmazingFeature"
-   ```
-4. Push to your branch:
-   ```bash
-   git push origin feature/AmazingFeature
-   ```
-5. Open a Pull Request!
-
-> **Note:** All changes should align with the codebase's modularity and quality.  
-> No unnecessary manipulation or removal of existing modules unless discussed.
-
----
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## 📄 License
 
-This project is licensed under the **MIT License**.  
-See [LICENSE.md](LICENSE.md) for full terms and conditions.  
-Redistribution, manipulation, or use of this code must respect the license terms.  
-Unauthorized commercial use is strictly prohibited.
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+
+## 🙏 Acknowledgments
+
+- **Next.js Team** - For the amazing React framework
+- **Vercel** - For seamless deployment platform
+- **Clerk** - For robust authentication solution
+- **Google AI** - For powerful Gemini API
+- **MongoDB** - For flexible database solution
+
+## 📞 Support
+
+- **GitHub Issues** - [Report bugs or request features](https://github.com/AnshTank/ConsultBridge/issues)
+- **Developer** - [Ansh Tank](https://github.com/AnshTank)
+- **LinkedIn** - [@anshtank9](https://www.linkedin.com/in/anshtank9)
 
 ---
 
-## 📬 Contact
+**ConsultBridge** - *Bridging You to the Right Consultancy with Confidence*
 
-Developed with ❤️ by **Ansh Tank**
-
-- GitHub: [@AnshTank](https://github.com/AnshTank)
-- LinkedIn: [@anshtank9](https://www.linkedin.com/in/anshtank9)
-
-**ConsultBridge – Bridging You to the Right Consultancy with Confidence.**
+Made with ❤️ by [Ansh Tank](https://github.com/AnshTank)
