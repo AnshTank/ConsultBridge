@@ -42,23 +42,46 @@ next-env.d.ts
 Rules/
 src/.qodo/
 
-# Documentation and Notes (Development Only)
-*.md
-!README.md
-!LICENSE.md
-*.tldr
-*.html
+# Development Files (Not for Production)
+# Screenshots and Images
 *.png
 *.jpg
-*.bat
-*.js
-!next.config.js
-!postcss.config.js
-!tailwind.config.js
-!eslint.config.js
-!migrate.js
-!generate-pdf.js
-!optimize-indexes.js
+*.jpeg
+*.gif
+!public/**/*.png
+!public/**/*.jpg
+!public/**/*.jpeg
+!public/**/*.gif
+
+# Development Notes and Documentation
+ADVANCED_AI_TESTING.md
+AI_AGENT_SYSTEM.md
+BOOKING_ERROR_FIX.md
+CHATBOT_IMPROVEMENTS.md
+OPTIMIZATION_NOTES.md
+POSTMAN_TESTING.md
+QUICK_START_AI_AGENT.md
+TRANSITION_FIXES.md
+UX_IMPROVEMENTS_SUMMARY.md
+ConsultBridge_Viva_Notes.md
 notes.tldr
 intro.md
 n
+
+# Batch Files and Scripts
+*.bat
+clean-build.bat
+fix-build.bat
+fix-db-null-checks.bat
+push-to-github.bat
+update-dependencies.bat
+
+# Documentation Generation Files
+CONSULTBRIDGE_VISUAL_DESIGN.html
+generate-pdf.js
+DOCUMENTATION_README.md
+CONSULTBRIDGE_SYSTEM_DESIGN.md
+
+# Personal Files
+ansh.jpg
+Screenshot*.png
