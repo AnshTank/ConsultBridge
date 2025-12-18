@@ -83,7 +83,7 @@ function BookAppointmentPage() {
   return (
     <SmartPageWrapper loadingMessage="📅 Preparing your booking form...">
       <PageTransition>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-all duration-300">
           <Navbar />
       <div className="container mx-auto px-4 md:px-6 py-8 md:py-12">
         <div className="max-w-4xl mx-auto">
@@ -97,11 +97,11 @@ function BookAppointmentPage() {
             <div className="absolute -bottom-2 -left-2 w-12 md:w-16 h-12 md:h-16 bg-white opacity-10 rounded-full"></div>
           </div>
           
-          <div className="bg-white rounded-b-xl shadow-2xl p-4 md:p-8 border-t-4 border-gradient-to-r from-indigo-500 to-purple-500">
+          <div className="bg-white dark:bg-dark-card rounded-b-xl shadow-2xl p-4 md:p-8 border-t-4 border-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300">
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {/* Personal Information */}
               <div className="md:col-span-2">
-                <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-800 border-b-2 border-indigo-200 pb-2 flex items-center">
+                <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-800 dark:text-white border-b-2 border-indigo-200 dark:border-indigo-700 pb-2 flex items-center transition-all duration-300">
                   <div className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mr-2 md:mr-3">
                     <User className="w-3 h-3 md:w-4 md:h-4 text-white" />
                   </div>
@@ -110,7 +110,7 @@ function BookAppointmentPage() {
               </div>
               
               <div>
-                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-all duration-300">
                   <User className="w-3 h-3 md:w-4 md:h-4 inline mr-1 md:mr-2" />
                   Full Name
                 </label>
@@ -119,14 +119,14 @@ function BookAppointmentPage() {
                   required
                   value={formData.clientName}
                   onChange={(e) => setFormData({...formData, clientName: e.target.value})}
-                  className="w-full p-2 md:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-50 text-sm md:text-base"
+                  className="w-full p-2 md:p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-50 dark:bg-dark-surface text-gray-900 dark:text-white text-sm md:text-base transition-all duration-300"
                   placeholder="Enter your full name"
                   readOnly
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-all duration-300">
                   <Mail className="w-4 h-4 inline mr-2" />
                   Email Address
                 </label>
@@ -135,14 +135,14 @@ function BookAppointmentPage() {
                   required
                   value={formData.clientEmail}
                   onChange={(e) => setFormData({...formData, clientEmail: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-50"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-50 dark:bg-dark-surface text-gray-900 dark:text-white transition-all duration-300"
                   placeholder="Enter your email"
                   readOnly
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-all duration-300">
                   <Phone className="w-4 h-4 inline mr-2" />
                   Phone Number
                 </label>
@@ -151,14 +151,14 @@ function BookAppointmentPage() {
                   required
                   value={formData.clientPhone}
                   onChange={(e) => setFormData({...formData, clientPhone: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-dark-surface text-gray-900 dark:text-white transition-all duration-300"
                   placeholder="Enter your phone number"
                 />
               </div>
 
               {/* Appointment Details */}
               <div className="md:col-span-2">
-                <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-800 border-b-2 border-indigo-200 pb-2 mt-4 md:mt-6 flex items-center">
+                <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-800 dark:text-white border-b-2 border-indigo-200 dark:border-indigo-700 pb-2 mt-4 md:mt-6 flex items-center transition-all duration-300">
                   <div className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mr-2 md:mr-3">
                     <Calendar className="w-3 h-3 md:w-4 md:h-4 text-white" />
                   </div>
@@ -167,7 +167,7 @@ function BookAppointmentPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-all duration-300">
                   <Calendar className="w-4 h-4 inline mr-2" />
                   Appointment Date
                 </label>
@@ -177,12 +177,12 @@ function BookAppointmentPage() {
                   value={formData.appointmentDate}
                   onChange={(e) => setFormData({...formData, appointmentDate: e.target.value})}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-dark-surface text-gray-900 dark:text-white transition-all duration-300"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-all duration-300">
                   <Clock className="w-4 h-4 inline mr-2" />
                   Appointment Time
                 </label>
@@ -191,14 +191,14 @@ function BookAppointmentPage() {
                   required
                   value={formData.appointmentTime}
                   onChange={(e) => setFormData({...formData, appointmentTime: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-50"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-50 dark:bg-dark-surface text-gray-900 dark:text-white transition-all duration-300"
                   placeholder="Selected time will appear here"
                   readOnly
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-all duration-300">
                   <MapPin className="w-4 h-4 inline mr-2" />
                   Appointment Type
                 </label>
@@ -229,7 +229,7 @@ function BookAppointmentPage() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-all duration-300">
                   <MessageSquare className="w-4 h-4 inline mr-2" />
                   Additional Message (Optional)
                 </label>
@@ -237,7 +237,7 @@ function BookAppointmentPage() {
                   value={formData.message}
                   onChange={(e) => setFormData({...formData, message: e.target.value})}
                   rows={4}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-dark-surface text-gray-900 dark:text-white transition-all duration-300"
                   placeholder="Any specific requirements, questions, or topics you'd like to discuss..."
                 />
               </div>

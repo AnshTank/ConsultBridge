@@ -369,18 +369,18 @@ const ConsultancySetupForm: React.FC = () => {
       <Navbar />
       <div className="container mx-auto px-6 py-12">
         <div className="max-w-3xl mx-auto">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h1 className="text-3xl font-bold text-center mb-2">
+          <div className="bg-white dark:bg-dark-card rounded-xl shadow-lg p-8 transition-all duration-300">
+            <h1 className="text-3xl font-bold text-center mb-2 text-gray-900 dark:text-white transition-all duration-300">
               Consultancy Setup
             </h1>
-            <p className="text-gray-600 text-center mb-8">
+            <p className="text-gray-600 dark:text-gray-300 text-center mb-8 transition-all duration-300">
               {formType === "new"
                 ? "Register your consultancy to start offering services"
                 : "Sign in to your existing consultancy account"}
             </p>
 
             <div className="flex justify-center mb-8">
-              <div className="relative bg-gray-100 p-1 rounded-lg">
+              <div className="relative bg-gray-100 dark:bg-gray-700 p-1 rounded-lg transition-all duration-300">
                 <motion.div
                   className="absolute top-1 bottom-1 bg-indigo-600 rounded-md shadow-lg"
                   initial={false}
@@ -416,13 +416,13 @@ const ConsultancySetupForm: React.FC = () => {
             </div>
 
             {/* Status Check Section */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-8">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-8 transition-all duration-300">
               <div className="text-center">
                 <div className="text-2xl mb-2">📊</div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2 transition-all duration-300">
                   Already Registered?
                 </h3>
-                <p className="text-sm text-gray-600 mb-3">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 transition-all duration-300">
                   Check your consultancy verification status
                 </p>
                 <button
@@ -465,7 +465,7 @@ const ConsultancySetupForm: React.FC = () => {
                                 value={formData.name}
                                 onChange={handleChange}
                                 required
-                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-dark-surface text-gray-900 dark:text-white transition-all duration-300"
                                 placeholder="Your consultancy name"
                               />
                             </div>
@@ -484,7 +484,7 @@ const ConsultancySetupForm: React.FC = () => {
                                 value={formData.category}
                                 onChange={handleChange}
                                 required
-                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-dark-surface text-gray-900 dark:text-white transition-all duration-300"
                               >
                                 <option value="">Select a category</option>
                                 {categories.map((category) => (
@@ -551,7 +551,7 @@ const ConsultancySetupForm: React.FC = () => {
                               onChange={handleChange}
                               required
                               rows={3}
-                              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                              className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-dark-surface text-gray-900 dark:text-white transition-all duration-300"
                               placeholder="Tell potential clients about your consultancy services..."
                             ></textarea>
                           </div>

@@ -133,3 +133,133 @@
     background-position: -200% 0;
   }
 }
+
+/* Clerk Component Clean Dark Mode - Only target the main card */
+.dark .cl-card,
+.dark .cl-userButtonPopoverCard {
+  background-color: #1f2937 !important;
+  border-color: #374151 !important;
+  color: #f9fafb !important;
+}
+
+.dark .cl-headerTitle {
+  color: #f9fafb !important;
+}
+
+.dark .cl-headerSubtitle {
+  color: #d1d5db !important;
+}
+
+.dark .cl-formFieldInput {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+  color: #f9fafb !important;
+}
+
+.dark .cl-formFieldInput::placeholder {
+  color: #9ca3af !important;
+}
+
+.dark .cl-formFieldLabel {
+  color: #d1d5db !important;
+}
+
+.dark .cl-footerActionText {
+  color: #d1d5db !important;
+}
+
+.dark .cl-footerActionLink {
+  color: #6366f1 !important;
+}
+
+.dark .cl-footerActionLink:hover {
+  color: #4f46e5 !important;
+}
+
+.dark .cl-userButtonTrigger {
+  background-color: #1f2937 !important;
+  border-color: #374151 !important;
+}
+
+.dark .cl-userButtonTrigger:hover {
+  background-color: #374151 !important;
+}
+
+.dark .cl-menuItem {
+  color: #d1d5db !important;
+}
+
+.dark .cl-menuItem:hover {
+  background-color: #374151 !important;
+  color: #f9fafb !important;
+}
+
+.dark .cl-userPreviewMainIdentifier {
+  color: #f9fafb !important;
+}
+
+.dark .cl-userPreviewSecondaryIdentifier {
+  color: #d1d5db !important;
+}
+
+.dark .cl-userButtonPopoverActionButton {
+  color: #d1d5db !important;
+}
+
+.dark .cl-userButtonPopoverActionButton:hover {
+  background-color: #374151 !important;
+  color: #f9fafb !important;
+}
+
+.dark .cl-userButtonPopoverActionButtonText {
+  color: #d1d5db !important;
+}
+
+.dark .cl-userButtonPopoverActionButtonIcon {
+  color: #9ca3af !important;
+}
+
+/* Remove weird selection/focus borders */
+.dark .cl-card:focus,
+.dark .cl-card:focus-visible,
+.dark .cl-modalContent:focus,
+.dark .cl-modalContent:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: #374151 !important;
+}
+
+.dark .cl-socialButtonsBlockButton {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+  color: #f9fafb !important;
+}
+
+.dark .cl-socialButtonsBlockButton:hover {
+  background-color: #4b5563 !important;
+}
+
+.dark .cl-dividerLine {
+  background-color: #4b5563 !important;
+}
+
+.dark .cl-dividerText {
+  color: #9ca3af !important;
+}
+
+/* Make Clerk branding visible in dropdown */
+.dark .cl-userButtonPopoverFooter {
+  background-color: #1f2937 !important;
+  border-top: 1px solid #374151 !important;
+}
+
+.dark .cl-userButtonPopoverFooter *,
+.dark .cl-userButtonPopoverFooter span,
+.dark .cl-userButtonPopoverFooter div,
+.dark .cl-branded {
+  color: #9ca3af !important;
+}
+
+.dark .cl-userButtonPopoverFooter a {
+  color: #6366f1 !important;
+}
