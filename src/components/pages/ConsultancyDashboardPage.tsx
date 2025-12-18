@@ -312,7 +312,6 @@ const ConsultancyDashboardPage: React.FC = () => {
                         );
                       })()}
                     </motion.div>
-                    </motion.div>
                   ))}
                 </div>
               ) : (
