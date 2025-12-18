@@ -14,6 +14,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import ConsultancyMeetingScheduler from '../ConsultancyMeetingScheduler';
 import { getConsultancyProfile } from "../../utils/consultancyUtils";
 import Modal from "../Modal";
 import ThemeToggle from "../ThemeToggle";
@@ -455,6 +456,9 @@ const ConsultancyAdminPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Meeting Scheduler */}
+        <ConsultancyMeetingScheduler consultancyId={localStorage.getItem('consultancyId')} appointments={appointments} />
 
         {/* Appointments Table */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mt-8 transition-colors duration-300">

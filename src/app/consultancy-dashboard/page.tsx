@@ -1,5 +1,5 @@
-import DashboardPage from '../../components/pages/DashboardPage';
+import ConsultancyDashboardPage from '../../components/pages/ConsultancyDashboardPage';
 
 export default function ConsultancyDashboardPageRoute() {
-  return <DashboardPage />
+  return <ConsultancyDashboardPage />
 }

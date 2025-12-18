@@ -41,3 +41,24 @@ next-env.d.ts
 .qodo/
 Rules/
 src/.qodo/
+
+# Documentation and Notes (Development Only)
+*.md
+!README.md
+!LICENSE.md
+*.tldr
+*.html
+*.png
+*.jpg
+*.bat
+*.js
+!next.config.js
+!postcss.config.js
+!tailwind.config.js
+!eslint.config.js
+!migrate.js
+!generate-pdf.js
+!optimize-indexes.js
+notes.tldr
+intro.md
+n

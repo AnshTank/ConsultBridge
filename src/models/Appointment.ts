@@ -12,6 +12,10 @@ export interface IAppointment extends Document {
   message?: string;
   consultancyName: string;
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'expired';
+  meetingId?: string;
+  meetingStartedAt?: Date;
+  meetingEndedAt?: Date;
+  meetingDuration?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,7 +40,11 @@ const AppointmentSchema = new Schema<IAppointment>({
     type: String, 
     enum: ['pending', 'confirmed', 'cancelled', 'completed', 'expired'],
     default: 'pending'
-  }
+  },
+  meetingId: { type: String },
+  meetingStartedAt: { type: Date },
+  meetingEndedAt: { type: Date },
+  meetingDuration: { type: Number }
 }, {
   timestamps: true,
   strict: true,

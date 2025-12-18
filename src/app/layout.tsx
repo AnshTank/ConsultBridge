@@ -10,6 +10,7 @@ import FloatingDhaba from "../components/FloatingDhaba";
 import { PopupProvider } from "../contexts/PopupContext";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import AuthErrorBoundary from "../components/AuthErrorBoundary";
 
 // const inter = Inter({ subsets: ["latin"] });
 
@@ -44,11 +45,13 @@ export default function RootLayout({
           />
           <ThemeProvider>
             <PopupProvider>
-              {children}
-              <FloatingDhaba />
-              <FloatingParticles />
-              <Chatbot />
-              <SpeedInsights />
+              <AuthErrorBoundary>
+                {children}
+                <FloatingDhaba />
+                <FloatingParticles />
+                <Chatbot />
+                <SpeedInsights />
+              </AuthErrorBoundary>
             </PopupProvider>
           </ThemeProvider>
         </body>

@@ -80,7 +80,7 @@ function CategoryPage() {
   return (
     <SmartPageWrapper loadingMessage="🎯 Loading category...">
       <PageTransition>
-        <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex flex-col transition-all duration-300">
       <PerformanceMonitor 
         pageName={`Category: ${categoryName}`}
         startTime={startTimeRef.current}
@@ -93,14 +93,14 @@ function CategoryPage() {
 
       {/* Main Content */}
       <div className="container mx-auto px-6 py-16 flex-grow section-stagger">
-        <h2 className="text-3xl font-bold mb-8 text-center">
+        <h2 className="text-3xl font-bold mb-8 text-center text-gray-900 dark:text-white transition-all duration-300">
           {categoryName} Consultancies
         </h2>
 
         {loading ? (
           <div className="space-y-6">
             <div className="text-center">
-              <p className="text-gray-600 text-lg mb-4">🎯 Finding the best consultancies for you...</p>
+              <p className="text-gray-600 dark:text-gray-300 text-lg mb-4 transition-all duration-300">🎯 Finding the best consultancies for you...</p>
             </div>
             <ConsultancySkeleton />
           </div>
@@ -114,7 +114,7 @@ function CategoryPage() {
             {consultancies.map((consultancy: any, index: number) => (
               <motion.div
                 key={index}
-                className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all h-full flex flex-col transform hover:scale-105"
+                className="bg-white dark:bg-black rounded-xl shadow-lg dark:shadow-2xl overflow-hidden hover:shadow-xl dark:hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] transition-all h-full flex flex-col transform hover:scale-105 border dark:border-white/20"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
@@ -139,10 +139,10 @@ function CategoryPage() {
                       </span>
                     </div>
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">
+                  <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white transition-all duration-300">
                     {consultancy.name}
                   </h3>
-                  <p className="text-gray-600 mb-4 flex-grow line-clamp-2 overflow-hidden">
+                  <p className="text-gray-600 dark:text-gray-300 mb-4 flex-grow line-clamp-2 overflow-hidden transition-all duration-300">
                     {consultancy.description || "No description available..."}
                   </p>
                   <button
@@ -164,10 +164,10 @@ function CategoryPage() {
           >
             <div className="max-w-md mx-auto">
               <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2 transition-all duration-300">
                 No consultancies found
               </h3>
-              <p className="text-gray-500 text-lg mb-6">
+              <p className="text-gray-500 dark:text-gray-300 text-lg mb-6 transition-all duration-300">
                 We couldn't find any consultancies in the {categoryName} category at the moment.
               </p>
               <div className="space-y-3">
@@ -179,7 +179,7 @@ function CategoryPage() {
                 </button>
                 <button
                   onClick={() => (window.location.href = "/")}
-                  className="w-full px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="w-full px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   Return to Home
                 </button>

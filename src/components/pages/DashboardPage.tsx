@@ -15,6 +15,7 @@ import {
   Plus,
   Search,
 } from "lucide-react";
+import MeetingScheduler from '../MeetingScheduler';
 import Navbar from "../Navbar";
 import PageTransition from "../PageTransition";
 import SmartPageWrapper from "../SmartPageWrapper";
@@ -152,6 +153,28 @@ const DashboardPage: React.FC = () => {
       setCurrentPage(newPage);
       setPageTransition(false);
     }, 150);
+  };
+
+  // Check if user can join meeting (10 minutes before appointment)
+  const canJoinMeeting = (appointment: AppointmentData) => {
+    const now = new Date();
+    const aptDate = new Date(appointment.appointmentDate);
+    const aptTime = appointment.appointmentTime;
+    const [time, period] = (aptTime || "").split(" ");
+    const [hours, minutes] = time.split(":").map(Number);
+    let hour24 = hours;
+    if (period === "PM" && hours !== 12) hour24 += 12;
+    if (period === "AM" && hours === 12) hour24 = 0;
+    aptDate.setHours(hour24, minutes || 0);
+    
+    const meetingStartTime = new Date(aptDate.getTime() - 10 * 60 * 1000);
+    return now >= meetingStartTime && now <= aptDate;
+  };
+
+  // Join meeting function
+  const joinMeeting = (meetingId: string) => {
+    const url = `/meeting/${meetingId}?role=client&name=${encodeURIComponent(userName)}&userId=${user?.id}`;
+    window.open(url, '_blank');
   };
 
   // Handle appointment actions
@@ -344,6 +367,9 @@ const DashboardPage: React.FC = () => {
                 Your Appointments ({filteredAppointments.length})
               </h3>
 
+              {/* Meeting Scheduler */}
+              <MeetingScheduler userId={user?.id} appointments={appointments} />
+
               {paginatedAppointments.length > 0 ? (
                 <div
                   className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 transition-opacity duration-150 ${
@@ -433,6 +459,44 @@ const DashboardPage: React.FC = () => {
                             </p>
                           </div>
                         )}
+
+                        {/* Join Meeting Button */}
+                        {displayStatus === "confirmed" && 
+                          (appointment as any).appointmentType === "online" && 
+                          (appointment as any).meetingId && 
+                          canJoinMeeting(appointment) && (
+                          <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg mb-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium text-green-800 dark:text-green-300">Meeting Ready</span>
+                              <Video className="w-4 h-4 text-green-600" />
+                            </div>
+                            <button
+                              onClick={() => joinMeeting((appointment as any).meetingId)}
+                              className="w-full bg-green-600 text-white py-2 px-3 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                            >
+                              <Video className="w-4 h-4" />
+                              Join Meeting
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Meeting Scheduled Info */}
+                        {displayStatus === "confirmed" && 
+                          (appointment as any).appointmentType === "online" && 
+                          (appointment as any).meetingId && 
+                          !canJoinMeeting(appointment) && (
+                          <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg mb-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Meeting Scheduled</span>
+                              <Clock className="w-4 h-4 text-gray-500" />
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              Join available 10 minutes before appointment
+                            </p>
+                          </div>
+                        )}
+
+
 
                         {displayStatus === "expired" && (
                           <div className="flex gap-2">
