@@ -22,20 +22,24 @@ import "swiper/css/effect-coverflow";
 import { Navigation, EffectCoverflow } from "swiper/modules";
 import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import Navbar from "../Navbar";
-// import PageTransition from "../PageTransition";
-import LoadingScreen from "../LoadingScreen";
 import Footer from "../Footer";
-import SmartPageWrapper from "../SmartPageWrapper";
+import GlobalLoader from "../GlobalLoader";
+import { useDataLoading } from "../../hooks/useDataLoading";
 import { createSlug } from "./../../utils/urlUtils";
 
 function Home() {
   const [categories, setCategories] = useState<any[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
 
   const router = useRouter();
   const { user, isLoaded } = useUser();
+  
+  // Data loading state for categories
+  const categoriesLoading = useDataLoading({ 
+    dataType: 'categories',
+    minLoadingTime: 600 
+  });
 
   // Ensure component is mounted on client immediately
   useEffect(() => {
@@ -112,9 +116,6 @@ function Home() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        // Set loading to false immediately to show page
-        setCategoriesLoading(false);
-
         const response = await fetch("/api/categories");
         const result = await response.json();
 
@@ -127,6 +128,7 @@ function Home() {
           setCategories(formattedCategories);
           const middleIndex = Math.floor(formattedCategories.length / 2);
           setActiveIndex(middleIndex);
+          categoriesLoading.setDataLoaded(true);
         } else {
           // Use fallback data when database is unavailable
           const { fallbackCategories } = await import("../../data/fallback");
@@ -138,27 +140,35 @@ function Home() {
           setCategories(formattedCategories);
           const middleIndex = Math.floor(formattedCategories.length / 2);
           setActiveIndex(middleIndex);
+          categoriesLoading.setDataLoaded(true);
         }
       } catch (error) {
         console.error("Error fetching categories:", error);
         // Use fallback data on error
-        const { fallbackCategories } = await import("../../data/fallback");
-        const formattedCategories = fallbackCategories.map((cat: any) => ({
-          title: cat.name,
-          description: cat.description,
-          icon: cat.emoji,
-        }));
-        setCategories(formattedCategories);
-        const middleIndex = Math.floor(formattedCategories.length / 2);
-        setActiveIndex(middleIndex);
+        try {
+          const { fallbackCategories } = await import("../../data/fallback");
+          const formattedCategories = fallbackCategories.map((cat: any) => ({
+            title: cat.name,
+            description: cat.description,
+            icon: cat.emoji,
+          }));
+          setCategories(formattedCategories);
+          const middleIndex = Math.floor(formattedCategories.length / 2);
+          setActiveIndex(middleIndex);
+          categoriesLoading.setDataLoaded(true);
+        } catch (fallbackError) {
+          categoriesLoading.setError('Failed to load categories');
+        }
       }
     };
 
-    fetchCategories();
-  }, []);
+    if (mounted) {
+      fetchCategories();
+    }
+  }, [mounted]);
 
-  // Don't render until everything is ready - SmartPageWrapper handles loading
-  if (!mounted || !isLoaded || categoriesLoading) {
+  // Don't render until everything is ready
+  if (!mounted || !isLoaded) {
     return null;
   }
 
@@ -166,7 +176,7 @@ function Home() {
 
   if (isConsultancy) {
     return (
-      <SmartPageWrapper loadingMessage="💼 Loading Dashboard...">
+      <GlobalLoader dataLoadingState={{ isDataLoaded: true }}>
         <div className="min-h-screen bg-gray-50">
           <Navbar />
           <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 dark:from-indigo-500 dark:via-purple-500 dark:to-pink-500 text-white py-20">
@@ -252,14 +262,16 @@ function Home() {
             </div>
           </footer>
         </div>
-      </SmartPageWrapper>
+      </GlobalLoader>
     );
   }
 
   return (
-    <SmartPageWrapper
-      isHomePage={true}
-      loadingMessage="🏠 Welcome to ConsultBridge..."
+    <GlobalLoader 
+      dataLoadingState={{
+        isDataLoaded: categoriesLoading.isDataLoaded,
+        dataType: 'categories'
+      }}
     >
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex flex-col page-transition transition-all duration-300">
         <header className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 dark:bg-gradient-to-br dark:from-slate-900 dark:via-gray-900 dark:to-black text-white relative overflow-hidden">
@@ -549,7 +561,7 @@ function Home() {
 
         <Footer />
       </div>
-    </SmartPageWrapper>
+    </GlobalLoader>
   );
 }
 

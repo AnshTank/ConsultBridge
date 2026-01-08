@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Calendar, Clock, User, Mail, Phone, MessageSquare, MapPin } from "lucide-react";
 import Navbar from "../Navbar";
 import PageTransition from "../PageTransition";
-import SmartPageWrapper from "../SmartPageWrapper";
+import GlobalLoader from "../GlobalLoader";
 
 function BookAppointmentPage() {
   const { user } = useUser();
@@ -81,7 +81,7 @@ function BookAppointmentPage() {
   };
 
   return (
-    <SmartPageWrapper loadingMessage="📅 Preparing your booking form...">
+    <GlobalLoader dataLoadingState={{ isDataLoaded: true, dataType: 'static' }}>
       <PageTransition>
         <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-all duration-300">
           <Navbar />
@@ -264,7 +264,7 @@ function BookAppointmentPage() {
         </div>
       </div>
       </PageTransition>
-    </SmartPageWrapper>
+    </GlobalLoader>
   );
 }
 

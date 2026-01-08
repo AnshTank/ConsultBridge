@@ -2,10 +2,10 @@
 import { useEffect, useState } from "react";
 import ConsultancyProfile from "../ConsultancyProfile";
 import ConsultancyReviews from "../ConsultancyReviews";
-import LoadingScreen from "../LoadingScreen";
 import Navbar from "../Navbar";
 import Footer from "../Footer";
-import SmartPageWrapper from "../SmartPageWrapper";
+import GlobalLoader from "../GlobalLoader";
+import { useDataLoading } from "../../hooks/useDataLoading";
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -13,7 +13,12 @@ export const revalidate = 0;
 
 function ConsultancyProfilePage({ id }: { id: string }) {
   const [consultancy, setConsultancy] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  
+  // Data loading state
+  const profileLoading = useDataLoading({ 
+    dataType: 'consultancy-profile',
+    minLoadingTime: 600 
+  });
 
   useEffect(() => {
     const fetchConsultancy = async () => {
@@ -23,25 +28,33 @@ function ConsultancyProfilePage({ id }: { id: string }) {
         const result = await response.json();
 
         if (result.success && result.data) {
-          console.log("Found consultancy by ID");
           setConsultancy(result.data);
+          profileLoading.setDataLoaded(true);
         } else {
-          console.log("Consultancy not found");
           setConsultancy(null);
+          profileLoading.setDataLoaded(true);
         }
       } catch (error) {
         console.error("Error fetching consultancy:", error);
         setConsultancy(null);
-      } finally {
-        setLoading(false);
+        profileLoading.setError('Failed to load consultancy');
       }
     };
 
     fetchConsultancy();
   }, [id]);
 
-  if (loading) {
-    return null;
+  if (!profileLoading.isDataLoaded) {
+    return (
+      <GlobalLoader 
+        dataLoadingState={{
+          isDataLoaded: profileLoading.isDataLoaded,
+          dataType: 'consultancy-profile'
+        }}
+      >
+        <div></div>
+      </GlobalLoader>
+    );
   }
 
   if (!consultancy) {
@@ -144,7 +157,7 @@ function ConsultancyProfilePage({ id }: { id: string }) {
   }
 
   return (
-    <SmartPageWrapper loadingMessage="💼 Loading consultancy profile...">
+    <GlobalLoader dataLoadingState={{ isDataLoaded: true, dataType: 'static' }}>
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-all duration-300">
         <header className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:bg-gradient-to-br dark:from-slate-900 dark:via-gray-900 dark:to-black text-white relative overflow-hidden">
           <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-blue-900/30 dark:via-purple-900/40 dark:to-pink-900/30"></div>
@@ -164,7 +177,7 @@ function ConsultancyProfilePage({ id }: { id: string }) {
 
         <Footer />
       </div>
-    </SmartPageWrapper>
+    </GlobalLoader>
   );
 }
 

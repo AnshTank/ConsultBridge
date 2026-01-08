@@ -5,7 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import Navbar from "../Navbar";
 import PageTransition from "../PageTransition";
 import Footer from "../Footer";
-import SmartPageWrapper from "../SmartPageWrapper";
+import GlobalLoader from "../GlobalLoader";
 
 function ContactPage() {
   const { user } = useUser();
@@ -85,7 +85,7 @@ function ContactPage() {
   };
 
   return (
-    <SmartPageWrapper loadingMessage="📞 Connecting you to our support team...">
+    <GlobalLoader dataLoadingState={{ isDataLoaded: true, dataType: 'static' }}>
       <PageTransition>
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-all duration-300">
         <Navbar />
@@ -438,7 +438,7 @@ function ContactPage() {
         <Footer />
       </div>
       </PageTransition>
-    </SmartPageWrapper>
+    </GlobalLoader>
   );
 }
 

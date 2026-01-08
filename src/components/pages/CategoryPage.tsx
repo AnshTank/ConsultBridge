@@ -1,7 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
 import Navbar from "../Navbar";
-import LoadingScreen from "../LoadingScreen";
 import ConsultancySkeleton from "../ConsultancySkeleton";
 import Footer from "../Footer";
 import { motion } from "framer-motion";
@@ -9,32 +8,32 @@ import { useState, useEffect, useRef } from "react";
 import { createSlug } from "../../utils/urlUtils";
 import PerformanceMonitor from "../PerformanceMonitor";
 import PageTransition from "../PageTransition";
-import SmartPageWrapper from "../SmartPageWrapper";
+import GlobalLoader from "../GlobalLoader";
+import { useDataLoading } from "../../hooks/useDataLoading";
 
 function CategoryPage() {
   const params = useParams();
   const category = params?.category as string;
   const [consultancies, setConsultancies] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [categoryName, setCategoryName] = useState("");
   const startTimeRef = useRef<number>(Date.now());
   const [endTime, setEndTime] = useState<number>();
+  
+  // Data loading state
+  const categoryLoading = useDataLoading({ 
+    dataType: 'category-consultancies',
+    minLoadingTime: 800 
+  });
 
   useEffect(() => {
     const fetchConsultancies = async () => {
       try {
-        setLoading(true);
-        
-        // Add 2-second delay for smooth user experience
-        const [response] = await Promise.all([
-          fetch(`/api/category/${category}`, {
-            cache: 'no-store',
-            headers: {
-              'Cache-Control': 'no-cache'
-            }
-          }),
-          new Promise(resolve => setTimeout(resolve, 2000))
-        ]);
+        const response = await fetch(`/api/category/${category}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        });
         
         const result = await response.json();
 
@@ -50,6 +49,7 @@ function CategoryPage() {
             .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
             .join(" "));
         }
+        categoryLoading.setDataLoaded(true);
       } catch (error) {
         console.error("Error fetching consultancies:", error);
         setConsultancies([]);
@@ -59,8 +59,8 @@ function CategoryPage() {
           .split(" ")
           .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
           .join(" "));
+        categoryLoading.setError('Failed to load category');
       } finally {
-        setLoading(false);
         setEndTime(Date.now());
       }
     };
@@ -78,7 +78,12 @@ function CategoryPage() {
   };
 
   return (
-    <SmartPageWrapper loadingMessage="🎯 Loading category...">
+    <GlobalLoader 
+      dataLoadingState={{
+        isDataLoaded: categoryLoading.isDataLoaded,
+        dataType: 'category-consultancies'
+      }}
+    >
       <PageTransition>
         <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex flex-col transition-all duration-300">
       <PerformanceMonitor 
@@ -97,7 +102,7 @@ function CategoryPage() {
           {categoryName} Consultancies
         </h2>
 
-        {loading ? (
+        {!categoryLoading.isDataLoaded ? (
           <div className="space-y-6">
             <div className="text-center">
               <p className="text-gray-600 dark:text-gray-300 text-lg mb-4 transition-all duration-300">🎯 Finding the best consultancies for you...</p>
@@ -192,7 +197,7 @@ function CategoryPage() {
         <Footer />
       </div>
       </PageTransition>
-    </SmartPageWrapper>
+    </GlobalLoader>
   );
 }
 

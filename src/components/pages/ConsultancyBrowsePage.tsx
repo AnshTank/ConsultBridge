@@ -3,11 +3,11 @@ import React, { useState, useEffect } from "react";
 import { Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../Navbar";
-import LoadingScreen from "../LoadingScreen";
 import ConsultancyCard from "../ConsultancyCard";
 import PageTransition from "../PageTransition";
-import SmartPageWrapper from "../SmartPageWrapper";
+import GlobalLoader from "../GlobalLoader";
 import Footer from "../Footer";
+import { useDataLoading } from "../../hooks/useDataLoading";
 
 interface ConsultancyProfile {
   id: string;
@@ -28,8 +28,13 @@ const ConsultancyBrowsePage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
   const itemsPerPage = 9;
+  
+  // Data loading state
+  const consultanciesLoading = useDataLoading({ 
+    dataType: 'consultancies',
+    minLoadingTime: 500 
+  });
 
   const categories = [
     "Business Strategy",
@@ -47,7 +52,6 @@ const ConsultancyBrowsePage: React.FC = () => {
   useEffect(() => {
     const loadConsultancies = async () => {
       try {
-        setLoading(true);
         const response = await fetch(`/api/consultancies?t=${Date.now()}`, {
           cache: 'no-store',
           headers: {
@@ -63,14 +67,15 @@ const ConsultancyBrowsePage: React.FC = () => {
           );
           setConsultancies(validConsultancies);
           setFilteredConsultancies(validConsultancies);
+          consultanciesLoading.setDataLoaded(true);
         } else {
           setConsultancies([]);
           setFilteredConsultancies([]);
+          consultanciesLoading.setDataLoaded(true);
         }
       } catch (error) {
         console.error('Error loading consultancies:', error);
-      } finally {
-        setLoading(false);
+        consultanciesLoading.setError('Failed to load consultancies');
       }
     };
 
@@ -106,7 +111,12 @@ const ConsultancyBrowsePage: React.FC = () => {
   };
 
   return (
-    <SmartPageWrapper loadingMessage="🔍 Loading consultancies...">
+    <GlobalLoader 
+      dataLoadingState={{
+        isDataLoaded: consultanciesLoading.isDataLoaded,
+        dataType: 'consultancies'
+      }}
+    >
       <PageTransition>
         <Navbar />
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-all duration-300">
@@ -159,9 +169,17 @@ const ConsultancyBrowsePage: React.FC = () => {
             </p>
           </div>
 
-          {loading ? (
+          {consultanciesLoading.error ? (
             <div className="text-center py-16">
-              <div className="text-xl text-gray-600 dark:text-gray-300 transition-all duration-300">Loading consultancies...</div>
+              <div className="text-xl text-red-600 dark:text-red-400 transition-all duration-300">
+                {consultanciesLoading.error}
+              </div>
+            </div>
+          ) : !consultanciesLoading.isDataLoaded ? (
+            <div className="text-center py-16">
+              <div className="text-xl text-gray-600 dark:text-gray-300 transition-all duration-300">
+                Loading consultancies...
+              </div>
             </div>
           ) : filteredConsultancies.length > 0 ? (
             <>
@@ -331,7 +349,7 @@ const ConsultancyBrowsePage: React.FC = () => {
       </div>
       <Footer />
       </PageTransition>
-    </SmartPageWrapper>
+    </GlobalLoader>
   );
 };
 

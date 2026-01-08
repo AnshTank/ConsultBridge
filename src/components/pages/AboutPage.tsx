@@ -3,10 +3,10 @@ import { Users, Award, TrendingUp, Shield } from "lucide-react";
 import Navbar from "../Navbar";
 import PageTransition from "../PageTransition";
 import Footer from "../Footer";
-import SmartPageWrapper from "../SmartPageWrapper";
+import GlobalLoader from "../GlobalLoader";
 function AboutPage() {
   return (
-    <SmartPageWrapper loadingMessage="📚 Learning about ConsultBridge...">
+    <GlobalLoader dataLoadingState={{ isDataLoaded: true, dataType: 'static' }}>
       <PageTransition>
         <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-all duration-300">
           <Navbar />
@@ -222,7 +222,7 @@ function AboutPage() {
           <Footer />
         </div>
       </PageTransition>
-    </SmartPageWrapper>
+    </GlobalLoader>
   );
 }
 

@@ -18,8 +18,9 @@ import {
 import MeetingScheduler from '../MeetingScheduler';
 import Navbar from "../Navbar";
 import PageTransition from "../PageTransition";
-import SmartPageWrapper from "../SmartPageWrapper";
+import GlobalLoader from "../GlobalLoader";
 import Modal from "../Modal";
+import { useDataLoading } from "../../hooks/useDataLoading";
 import {
   appointmentManager,
   AppointmentData,
@@ -29,7 +30,6 @@ const DashboardPage: React.FC = () => {
   const router = useRouter();
   const { user, isLoaded } = useUser();
   const [appointments, setAppointments] = useState<AppointmentData[]>([]);
-  const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmModal, setConfirmModal] = useState<{
     id: string;
@@ -41,6 +41,12 @@ const DashboardPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageTransition, setPageTransition] = useState(false);
   const appointmentsPerPage = 9;
+  
+  // Data loading state
+  const appointmentsLoading = useDataLoading({ 
+    dataType: 'appointments',
+    minLoadingTime: 600 
+  });
 
 
 
@@ -80,19 +86,25 @@ const DashboardPage: React.FC = () => {
           const result = await response.json();
           if (result.success) {
             setAppointments(result.data || []);
+            appointmentsLoading.setDataLoaded(true);
           } else {
             setAppointments([]);
+            appointmentsLoading.setDataLoaded(true);
           }
         } catch (error) {
           console.error("Error fetching appointments:", error);
           setAppointments([]);
+          appointmentsLoading.setError('Failed to load appointments');
         }
+      } else {
+        appointmentsLoading.setDataLoaded(true);
       }
-      setLoading(false);
     };
 
-    fetchAppointments();
-  }, [user?.id]);
+    if (isLoaded) {
+      fetchAppointments();
+    }
+  }, [user?.id, isLoaded]);
 
   if (!isLoaded) {
     return null;
@@ -209,7 +221,12 @@ const DashboardPage: React.FC = () => {
   };
 
   return (
-    <SmartPageWrapper loadingMessage="📊 Loading your dashboard...">
+    <GlobalLoader 
+      dataLoadingState={{
+        isDataLoaded: appointmentsLoading.isDataLoaded,
+        dataType: 'appointments'
+      }}
+    >
       <PageTransition>
         <Navbar />
         <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-all duration-300">
@@ -659,7 +676,7 @@ const DashboardPage: React.FC = () => {
           </Modal>
         </div>
       </PageTransition>
-    </SmartPageWrapper>
+    </GlobalLoader>
   );
 };
 

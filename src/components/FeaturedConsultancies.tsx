@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import ConsultancyCard from "./ConsultancyCard";
-import LoadingScreen from "./LoadingScreen";
+import OptimizedLoader from "./OptimizedLoader";
+import { useDataLoading } from "../hooks/useDataLoading";
 interface ConsultancyData {
   _id?: string;
   id?: string;
@@ -16,7 +17,12 @@ interface ConsultancyData {
 
 export default function FeaturedConsultancies() {
   const [consultancies, setConsultancies] = useState<ConsultancyData[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  // Data loading state
+  const featuredLoading = useDataLoading({ 
+    dataType: 'featured-consultancies',
+    minLoadingTime: 400 
+  });
 
   useEffect(() => {
     const fetchFeaturedConsultancies = async () => {
@@ -42,10 +48,12 @@ export default function FeaturedConsultancies() {
 
         if (result.success && result.data) {
           setConsultancies(result.data);
+          featuredLoading.setDataLoaded(true);
         } else {
           console.warn('No consultancies data received, using fallback');
           const { fallbackConsultancies } = await import('../data/fallback');
           setConsultancies(fallbackConsultancies);
+          featuredLoading.setDataLoaded(true);
         }
       } catch (error: any) {
         if (error?.name === 'AbortError') {
@@ -55,29 +63,12 @@ export default function FeaturedConsultancies() {
         }
         const { fallbackConsultancies } = await import('../data/fallback');
         setConsultancies(fallbackConsultancies);
-      } finally {
-        setLoading(false);
+        featuredLoading.setDataLoaded(true);
       }
     };
 
     fetchFeaturedConsultancies();
   }, []);
-
-  if (loading) {
-    return (
-      <section className="bg-white dark:bg-dark-bg py-16">
-        <div className="container mx-auto px-6">
-          <h3 className="text-3xl font-bold mb-12 text-center text-gray-900 dark:text-white">
-            Top Rated Consultancies
-          </h3>
-          <LoadingScreen
-            variant="dots"
-            message="Loading featured consultancies..."
-          />
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section className="bg-white dark:bg-dark-bg py-12 md:py-16">
@@ -85,7 +76,13 @@ export default function FeaturedConsultancies() {
         <h3 className="text-2xl md:text-3xl font-bold mb-8 md:mb-12 text-center text-gray-900 dark:text-white">
           Top Rated Consultancies
         </h3>
-        {consultancies.length > 0 ? (
+        
+        <OptimizedLoader 
+          isLoading={!featuredLoading.isDataLoaded}
+          error={featuredLoading.error}
+          minHeight="300px"
+        >
+          {consultancies.length > 0 ? (
           <motion.div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8"
             initial={{ opacity: 0, y: 20 }}
@@ -126,6 +123,7 @@ export default function FeaturedConsultancies() {
             </p>
           </div>
         )}
+        </OptimizedLoader>
       </div>
     </section>
   );

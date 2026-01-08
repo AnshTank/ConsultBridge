@@ -15,17 +15,23 @@ import {
 } from "lucide-react";
 import Navbar from "../Navbar";
 import PageTransition from "../PageTransition";
-import SmartPageWrapper from "../SmartPageWrapper";
+import GlobalLoader from "../GlobalLoader";
+import { useDataLoading } from "../../hooks/useDataLoading";
 
 const ConsultancyDashboardPage: React.FC = () => {
   const router = useRouter();
   const { user, isLoaded } = useUser();
   const [appointments, setAppointments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const appointmentsPerPage = 9;
+  
+  // Data loading state
+  const dashboardLoading = useDataLoading({ 
+    dataType: 'consultancy-appointments',
+    minLoadingTime: 700 
+  });
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -35,19 +41,25 @@ const ConsultancyDashboardPage: React.FC = () => {
           const result = await response.json();
           if (result.success) {
             setAppointments(result.data || []);
+            dashboardLoading.setDataLoaded(true);
           } else {
             setAppointments([]);
+            dashboardLoading.setDataLoaded(true);
           }
         } catch (error) {
           console.error("Error fetching appointments:", error);
           setAppointments([]);
+          dashboardLoading.setError('Failed to load appointments');
         }
+      } else {
+        dashboardLoading.setDataLoaded(true);
       }
-      setLoading(false);
     };
 
-    fetchAppointments();
-  }, [user?.id]);
+    if (isLoaded) {
+      fetchAppointments();
+    }
+  }, [user?.id, isLoaded]);
 
   if (!isLoaded) return null;
 
@@ -113,7 +125,12 @@ const ConsultancyDashboardPage: React.FC = () => {
   };
 
   return (
-    <SmartPageWrapper loadingMessage="📊 Loading consultant dashboard...">
+    <GlobalLoader 
+      dataLoadingState={{
+        isDataLoaded: dashboardLoading.isDataLoaded,
+        dataType: 'consultancy-appointments'
+      }}
+    >
       <PageTransition>
         <Navbar />
         <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-all duration-300">
@@ -324,7 +341,7 @@ const ConsultancyDashboardPage: React.FC = () => {
           </div>
         </div>
       </PageTransition>
-    </SmartPageWrapper>
+    </GlobalLoader>
   );
 };
 

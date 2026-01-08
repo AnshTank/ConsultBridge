@@ -1,10 +1,9 @@
 "use client";
 import { useRouter } from "next/navigation";
 import Navbar from "../Navbar";
-import Link from "next/link";
 import PageTransition from "../PageTransition";
 import Footer from "../Footer";
-import SmartPageWrapper from "../SmartPageWrapper";
+import GlobalLoader from "../GlobalLoader";
 
 const categories = [
   {
@@ -72,7 +71,7 @@ function CategoriesPage() {
   const router = useRouter();
 
   return (
-    <SmartPageWrapper loadingMessage="🔍 Exploring all categories...">
+    <GlobalLoader dataLoadingState={{ isDataLoaded: true, dataType: 'static' }}>
       <PageTransition>
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-all duration-300">
         <Navbar />
@@ -127,7 +126,7 @@ function CategoriesPage() {
         <Footer />
       </div>
       </PageTransition>
-    </SmartPageWrapper>
+    </GlobalLoader>
   );
 }
 
